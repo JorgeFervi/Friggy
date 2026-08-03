@@ -9,9 +9,9 @@ Ideas principales para la Fase 1 del proyecto de desarrollo de la aplicación:
   - Datos que incluirán:
     - Nombre de la receta
     - Ingredientes que se van a usar
-    - Cantidades de alimentos
+    - Cantidades de alimentos y tipo de unidad de medida
     - Tiempo estimado
-    - Categoria para clasificar las recetas (p.e.: vegano, sin gluten)
+    - Etiquetas para clasificar las recetas (p. ej.: vegano, sin gluten)
     - Imagen del resultado final de la receta
     - Indicar la preferencia de tipo de comida (desayuno, comida, cena, primer plato, segundo plato, postre, etc)
   - Utilidad IA (Opcional):
@@ -52,3 +52,7 @@ Ideas principales para la Fase 2 del proyecto de desarrollo de la aplicación:
 - Registro de alimentos disponibles. Crear un "frigorífico virtual" para indicar que alimentos tienes disponibles en casa.
 
 - Creación automática de la lista de la compra basandose en la planificación semanal activa, los alimentos que tienes disponibles en casa y los que te faltan.
+
+## Definición del MVP
+
+La selección de funcionalidades para la primera versión, su modelo de datos y el calendario previsto se detallan en [Definición del MVP](001-mvp.md).
