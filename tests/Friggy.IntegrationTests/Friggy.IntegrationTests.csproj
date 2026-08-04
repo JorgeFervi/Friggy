@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Friggy.Api\Friggy.Api.csproj" />
     <ProjectReference Include="..\..\src\Friggy.Infrastructure\Friggy.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Friggy.Web\Friggy.Web.csproj" />
   </ItemGroup>
 
 </Project>

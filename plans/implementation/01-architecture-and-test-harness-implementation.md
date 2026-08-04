@@ -6,7 +6,7 @@
 
 Esta guía consolida el scaffold existente; no vuelve a generarlo sin auditarlo. Al terminar debe existir una plataforma reproducible, pero ningún caso de uso funcional.
 
-> **Progreso:** subfase 1.1 completada el 4 de agosto de 2026. SDK, MTP, Central Package Management, analizadores, formato, fuentes NuGet y smoke tests del scaffold están verificados. La siguiente unidad ejecutable es la subfase 1.2.
+> **Progreso:** subfases 1.1 y 1.2 completadas el 4 de agosto de 2026. SDK, MTP, paquetes, formato y fuentes NuGet están verificados; las referencias declaradas y efectivas de Clean Architecture están protegidas por tests. La siguiente unidad ejecutable es la subfase 1.3.
 
 ## Inventario de trabajo
 
