@@ -1,6 +1,6 @@
 # Fase 1 — Arquitectura y banco de pruebas
 
-- **Estado:** Pendiente de ejecución
+- **Estado:** En curso — subfase 1.1 completada
 - **Estimación:** 2 días
 - **Dependencias:** [Plan general](../000-general-plan.md)
 - **Guía ejecutable:** [Implementación de la fase 1](../implementation/01-architecture-and-test-harness-implementation.md)

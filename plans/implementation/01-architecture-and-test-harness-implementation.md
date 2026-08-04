@@ -6,6 +6,8 @@
 
 Esta guía consolida el scaffold existente; no vuelve a generarlo sin auditarlo. Al terminar debe existir una plataforma reproducible, pero ningún caso de uso funcional.
 
+> **Progreso:** subfase 1.1 completada el 4 de agosto de 2026. SDK, MTP, Central Package Management, analizadores, formato, fuentes NuGet y smoke tests del scaffold están verificados. La siguiente unidad ejecutable es la subfase 1.2.
+
 ## Inventario de trabajo
 
 | Subfase | Archivos principales | Evidencia |
