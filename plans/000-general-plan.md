@@ -157,4 +157,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Existe un scaffold parcial con los cinco proyectos de producción, cinco proyectos de pruebas, xUnit v3 y referencias iniciales de paquetes. Es un artefacto de una ejecución interrumpida: la fase 1 debe auditar versiones, referencias, vulnerabilidades y archivos de plantilla antes de considerarlo válido.
+La fase 1 quedó completada el 6 de agosto de 2026. Los cinco proyectos de producción y los cinco proyectos de pruebas están validados; PostgreSQL, EF Core, xUnit v3/MTP, bUnit, Testcontainers, Playwright y los scripts locales superan la puerta de calidad. La fase 2 está habilitada y su siguiente unidad ejecutable es la subfase 2.1.

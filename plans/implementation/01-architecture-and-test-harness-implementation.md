@@ -6,7 +6,7 @@
 
 Esta guía consolida el scaffold existente; no vuelve a generarlo sin auditarlo. Al terminar debe existir una plataforma reproducible, pero ningún caso de uso funcional.
 
-> **Progreso:** subfases 1.1, 1.2, 1.3, 1.4 y 1.5 completadas. SDK, MTP, paquetes, formato y fuentes NuGet están verificados; las referencias de Clean Architecture están protegidas por tests; PostgreSQL, EF Core, el composition root de API, los harnesses y los scripts locales están operativos. La siguiente unidad ejecutable es la subfase 1.6.
+> **Progreso:** fase completada. Las subfases 1.1 a 1.6 están verdes; la siguiente unidad ejecutable es la subfase 2.1.
 
 ## Inventario de trabajo
 
@@ -233,6 +233,14 @@ dotnet test --project tests/Friggy.EndToEndTests/Friggy.EndToEndTests.csproj
 ```
 
 Para xUnit v3 sobre MTP usar `--filter-class`, `--filter-method` o `--filter-trait`; no usar `--filter "FullyQualifiedName~..."` ni el separador `--`.
+
+### Resultado ejecutado — 6 de agosto de 2026
+
+- Restore y build `Release` completados con warnings tratados como errores.
+- Formato, dependencias arquitectónicas, modelo EF Core y configuración Compose verificados.
+- Las cinco suites completaron el recorrido automatizado sin tests omitidos.
+- La auditoría de paquetes no encontró vulnerabilidades conocidas.
+- Los ADR 003 y 004 y la guía operativa raíz documentan las reglas que deberá respetar la fase 2.
 
 ## Auditoría y salida
 

@@ -25,6 +25,6 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 - Actualizar el estado y las decisiones del plan al terminar cada fase.
 - Los ejemplos son patrones recomendados; los nombres finales deben conservar los contratos definidos en el plan general.
 
-## Estado inicial
+## Estado actual
 
-La solución y los proyectos base fueron generados durante una ejecución interrumpida anterior. Se consideran scaffold sin funcionalidad y deberán auditarse en la fase 1 antes de reutilizarlos. Ninguna fase funcional se considera iniciada.
+La fase 1 está completada: toolchain, límites arquitectónicos, PostgreSQL, EF Core, bancos de pruebas y scripts locales han superado su puerta de calidad. La siguiente unidad ejecutable es la subfase 2.1 de [Catálogos](implementation/02-catalogs-implementation.md).

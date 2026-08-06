@@ -22,6 +22,23 @@ El objetivo de Friggy es facilitar la planificación de las comidas, reducir el 
 
 La definición funcional, el alcance y el calendario de desarrollo se encuentran en [Definición del MVP](docs/use-cases/001-mvp.md). Las decisiones arquitectónicas se documentan en [docs/adr](docs/adr).
 
+Las decisiones que gobiernan la implementación están recogidas en [Clean Architecture](docs/adr/003-clean-architecture.md) y [TDD y estrategia de pruebas](docs/adr/004-tdd-and-testing-strategy.md).
+
+## Entorno verificado
+
+| Componente | Versión |
+|---|---|
+| .NET SDK | 10.0.302 |
+| PostgreSQL | 17.6-alpine |
+| Entity Framework Core | 10.0.10 |
+| Npgsql para EF Core | 10.0.3 |
+| xUnit v3 / MTP v2 | 3.2.2 |
+| Testcontainers.PostgreSql | 4.13.0 |
+| bUnit | 2.9.0 |
+| Playwright para .NET | 1.61.0 |
+
+La puerta de calidad de la fase 1 se verificó con Docker Engine 29.6.2 y Docker Compose 5.3.1. Son versiones del entorno validado, no credenciales ni requisitos de producción.
+
 ## Ejecución local
 
 Desde PowerShell, ejecutar los scripts en este orden:
@@ -42,3 +59,21 @@ Para compilar una vez y ejecutar todas las suites en orden:
 ```
 
 El script usa la configuración `Release` para no interferir con los procesos locales `Debug` iniciados por `start.ps1`, y termina inmediatamente si falla cualquier comando o suite.
+
+## Puerta de calidad
+
+Antes de incorporar cambios, ejecutar:
+
+```powershell
+dotnet restore Friggy.sln --configfile NuGet.Config
+dotnet build Friggy.sln --configuration Release --no-restore
+dotnet format Friggy.sln --verify-no-changes --no-restore
+./scripts/test.ps1
+dotnet list Friggy.sln package --vulnerable --include-transitive --no-restore
+```
+
+Para ejecutar únicamente las reglas arquitectónicas con xUnit v3 sobre MTP:
+
+```powershell
+dotnet test --project tests/Friggy.IntegrationTests/Friggy.IntegrationTests.csproj --configuration Release --no-build --no-restore --filter-trait "Category=Architecture"
+```

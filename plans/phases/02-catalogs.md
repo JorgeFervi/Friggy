@@ -1,6 +1,6 @@
 # Fase 2 — Catálogos
 
-- **Estado:** Bloqueada por fase 1
+- **Estado:** Lista para comenzar — fase 1 completada
 - **Estimación:** 2 días
 - **Dependencias:** [Fase 1](01-architecture-and-test-harness.md)
 - **Guía ejecutable:** [Implementación de la fase 2](../implementation/02-catalogs-implementation.md)
