@@ -6,7 +6,7 @@
 
 Esta guía consolida el scaffold existente; no vuelve a generarlo sin auditarlo. Al terminar debe existir una plataforma reproducible, pero ningún caso de uso funcional.
 
-> **Progreso:** subfases 1.1, 1.2 y 1.3 completadas. SDK, MTP, paquetes, formato y fuentes NuGet están verificados; las referencias de Clean Architecture están protegidas por tests; PostgreSQL, EF Core y el composition root de API están operativos. La siguiente unidad ejecutable es la subfase 1.4.
+> **Progreso:** subfases 1.1, 1.2, 1.3 y 1.4 completadas. SDK, MTP, paquetes, formato y fuentes NuGet están verificados; las referencias de Clean Architecture están protegidas por tests; PostgreSQL, EF Core, el composition root de API y los harnesses de Integration, Component y E2E están operativos. La siguiente unidad ejecutable es la subfase 1.5.
 
 ## Inventario de trabajo
 
@@ -179,6 +179,14 @@ Usar `BunitContext` de bUnit 2.x y fakes escritos a mano. Crear contexto y fake 
 ### End-to-end
 
 Exigir `FRIGGY_WEB_BASE_URL`, un `BrowserContext` por test y locators por rol o label. Desactivar paralelismo del proyecto E2E y capturar trace, screenshot, vídeo y logs solo al fallar.
+
+### Resultado ejecutado — 6 de agosto de 2026
+
+- Las pruebas de integración crean un contenedor PostgreSQL `17.6-alpine` por clase, con un nombre de base físico único, aplican las migraciones y reconstruyen el esquema antes de cada método.
+- `FriggyApiFactory` conserva el composition root de API y reemplaza únicamente los registros vinculados a `FriggyDbContext`; el smoke test comprueba que el contexto resuelto apunta a la base efímera.
+- El harness de componentes crea un `BunitContext`, un `HttpClient` y un fake HTTP escrito a mano por instancia de test; el componente Home se valida mediante comparación semántica de HTML.
+- El harness E2E exige `FRIGGY_WEB_BASE_URL`, hereda de `PageTest` para obtener un `BrowserContext` aislado, fija viewport, locale y zona horaria, desactiva el paralelismo y conserva trace, screenshot, vídeo y logs únicamente si falla un escenario ejecutado mediante `RunScenarioAsync`.
+- Se observaron primero fallos rojos por ausencia de las fixtures y después quedaron verdes 14 pruebas de integración, 3 de componentes y 4 de configuración E2E.
 
 ## 1.5 — Scripts PowerShell idempotentes
 
