@@ -22,11 +22,23 @@ El objetivo de Friggy es facilitar la planificación de las comidas, reducir el 
 
 La definición funcional, el alcance y el calendario de desarrollo se encuentran en [Definición del MVP](docs/use-cases/001-mvp.md). Las decisiones arquitectónicas se documentan en [docs/adr](docs/adr).
 
-## Ejecución local prevista
+## Ejecución local
 
-El primer scaffold del proyecto incorporará los siguientes scripts de PowerShell:
+Desde PowerShell, ejecutar los scripts en este orden:
 
-* `scripts/setup.ps1`: comprobará los requisitos, preparará la configuración local, arrancará PostgreSQL, restaurará las dependencias y aplicará las migraciones.
-* `scripts/start.ps1`: arrancará PostgreSQL si fuese necesario e iniciará la aplicación.
+```powershell
+./scripts/setup.ps1
+./scripts/start.ps1
+```
 
-Hasta que se cree el scaffold de la aplicación, estos comandos forman parte del plan de implementación y todavía no están disponibles.
+`setup.ps1` comprueba .NET y Docker, arranca PostgreSQL, restaura herramientas y paquetes, aplica las migraciones e instala Chromium para Playwright. Puede ejecutarse de nuevo sin eliminar datos ni recrear la configuración local.
+
+`start.ps1` inicia la API en `http://localhost:5292` y la aplicación Web en `http://localhost:5179`. Si ya están disponibles, no crea procesos duplicados. Los logs locales se guardan bajo `.friggy/logs`, que no se versiona.
+
+Para compilar una vez y ejecutar todas las suites en orden:
+
+```powershell
+./scripts/test.ps1
+```
+
+El script usa la configuración `Release` para no interferir con los procesos locales `Debug` iniciados por `start.ps1`, y termina inmediatamente si falla cualquier comando o suite.

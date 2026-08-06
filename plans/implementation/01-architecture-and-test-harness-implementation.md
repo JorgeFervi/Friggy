@@ -6,7 +6,7 @@
 
 Esta guía consolida el scaffold existente; no vuelve a generarlo sin auditarlo. Al terminar debe existir una plataforma reproducible, pero ningún caso de uso funcional.
 
-> **Progreso:** subfases 1.1, 1.2, 1.3 y 1.4 completadas. SDK, MTP, paquetes, formato y fuentes NuGet están verificados; las referencias de Clean Architecture están protegidas por tests; PostgreSQL, EF Core, el composition root de API y los harnesses de Integration, Component y E2E están operativos. La siguiente unidad ejecutable es la subfase 1.5.
+> **Progreso:** subfases 1.1, 1.2, 1.3, 1.4 y 1.5 completadas. SDK, MTP, paquetes, formato y fuentes NuGet están verificados; las referencias de Clean Architecture están protegidas por tests; PostgreSQL, EF Core, el composition root de API, los harnesses y los scripts locales están operativos. La siguiente unidad ejecutable es la subfase 1.6.
 
 ## Inventario de trabajo
 
@@ -210,6 +210,14 @@ function Invoke-Checked {
 - `start.ps1`: levanta PostgreSQL, espera `/health`, inicia API y Web y muestra sus URL.
 - `test.ps1`: build único y suites Domain → Application → Integration → Component → E2E; termina en el primer fallo.
 - Ningún script sobrescribe `.env`, elimina volúmenes ni presupone que Docker ya está activo.
+
+### Resultado ejecutado — 6 de agosto de 2026
+
+- `common.ps1` centraliza la detección de comandos, la ejecución fail-fast y la espera acotada de endpoints HTTP.
+- `setup.ps1` valida .NET y Docker, espera PostgreSQL healthy, restaura la herramienta local y los paquetes, aplica migraciones, compila el proyecto E2E e instala Chromium. Dos ejecuciones consecutivas finalizaron correctamente sin eliminar datos ni volúmenes.
+- `start.ps1` inicia API y Web como procesos ocultos con logs locales ignorados por Git, fija `ASPNETCORE_ENVIRONMENT=Development` y comprueba ambos endpoints. La segunda ejecución detectó los servicios existentes sin duplicarlos.
+- `test.ps1` usa un único build `Release` para convivir con los servicios `Debug` en ejecución y lanza secuencialmente las cinco suites mediante la sintaxis MTP de .NET 10. El recorrido completo terminó con 29 pruebas verdes y ninguna omitida.
+- Los defectos de entorno ASP.NET Core y bloqueo de apphost en Windows se reprodujeron primero mediante tests rojos y quedaron cubiertos por pruebas de regresión.
 
 ## 1.6 — Secuencia de verificación
 
