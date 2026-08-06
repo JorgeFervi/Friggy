@@ -29,7 +29,9 @@ public sealed class ArchitectureTests
         AssertProjectReferences(
             "src/Friggy.Application/Friggy.Application.csproj",
             ["Friggy.Domain"]);
-        AssertPackageReferences("src/Friggy.Application/Friggy.Application.csproj", []);
+        AssertPackageReferences(
+            "src/Friggy.Application/Friggy.Application.csproj",
+            ["Microsoft.Extensions.DependencyInjection.Abstractions"]);
         AssertAssemblyDoesNotReference(
             typeof(global::Friggy.Application.AssemblyMarker).Assembly,
             "Friggy.Infrastructure",

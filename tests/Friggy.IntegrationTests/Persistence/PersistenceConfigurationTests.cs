@@ -1,0 +1,74 @@
+using Friggy.Infrastructure;
+using Friggy.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Friggy.IntegrationTests.Persistence;
+
+public sealed class PersistenceConfigurationTests
+{
+    private const string ConnectionString =
+        "Host=localhost;Port=5432;Database=friggy_tests;Username=friggy;Password=friggy_local";
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void AddInfrastructure_MissingConnectionString_FailsImmediately()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().Build();
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => services.AddInfrastructure(configuration));
+
+        Assert.Contains("Friggy", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void AddInfrastructure_ValidConfiguration_RegistersScopedNpgsqlContext()
+    {
+        var services = new ServiceCollection();
+        var configuration = CreateConfiguration();
+
+        services.AddInfrastructure(configuration);
+
+        var descriptor = Assert.Single(
+            services,
+            service => service.ServiceType == typeof(FriggyDbContext));
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
+        Assert.True(typeof(FriggyDbContext).IsSealed);
+
+        using var provider = services.BuildServiceProvider();
+        using var firstScope = provider.CreateScope();
+        using var secondScope = provider.CreateScope();
+        var firstContext = firstScope.ServiceProvider.GetRequiredService<FriggyDbContext>();
+        var sameScopeContext = firstScope.ServiceProvider.GetRequiredService<FriggyDbContext>();
+        var secondContext = secondScope.ServiceProvider.GetRequiredService<FriggyDbContext>();
+
+        Assert.Same(firstContext, sameScopeContext);
+        Assert.NotSame(firstContext, secondContext);
+        Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", firstContext.Database.ProviderName);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void DesignTimeFactory_CreatesNpgsqlContextWithInitialMigration()
+    {
+        using var context = new FriggyDbContextFactory().CreateDbContext([]);
+
+        var migrations = context.Database.GetMigrations().ToArray();
+
+        var migration = Assert.Single(migrations);
+        Assert.EndsWith("_InitialInfrastructure", migration, StringComparison.Ordinal);
+        Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", context.Database.ProviderName);
+    }
+
+    private static IConfiguration CreateConfiguration() =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:Friggy"] = ConnectionString,
+            })
+            .Build();
+}

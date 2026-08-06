@@ -1,6 +1,6 @@
 # Fase 1 — Arquitectura y banco de pruebas
 
-- **Estado:** En curso — subfases 1.1 y 1.2 completadas
+- **Estado:** En curso — subfases 1.1, 1.2 y 1.3 completadas
 - **Estimación:** 2 días
 - **Dependencias:** [Plan general](../000-general-plan.md)
 - **Guía ejecutable:** [Implementación de la fase 1](../implementation/01-architecture-and-test-harness-implementation.md)

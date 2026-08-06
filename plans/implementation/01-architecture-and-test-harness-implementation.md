@@ -6,7 +6,7 @@
 
 Esta guía consolida el scaffold existente; no vuelve a generarlo sin auditarlo. Al terminar debe existir una plataforma reproducible, pero ningún caso de uso funcional.
 
-> **Progreso:** subfases 1.1 y 1.2 completadas el 4 de agosto de 2026. SDK, MTP, paquetes, formato y fuentes NuGet están verificados; las referencias declaradas y efectivas de Clean Architecture están protegidas por tests. La siguiente unidad ejecutable es la subfase 1.3.
+> **Progreso:** subfases 1.1, 1.2 y 1.3 completadas. SDK, MTP, paquetes, formato y fuentes NuGet están verificados; las referencias de Clean Architecture están protegidas por tests; PostgreSQL, EF Core y el composition root de API están operativos. La siguiente unidad ejecutable es la subfase 1.4.
 
 ## Inventario de trabajo
 
@@ -137,6 +137,14 @@ volumes:
 ```
 
 `FriggyDbContext` será `sealed`, se registrará como scoped y no se inyectará fuera de Infrastructure. Las migraciones se aplicarán de forma explícita por script, no en cada petición.
+
+### Resultado ejecutado — 6 de agosto de 2026
+
+- PostgreSQL usa `postgres:17.6-alpine`, volumen nombrado, health check y credenciales exclusivamente locales.
+- `dotnet-ef` queda fijado como herramienta local en la versión `10.0.10`.
+- `FriggyDbContext`, su factory de diseño y `AddInfrastructure` usan Npgsql; la cadena `ConnectionStrings:Friggy` se valida al registrar la capa.
+- La migración vacía `20260806074158_InitialInfrastructure` se aplicó explícitamente sobre PostgreSQL y permaneció registrada tras reiniciar el contenedor.
+- `Program.cs` compone Application e Infrastructure y expone `/health`; un smoke test mediante `WebApplicationFactory` verifica el arranque real del ensamblado API.
 
 ## 1.4 — Harness de pruebas
 

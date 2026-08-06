@@ -1,5 +1,8 @@
 namespace Friggy.Api;
 
-public static class AssemblyMarker
+public sealed class AssemblyMarker
 {
+    private AssemblyMarker()
+    {
+    }
 }
