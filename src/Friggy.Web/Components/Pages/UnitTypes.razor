@@ -1,0 +1,37 @@
+@page "/unit-types"
+@using System.ComponentModel.DataAnnotations
+@using Friggy.Application.Catalogs.UnitTypes.Dtos
+@using Friggy.Web.Api
+@inject IUnitTypesApiClient Api
+@inject IJSRuntime JavaScript
+
+<PageTitle>Unidades</PageTitle>
+<h1>Tipos de unidad</h1>
+<EditForm Model="model" OnValidSubmit="SaveAsync" FormName="unit-form">
+    <DataAnnotationsValidator />
+    <label for="unit-name">Nombre</label><InputText id="unit-name" @bind-Value="model.Name" /><ValidationMessage For="() => model.Name" />
+    <label for="unit-symbol">Símbolo</label><InputText id="unit-symbol" @bind-Value="model.Symbol" /><ValidationMessage For="() => model.Symbol" />
+    <button type="submit">@(editingId.HasValue ? "Guardar" : "Añadir")</button>
+    @if (editingId.HasValue) { <button type="button" @onclick="CancelEdit">Cancelar</button> }
+</EditForm>
+@if (error is not null) { <p role="alert">@error</p> }
+@if (loading) { <p>Cargando unidades…</p> }
+else if (items.Count == 0) { <p>No hay unidades.</p> }
+else
+{
+    <table><thead><tr><th>Nombre</th><th>Símbolo</th><th>Acciones</th></tr></thead><tbody>
+    @foreach (var item in items) { <tr @key="item.Id"><td>@item.Name</td><td>@item.Symbol</td><td><button type="button" @onclick="() => BeginEdit(item)">Editar</button><button type="button" @onclick="() => DeleteAsync(item)">Borrar</button></td></tr> }
+    </tbody></table>
+}
+@code {
+    private readonly UnitInput model = new();
+    private IReadOnlyList<UnitTypeResponse> items = [];
+    private Guid? editingId; private string? error; private bool loading = true;
+    protected override async Task OnInitializedAsync() { await ReloadAsync(); loading = false; }
+    private async Task ReloadAsync() { try { items = await Api.ListAsync(CancellationToken.None); error = null; } catch (Exception ex) when (ex is HttpRequestException or CatalogApiException) { error = ex.Message; } }
+    private async Task SaveAsync() { try { if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name, model.Symbol), CancellationToken.None); else await Api.CreateAsync(new(model.Name, model.Symbol), CancellationToken.None); CancelEdit(); await ReloadAsync(); } catch (CatalogApiException ex) { error = ex.Message; } }
+    private void BeginEdit(UnitTypeResponse item) { editingId = item.Id; model.Name = item.Name; model.Symbol = item.Symbol; }
+    private void CancelEdit() { editingId = null; model.Name = string.Empty; model.Symbol = string.Empty; }
+    private async Task DeleteAsync(UnitTypeResponse item) { if (await JavaScript.InvokeAsync<bool>("confirm", $"¿Borrar {item.Name}?")) { try { await Api.DeleteAsync(item.Id, CancellationToken.None); await ReloadAsync(); } catch (CatalogApiException ex) { error = ex.Message; } } }
+    private sealed class UnitInput { [Required(ErrorMessage = "El nombre es obligatorio.")] [StringLength(120)] public string Name { get; set; } = string.Empty; [Required(ErrorMessage = "El símbolo es obligatorio.")] [StringLength(20)] public string Symbol { get; set; } = string.Empty; }
+}

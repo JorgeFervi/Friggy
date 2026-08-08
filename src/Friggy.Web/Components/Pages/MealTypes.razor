@@ -1,0 +1,37 @@
+@page "/meal-types"
+@using System.ComponentModel.DataAnnotations
+@using Friggy.Application.Catalogs.MealTypes.Dtos
+@using Friggy.Web.Api
+@inject IMealTypesApiClient Api
+@inject IJSRuntime JavaScript
+
+<PageTitle>Tipos de comida</PageTitle>
+<h1>Tipos de comida</h1>
+<EditForm Model="model" OnValidSubmit="SaveAsync" FormName="meal-form">
+    <DataAnnotationsValidator />
+    <label for="meal-name">Nombre</label><InputText id="meal-name" @bind-Value="model.Name" /><ValidationMessage For="() => model.Name" />
+    <label for="meal-order">Orden</label><InputNumber id="meal-order" @bind-Value="model.Order" /><ValidationMessage For="() => model.Order" />
+    <button type="submit">@(editingId.HasValue ? "Guardar" : "Añadir")</button>
+    @if (editingId.HasValue) { <button type="button" @onclick="CancelEdit">Cancelar</button> }
+</EditForm>
+@if (error is not null) { <p role="alert">@error</p> }
+@if (loading) { <p>Cargando tipos de comida…</p> }
+else if (items.Count == 0) { <p>No hay tipos de comida.</p> }
+else
+{
+    <table><thead><tr><th>Nombre</th><th>Orden</th><th>Acciones</th></tr></thead><tbody>
+    @foreach (var item in items) { <tr @key="item.Id"><td>@item.Name</td><td>@item.Order</td><td><button type="button" @onclick="() => BeginEdit(item)">Editar</button><button type="button" @onclick="() => DeleteAsync(item)">Borrar</button></td></tr> }
+    </tbody></table>
+}
+@code {
+    private readonly MealInput model = new();
+    private IReadOnlyList<MealTypeResponse> items = [];
+    private Guid? editingId; private string? error; private bool loading = true;
+    protected override async Task OnInitializedAsync() { await ReloadAsync(); loading = false; }
+    private async Task ReloadAsync() { try { items = await Api.ListAsync(CancellationToken.None); error = null; } catch (Exception ex) when (ex is HttpRequestException or CatalogApiException) { error = ex.Message; } }
+    private async Task SaveAsync() { try { if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name, model.Order), CancellationToken.None); else await Api.CreateAsync(new(model.Name, model.Order), CancellationToken.None); CancelEdit(); await ReloadAsync(); } catch (CatalogApiException ex) { error = ex.Message; } }
+    private void BeginEdit(MealTypeResponse item) { editingId = item.Id; model.Name = item.Name; model.Order = item.Order; }
+    private void CancelEdit() { editingId = null; model.Name = string.Empty; model.Order = 0; }
+    private async Task DeleteAsync(MealTypeResponse item) { if (await JavaScript.InvokeAsync<bool>("confirm", $"¿Borrar {item.Name}?")) { try { await Api.DeleteAsync(item.Id, CancellationToken.None); await ReloadAsync(); } catch (CatalogApiException ex) { error = ex.Message; } } }
+    private sealed class MealInput { [Required(ErrorMessage = "El nombre es obligatorio.")] [StringLength(120)] public string Name { get; set; } = string.Empty; [Range(0, int.MaxValue, ErrorMessage = "El orden no puede ser negativo.")] public int Order { get; set; } }
+}
