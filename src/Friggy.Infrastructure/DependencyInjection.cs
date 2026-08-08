@@ -1,4 +1,9 @@
+using Friggy.Application.Catalogs.Ingredients.Interfaces;
+using Friggy.Application.Catalogs.MealTypes.Interfaces;
+using Friggy.Application.Catalogs.RecipeTags.Interfaces;
+using Friggy.Application.Catalogs.UnitTypes.Interfaces;
 using Friggy.Infrastructure.Persistence;
+using Friggy.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +30,11 @@ public static class DependencyInjection
             options.UseNpgsql(
                 connectionString,
                 postgres => postgres.MigrationsAssembly(typeof(FriggyDbContext).Assembly.FullName)));
+
+        services.AddScoped<IIngredientRepository, IngredientRepository>();
+        services.AddScoped<IUnitTypeRepository, UnitTypeRepository>();
+        services.AddScoped<IRecipeTagRepository, RecipeTagRepository>();
+        services.AddScoped<IMealTypeRepository, MealTypeRepository>();
 
         return services;
     }
