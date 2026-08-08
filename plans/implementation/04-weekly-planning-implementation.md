@@ -48,7 +48,7 @@ public sealed class WeeklyPlan
             throw DomainValidationException.WithCode(
                 "weekly-plan.start-date.monday");
 
-        return new WeeklyPlan(WeeklyPlanId.New(), name, startDate, description);
+        return new WeeklyPlan(Guid.NewGuid(), name, startDate, description);
     }
 }
 ```
@@ -64,9 +64,9 @@ El comportamiento de la celda es idempotente: asignar la misma receta dos veces 
 public void Assign_ExistingSlot_ReplacesRecipeWithoutDuplicatingEntry()
 {
     var plan = WeeklyPlan.Create("Semana", new DateOnly(2026, 8, 3), null);
-    var mealTypeId = MealTypeId.New();
-    var firstRecipe = RecipeId.New();
-    var replacement = RecipeId.New();
+    var mealTypeId = Guid.NewGuid();
+    var firstRecipe = Guid.NewGuid();
+    var replacement = Guid.NewGuid();
 
     plan.Assign(new DateOnly(2026, 8, 4), mealTypeId, firstRecipe);
     plan.Assign(new DateOnly(2026, 8, 4), mealTypeId, replacement);
@@ -92,11 +92,11 @@ public async Task<WeeklyPlanResponse> ExecuteAsync(
     SetMealPlanEntryRequest request,
     CancellationToken cancellationToken)
 {
-    var plan = await plans.GetRequiredAsync(new(planId), cancellationToken);
+    var plan = await plans.GetRequiredAsync(planId, cancellationToken);
     await references.EnsureRecipeAndMealTypeExistAsync(
-        new(request.RecipeId), new(mealTypeId), cancellationToken);
+        request.RecipeId, mealTypeId, cancellationToken);
 
-    plan.Assign(date, new(mealTypeId), new(request.RecipeId));
+    plan.Assign(date, mealTypeId, request.RecipeId);
     await unitOfWork.SaveChangesAsync(cancellationToken);
     return WeeklyPlanMappings.ToResponse(plan);
 }

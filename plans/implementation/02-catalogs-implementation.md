@@ -39,17 +39,17 @@ Implementación mínima orientativa:
 ```csharp
 public sealed class Ingredient
 {
-    private Ingredient(IngredientId id, CatalogName name)
+    private Ingredient(Guid id, CatalogName name)
     {
         Id = id;
         Name = name;
     }
 
-    public IngredientId Id { get; }
+    public Guid Id { get; }
     public CatalogName Name { get; private set; }
 
     public static Ingredient Create(string name) =>
-        new(IngredientId.New(), CatalogName.Create(name, "ingredient.name.required"));
+        new(Guid.NewGuid(), CatalogName.Create(name, "ingredient.name.required"));
 
     public void Rename(string name) =>
         Name = CatalogName.Create(name, "ingredient.name.required");
@@ -82,7 +82,7 @@ public async Task Execute_ValidName_PersistsAndReturnsNormalizedIngredient()
 
     Assert.Equal("Tomate", result.Name);
     Assert.Contains(repository.Items, item =>
-        item.Id.Value == result.Id && item.Name.Value == "Tomate");
+        item.Id == result.Id && item.Name.Value == "Tomate");
 }
 ```
 
@@ -90,7 +90,7 @@ El fake es manual y nuevo por test. Las assertions verifican resultado y estado,
 
 ## 2.3 — PostgreSQL y repositorios
 
-Mapear cada entidad en una clase `IEntityTypeConfiguration<T>`. Proyectar lecturas con `AsNoTracking`; no materializar entidades completas para DTO de listado.
+Mapear cada entidad en una clase `IEntityTypeConfiguration<T>`. Cada configuración, helper compartido de configuración e implementación de repositorio reside en su propio archivo dentro de `Configurations` o `Repositories`. Proyectar lecturas con `AsNoTracking`; no materializar entidades completas para DTO de listado.
 
 ```csharp
 internal sealed class IngredientConfiguration : IEntityTypeConfiguration<Ingredient>
@@ -99,7 +99,6 @@ internal sealed class IngredientConfiguration : IEntityTypeConfiguration<Ingredi
     {
         builder.ToTable("ingredients");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).HasConversion(id => id.Value, value => new(value));
         builder.OwnsOne(x => x.Name, name =>
         {
             name.Property(x => x.Value).HasColumnName("name").HasMaxLength(120);
@@ -161,7 +160,7 @@ public async Task Post_DuplicateNormalizedName_ReturnsConflictProblemDetails()
 
 ## 2.5 — Blazor y bUnit
 
-Web usa `IIngredientsApiClient` y `HttpClient`; nunca Application services con acceso a repositorios. El componente cubre carga, vacío, lista, validación, creación, edición, borrado y error HTTP.
+Web usa `IIngredientsApiClient` y `HttpClient`; nunca Application services con acceso a repositorios. Cada cliente HTTP, interfaz y excepción pública reside en su propio archivo dentro de `Api`. El componente cubre carga, vacío, lista, validación, creación, edición, borrado y error HTTP.
 
 ```csharp
 [Fact]

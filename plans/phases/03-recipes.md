@@ -1,6 +1,6 @@
 # Fase 3 — Recetas
 
-- **Estado:** Bloqueada por fase 2
+- **Estado:** Lista para comenzar — fase 2 completada
 - **Estimación:** 4 días
 - **Dependencias:** [Fase 2](02-catalogs.md)
 - **Guía ejecutable:** [Implementación de la fase 3](../implementation/03-recipes-implementation.md)

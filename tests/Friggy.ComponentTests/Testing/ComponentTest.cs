@@ -22,6 +22,8 @@ public abstract class ComponentTest : IDisposable
 
     protected HttpClient ApiClient { get; }
 
+    protected IServiceCollection Services => context.Services;
+
     protected IRenderedComponent<TComponent> Render<TComponent>()
         where TComponent : IComponent => context.Render<TComponent>();
 

@@ -1,6 +1,6 @@
 # Fase 2 — Catálogos
 
-- **Estado:** Lista para comenzar — fase 1 completada
+- **Estado:** Completada — 6 de agosto de 2026
 - **Estimación:** 2 días
 - **Dependencias:** [Fase 1](01-architecture-and-test-harness.md)
 - **Guía ejecutable:** [Implementación de la fase 2](../implementation/02-catalogs-implementation.md)
@@ -52,3 +52,10 @@ CRUD completo y probado para `Ingredient`, `UnitType`, `RecipeTag` y `MealType`,
 ## Handoff
 
 Sembrar unidades y tipos de comida iniciales, documentar sus identificadores estables y habilitar [Fase 3 — Recetas](03-recipes.md).
+
+## Resultado del cierre
+
+- Las cuatro verticales (`Ingredient`, `UnitType`, `RecipeTag` y `MealType`) están disponibles en Domain, Application, PostgreSQL, Minimal APIs y Blazor.
+- La migración `AddCatalogs` crea índices normalizados, restricciones y los datos iniciales de unidades y tipos de comida.
+- Las suites de Domain, Application, Integration y Component cubren invariantes, casos de uso, persistencia real, contratos HTTP y estados de interfaz.
+- La fase 3 queda habilitada como siguiente unidad ejecutable.

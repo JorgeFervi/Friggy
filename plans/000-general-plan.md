@@ -36,6 +36,12 @@ Friggy.Web ──HTTP──> Friggy.Api
 
 Domain no contendrá referencias a EF Core o ASP.NET Core. Application no conocerá PostgreSQL. Web no accederá a `DbContext`, repositorios o entidades persistentes.
 
+Dentro de cada feature de Application, los contratos, puertos y casos de uso se organizan respectivamente en `Dtos`, `Interfaces` y `Services`. Cada tipo público reside en su propio archivo y el namespace refleja la estructura física, manteniendo primero el límite funcional y después la responsabilidad técnica.
+
+En Infrastructure, cada configuración de EF Core y cada implementación de repositorio reside en su propio archivo dentro de `Configurations` y `Repositories`. Los helpers compartidos de configuración también se mantienen en archivos independientes.
+
+En Web, cada cliente HTTP, interfaz y excepción pública reside en su propio archivo. Las implementaciones compartidas pueden implementar varios contratos cuando conservan una única responsabilidad de transporte.
+
 ## Modelo de datos del MVP
 
 - `Ingredient`: identificador y nombre único.
@@ -51,6 +57,8 @@ Domain no contendrá referencias a EF Core o ASP.NET Core. Application no conoce
 - `MealPlanEntry`: fecha, tipo de comida y receta; combinación única por plan, fecha y tipo.
 
 Todos los nombres se recortarán, serán obligatorios y se compararán sin distinguir mayúsculas para aplicar unicidad. Las cantidades serán decimales positivas; tiempos y posiciones no admitirán valores negativos.
+
+Todos los identificadores de entidades y relaciones usan `Guid` directamente. No se introducirán wrappers tipados para IDs mientras no exista una invariante adicional que justifique ese coste; los objetos de valor como `CatalogName` se reservan para conceptos que sí encapsulan reglas y estado coherente.
 
 ## Contratos HTTP
 
@@ -157,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-La fase 1 quedó completada el 6 de agosto de 2026. Los cinco proyectos de producción y los cinco proyectos de pruebas están validados; PostgreSQL, EF Core, xUnit v3/MTP, bUnit, Testcontainers, Playwright y los scripts locales superan la puerta de calidad. La fase 2 está habilitada y su siguiente unidad ejecutable es la subfase 2.1.
+Las fases 1 y 2 quedaron completadas el 6 de agosto de 2026. La solución base y los cuatro catálogos del MVP están implementados de extremo a extremo con pruebas de Domain, Application, PostgreSQL, HTTP y Blazor. La fase 3 — Recetas está habilitada como siguiente unidad ejecutable.

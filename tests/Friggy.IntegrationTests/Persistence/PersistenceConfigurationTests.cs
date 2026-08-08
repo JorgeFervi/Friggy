@@ -59,8 +59,10 @@ public sealed class PersistenceConfigurationTests
 
         var migrations = context.Database.GetMigrations().ToArray();
 
-        var migration = Assert.Single(migrations);
-        Assert.EndsWith("_InitialInfrastructure", migration, StringComparison.Ordinal);
+        Assert.Collection(
+            migrations,
+            migration => Assert.EndsWith("_InitialInfrastructure", migration, StringComparison.Ordinal),
+            migration => Assert.EndsWith("_AddCatalogs", migration, StringComparison.Ordinal));
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", context.Database.ProviderName);
     }
 

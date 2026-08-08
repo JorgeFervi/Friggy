@@ -77,3 +77,9 @@ Para ejecutar únicamente las reglas arquitectónicas con xUnit v3 sobre MTP:
 ```powershell
 dotnet test --project tests/Friggy.IntegrationTests/Friggy.IntegrationTests.csproj --configuration Release --no-build --no-restore --filter-trait "Category=Architecture"
 ```
+
+## Catálogos del MVP
+
+La aplicación permite administrar ingredientes, unidades, etiquetas de receta y tipos de comida desde Blazor y mediante las rutas `/api/ingredients`, `/api/unit-types`, `/api/recipe-tags` y `/api/meal-types`.
+
+La migración `AddCatalogs` incorpora unidades y tipos de comida iniciales con identificadores estables. Los identificadores públicos se encuentran en `Friggy.Domain.Catalogs.CatalogSeedIds`; incluyen gramo, kilogramo, mililitro, litro, unidad, cucharadita, cucharada, desayuno, comida y cena.

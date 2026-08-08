@@ -18,7 +18,7 @@
 8. Formulario/detalle Blazor y bUnit.
 9. Smoke Playwright de la vertical.
 
-Los archivos se organizan por feature dentro de cada capa, por ejemplo `Recipes/CreateRecipe`, manteniendo la dirección de dependencias.
+Los archivos se organizan primero por feature dentro de cada capa. En Application, `Recipes` se divide en `Dtos`, `Interfaces` y `Services`, con un tipo público por archivo y namespaces alineados, manteniendo la dirección de dependencias.
 
 ## 3.1 — Agregado en ciclos rojos pequeños
 
@@ -34,8 +34,8 @@ public void AddIngredient_NonPositiveQuantity_ThrowsAndDoesNotMutate(string valu
 
     var exception = Assert.Throws<DomainValidationException>(() =>
         recipe.AddIngredient(
-            IngredientId.New(),
-            UnitTypeId.New(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
             decimal.Parse(value, CultureInfo.InvariantCulture),
             order: 1));
 
@@ -48,8 +48,8 @@ Implementación mínima orientativa:
 
 ```csharp
 public void AddIngredient(
-    IngredientId ingredientId,
-    UnitTypeId unitTypeId,
+    Guid ingredientId,
+    Guid unitTypeId,
     decimal quantity,
     int order)
 {
@@ -96,7 +96,7 @@ public sealed class CreateRecipe
             TimeSpan.FromMinutes(request.EstimatedMinutes));
 
         foreach (var item in request.Ingredients.OrderBy(x => x.Order))
-            recipe.AddIngredient(new(item.IngredientId), new(item.UnitTypeId),
+            recipe.AddIngredient(item.IngredientId, item.UnitTypeId,
                 item.Quantity, item.Order);
 
         await recipes.AddAsync(recipe, cancellationToken);

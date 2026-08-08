@@ -7,15 +7,17 @@ public sealed class HomeComponentTests : ComponentTest
 {
     [Fact]
     [Trait("Category", "Component")]
-    public void Render_DefaultState_ShowsHeadingAndWelcomeMessage()
+    public void Render_DefaultState_ShowsCatalogNavigation()
     {
         var component = Render<global::Friggy.Web.Components.Pages.Home>();
 
-        component.MarkupMatches(
-            """
-            <h1>Hello, world!</h1>
-            Welcome to your new app.
-            """);
+        Assert.Equal("Friggy", component.Find("h1").TextContent);
+        Assert.Collection(
+            component.FindAll("nav a"),
+            link => Assert.Equal("ingredients", link.GetAttribute("href")),
+            link => Assert.Equal("unit-types", link.GetAttribute("href")),
+            link => Assert.Equal("recipe-tags", link.GetAttribute("href")),
+            link => Assert.Equal("meal-types", link.GetAttribute("href")));
     }
 
     [Fact]

@@ -63,7 +63,7 @@ return await dbContext.Recipes
     .AsNoTracking()
     .OrderBy(recipe => recipe.Name.Normalized)
     .Select(recipe => new RecipeListItemResponse(
-        recipe.Id.Value,
+        recipe.Id,
         recipe.Name.Value,
         recipe.EstimatedTime.TotalMinutes))
     .ToListAsync(cancellationToken);
