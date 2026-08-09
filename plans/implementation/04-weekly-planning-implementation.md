@@ -55,7 +55,7 @@ public sealed class WeeklyPlan
 
 Añadir tests para nombre, fecha final, enumeración de siete fechas e identidad. No persistir `EndDate` si siempre se deriva sin ambigüedad.
 
-## 4.2 — Asignar, sustituir y retirar
+## 4.2 — Asignar, sustituir y retirar — Completada
 
 El comportamiento de la celda es idempotente: asignar la misma receta dos veces no duplica; asignar otra sustituye; retirar una celda inexistente no afecta a otras entradas.
 
