@@ -104,7 +104,7 @@ public async Task<WeeklyPlanResponse> ExecuteAsync(
 
 Probar no encontrado, referencia inexistente, fecha fuera de rango, cancelación y estado final del fake. No duplicar las invariantes de Domain dentro del handler.
 
-## 4.4 — Persistencia y migración
+## 4.4 — Persistencia y migración — Completada
 
 ```csharp
 internal sealed class MealPlanEntryConfiguration

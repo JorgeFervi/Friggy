@@ -19,7 +19,8 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             appliedMigrations,
             migration => Assert.EndsWith("_InitialInfrastructure", migration, StringComparison.Ordinal),
             migration => Assert.EndsWith("_AddCatalogs", migration, StringComparison.Ordinal),
-            migration => Assert.EndsWith("_AddRecipes", migration, StringComparison.Ordinal));
+            migration => Assert.EndsWith("_AddRecipes", migration, StringComparison.Ordinal),
+            migration => Assert.EndsWith("_AddWeeklyPlans", migration, StringComparison.Ordinal));
         Assert.StartsWith("friggy_tests_", Database.DatabaseName, StringComparison.Ordinal);
     }
 
@@ -47,6 +48,6 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             .GetAppliedMigrationsAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(true, tableWasRemoved);
-        Assert.Equal(3, appliedMigrations.Count());
+        Assert.Equal(4, appliedMigrations.Count());
     }
 }
