@@ -1,6 +1,6 @@
 # Fase 4 — Planificación semanal
 
-- **Estado:** Lista para comenzar — fase 3 completada
+- **Estado:** En progreso — subfase 4.1 completada el 9 de agosto de 2026
 - **Estimación:** 2 días
 - **Dependencias:** [Fase 3](03-recipes.md)
 - **Guía ejecutable:** [Implementación de la fase 4](../implementation/04-weekly-planning-implementation.md)

@@ -16,7 +16,7 @@
 | Entrada única | Domain e Integration | índice compuesto único |
 | Asignar/sustituir/retirar | Domain, Application y Component | endpoint idempotente por celda |
 
-## 4.1 — Crear la semana en Domain
+## 4.1 — Crear la semana en Domain — Completada
 
 ```csharp
 [Fact]
