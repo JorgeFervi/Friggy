@@ -2,8 +2,26 @@
 
 @Body
 
+@if (interactive)
+{
+    <span data-testid="interactive-ready" hidden aria-hidden="true"></span>
+}
+
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool interactive;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            interactive = true;
+            StateHasChanged();
+        }
+    }
+}

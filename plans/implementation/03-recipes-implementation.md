@@ -4,6 +4,8 @@
 - **Agentes instalados:** `dotnet-router`, `dotnet-data`, `dotnet-frontend`, `code-testing-planner`, `test-quality-auditor`, `dotnet-review`
 - **Skills instaladas:** `architecture`, `modern-csharp`, `xunit`, `entity-framework-core`, `minimal-apis`, `blazor`, `assertion-quality`, `test-anti-patterns`, `code-review`
 
+> **Progreso:** fase completada. Las subfases 3.1 a 3.6 están verdes; la siguiente unidad ejecutable es la subfase 4.1.
+
 `Recipe` es la raíz del agregado. `RecipeIngredient`, `RecipeStep` y los vínculos de etiquetas/tipos de comida se modifican únicamente mediante ella; no tendrán repositorios independientes.
 
 ## Orden e inventario

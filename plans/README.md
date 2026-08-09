@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-La fase 1 está completada: toolchain, límites arquitectónicos, PostgreSQL, EF Core, bancos de pruebas y scripts locales han superado su puerta de calidad. La siguiente unidad ejecutable es la subfase 2.1 de [Catálogos](implementation/02-catalogs-implementation.md).
+Las fases 1, 2 y 3 están completadas. La solución dispone de arquitectura y banco de pruebas, catálogos y recetas operables de extremo a extremo mediante PostgreSQL, Minimal APIs y Blazor. La siguiente unidad ejecutable es la subfase 4.1 de [Planificación semanal](implementation/04-weekly-planning-implementation.md).

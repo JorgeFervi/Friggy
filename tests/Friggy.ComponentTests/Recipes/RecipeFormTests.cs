@@ -90,9 +90,27 @@ public sealed class RecipeFormTests : ComponentTest
         Assert.False(saved);
     }
 
+    [Theory]
+    [InlineData(false, false, "Guardar receta")]
+    [InlineData(true, true, "Guardando")]
+    [Trait("Category", "Component")]
+    public void SavingState_ControlsSubmitAvailabilityAndText(
+        bool isSaving,
+        bool expectedDisabled,
+        string expectedText)
+    {
+        var component = RenderForm(ValidModel(), isSaving: isSaving);
+
+        var submit = component.Find("button[type='submit']");
+
+        Assert.Equal(expectedDisabled, submit.HasAttribute("disabled"));
+        Assert.Contains(expectedText, submit.TextContent, StringComparison.Ordinal);
+    }
+
     private IRenderedComponent<RecipeForm> RenderForm(
         RecipeFormModel model,
-        Action? onValidSubmit = null) =>
+        Action? onValidSubmit = null,
+        bool isSaving = false) =>
         Render<RecipeForm>(parameters =>
         {
             parameters
@@ -100,7 +118,8 @@ public sealed class RecipeFormTests : ComponentTest
                 .Add(component => component.Ingredients, Ingredients)
                 .Add(component => component.UnitTypes, UnitTypes)
                 .Add(component => component.Tags, Tags)
-                .Add(component => component.MealTypes, MealTypes);
+                .Add(component => component.MealTypes, MealTypes)
+                .Add(component => component.IsSaving, isSaving);
             if (onValidSubmit is not null)
             {
                 parameters.Add(component => component.OnValidSubmit, onValidSubmit);

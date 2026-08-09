@@ -1,6 +1,6 @@
 # Fase 3 — Recetas
 
-- **Estado:** Lista para comenzar — fase 2 completada
+- **Estado:** Completada — 9 de agosto de 2026
 - **Estimación:** 4 días
 - **Dependencias:** [Fase 2](02-catalogs.md)
 - **Guía ejecutable:** [Implementación de la fase 3](../implementation/03-recipes-implementation.md)
@@ -41,7 +41,7 @@ Crear, consultar, editar y borrar recetas con ingredientes cuantificados, unidad
 - Catálogos inexistentes producen validación y no escrituras parciales.
 - La lectura devuelve ingredientes y pasos ordenados y usa consultas sin tracking.
 - Un fallo en cualquier relación revierte la operación completa.
-- Suites de Domain, Application, Integration y Component en verde.
+- Suites de Domain, Application, Integration, Component y EndToEnd en verde.
 
 ## Agentes y skills
 
@@ -53,3 +53,13 @@ Crear, consultar, editar y borrar recetas con ingredientes cuantificados, unidad
 ## Handoff
 
 Guardar datos de ejemplo reproducibles, verificar el contrato de lectura y habilitar [Fase 4 — Planificación semanal](04-weekly-planning.md).
+
+## Resultado del cierre
+
+- El agregado `Recipe` encapsula ingredientes, pasos, etiquetas y tipos de comida y conserva sus invariantes ante cualquier error.
+- Los casos de uso crean, consultan, sustituyen y eliminan el agregado completo después de validar las referencias de catálogo.
+- La migración `AddRecipes` persiste la raíz y sus relaciones con claves externas, restricciones de orden y precisión decimal verificadas en PostgreSQL real.
+- `/api/recipes` publica el CRUD mediante `TypedResults`, OpenAPI y `ProblemDetails` coherentes para validación, referencias inexistentes y conflictos.
+- Blazor ofrece listado, detalle y formulario dinámico con filas estables, reordenación, validación y estados de carga, guardado y error cubiertos con bUnit.
+- El smoke Playwright crea un ingrediente y una receta desde el navegador y recupera posteriormente la receta desde el listado.
+- La fase 4 queda habilitada como siguiente unidad ejecutable.

@@ -165,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 y 2 quedaron completadas el 6 de agosto de 2026. La solución base y los cuatro catálogos del MVP están implementados de extremo a extremo con pruebas de Domain, Application, PostgreSQL, HTTP y Blazor. La fase 3 — Recetas está habilitada como siguiente unidad ejecutable.
+Las fases 1, 2 y 3 quedaron completadas el 9 de agosto de 2026. La solución base, los cuatro catálogos y la vertical completa de recetas están implementados con pruebas de Domain, Application, PostgreSQL, HTTP, Blazor y Playwright. La fase 4 — Planificación semanal está habilitada como siguiente unidad ejecutable.

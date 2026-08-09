@@ -1,6 +1,6 @@
 # Fase 4 — Planificación semanal
 
-- **Estado:** Bloqueada por fase 3
+- **Estado:** Lista para comenzar — fase 3 completada
 - **Estimación:** 2 días
 - **Dependencias:** [Fase 3](03-recipes.md)
 - **Guía ejecutable:** [Implementación de la fase 4](../implementation/04-weekly-planning-implementation.md)
