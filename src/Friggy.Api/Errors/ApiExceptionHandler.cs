@@ -1,6 +1,5 @@
 using Friggy.Application.Catalogs;
 using Friggy.Application.Recipes.Exceptions;
-using Friggy.Domain.Recipes;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,12 +43,19 @@ public sealed class ApiExceptionHandler : IExceptionHandler
             };
         }
 
+        var recipeFailure = RecipeFailureClassifier.Classify(exception);
+        if (recipeFailure is not null)
+        {
+            return recipeFailure.Kind switch
+            {
+                RecipeFailureKind.NotFound => NotFound(recipeFailure.Code),
+                RecipeFailureKind.Conflict => Conflict(recipeFailure.Code),
+                _ => null,
+            };
+        }
+
         return exception switch
         {
-            RecipeNotFoundException notFound => NotFound(notFound.Code),
-            RecipeReferenceNotFoundException reference => NotFound(reference.Code),
-            RecipeNameConflictException conflict => Conflict(conflict.Code),
-            RecipeConflictException conflict => Conflict(conflict.Code),
             DbUpdateException => Conflict("persistence.conflict"),
             _ => null,
         };
