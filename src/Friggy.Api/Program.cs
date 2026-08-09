@@ -10,7 +10,7 @@ builder.Services
     .AddInfrastructure(builder.Configuration);
 
 builder.Services.AddProblemDetails();
-builder.Services.AddExceptionHandler<CatalogExceptionHandler>();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
@@ -23,6 +23,7 @@ app.MapIngredientEndpoints();
 app.MapUnitTypeEndpoints();
 app.MapRecipeTagEndpoints();
 app.MapMealTypeEndpoints();
+app.MapRecipeEndpoints();
 
 app.Run();
 
