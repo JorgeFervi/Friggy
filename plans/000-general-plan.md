@@ -165,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1, 2 y 3 quedaron completadas el 9 de agosto de 2026. La solución base, los cuatro catálogos y la vertical completa de recetas están implementados con pruebas de Domain, Application, PostgreSQL, HTTP, Blazor y Playwright. La fase 4 — Planificación semanal está en progreso: la creación y el comportamiento de asignación del agregado semanal de las subfases 4.1 y 4.2 están completados y los casos de uso de Application de la subfase 4.3 son la siguiente unidad ejecutable.
+Las fases 1, 2 y 3 quedaron completadas el 9 de agosto de 2026. La solución base, los cuatro catálogos y la vertical completa de recetas están implementados con pruebas de Domain, Application, PostgreSQL, HTTP, Blazor y Playwright. La fase 4 — Planificación semanal está en progreso: el dominio y los casos de uso de las subfases 4.1 a 4.3 están completados y la persistencia PostgreSQL de la subfase 4.4 es la siguiente unidad ejecutable.

@@ -78,7 +78,7 @@ public void Assign_ExistingSlot_ReplacesRecipeWithoutDuplicatingEntry()
 
 Antes de implementar, añadir rojos para fecha fuera de rango e IDs inválidos. La colección solo cambia después de que todas las validaciones hayan pasado.
 
-## 4.3 — Application
+## 4.3 — Application — Completada
 
 Casos de uso mínimos: crear/listar/obtener/actualizar/borrar semana, asignar o retirar una receta y devolver siete días incluso vacíos, ordenados por fecha y tipo de comida.
 

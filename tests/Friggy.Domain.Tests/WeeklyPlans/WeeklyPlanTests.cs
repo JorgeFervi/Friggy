@@ -233,6 +233,36 @@ public sealed class WeeklyPlanTests
         Assert.Single(plan.Entries);
     }
 
+    [Fact]
+    public void UpdateDetails_ValidValues_ChangesTextAndPreservesSchedule()
+    {
+        var plan = CreatePlan();
+        plan.Assign(plan.StartDate, Guid.NewGuid(), Guid.NewGuid());
+        var planId = plan.Id;
+        var entryId = Assert.Single(plan.Entries).Id;
+
+        plan.UpdateDetails("  Semana de vacaciones  ", "  Costa  ");
+
+        Assert.Equal(planId, plan.Id);
+        Assert.Equal("Semana de vacaciones", plan.Name.Value);
+        Assert.Equal("Costa", plan.Description);
+        Assert.Equal(new DateOnly(2026, 8, 3), plan.StartDate);
+        Assert.Equal(entryId, Assert.Single(plan.Entries).Id);
+    }
+
+    [Fact]
+    public void UpdateDetails_InvalidName_ThrowsAndPreservesState()
+    {
+        var plan = CreatePlan();
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.UpdateDetails(" ", "Nueva descripción"));
+
+        Assert.Equal("weekly-plan.name.required", exception.Code);
+        Assert.Equal("Semana 32", plan.Name.Value);
+        Assert.Null(plan.Description);
+    }
+
     private static WeeklyPlan CreatePlan() =>
         WeeklyPlan.Create("Semana 32", new DateOnly(2026, 8, 3), null);
 }

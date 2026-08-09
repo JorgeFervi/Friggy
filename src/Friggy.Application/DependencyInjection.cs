@@ -3,6 +3,7 @@ using Friggy.Application.Catalogs.MealTypes.Services;
 using Friggy.Application.Catalogs.RecipeTags.Services;
 using Friggy.Application.Catalogs.UnitTypes.Services;
 using Friggy.Application.Recipes.Services;
+using Friggy.Application.WeeklyPlans.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Friggy.Application;
@@ -18,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<RecipeTagService>();
         services.AddScoped<MealTypeService>();
         services.AddScoped<RecipeService>();
+        services.AddScoped<WeeklyPlanService>();
 
         return services;
     }

@@ -88,6 +88,15 @@ public sealed class WeeklyPlan
         return existing is not null && entries.Remove(existing);
     }
 
+    public void UpdateDetails(string? name, string? description)
+    {
+        var updatedName = CatalogName.Create(name, "weekly-plan.name.required");
+        var updatedDescription = NormalizeDescription(description);
+
+        Name = updatedName;
+        Description = updatedDescription;
+    }
+
     private static string? NormalizeDescription(string? description)
     {
         var trimmed = description?.Trim();
