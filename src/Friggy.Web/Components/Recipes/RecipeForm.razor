@@ -1,0 +1,181 @@
+@using Friggy.Application.Catalogs.Ingredients.Dtos
+@using Friggy.Application.Catalogs.MealTypes.Dtos
+@using Friggy.Application.Catalogs.RecipeTags.Dtos
+@using Friggy.Application.Catalogs.UnitTypes.Dtos
+@using Friggy.Web.Recipes
+
+<EditForm Model="Model" OnValidSubmit="OnValidSubmit" FormName="recipe-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <label for="recipe-name">Nombre</label>
+    <InputText id="recipe-name" @bind-Value="Model.Name" />
+    <ValidationMessage For="() => Model.Name" />
+
+    <label for="recipe-estimated-minutes">Tiempo estimado (minutos)</label>
+    <InputNumber id="recipe-estimated-minutes" @bind-Value="Model.EstimatedMinutes" />
+    <ValidationMessage For="() => Model.EstimatedMinutes" />
+
+    <section aria-labelledby="recipe-ingredients-heading">
+        <h2 id="recipe-ingredients-heading">Ingredientes</h2>
+        @for (var index = 0; index < Model.Ingredients.Count; index++)
+        {
+            var currentIndex = index;
+            var ingredient = Model.Ingredients[index];
+            <RecipeIngredientRow @key="ingredient.ClientId"
+                                 Model="ingredient"
+                                 Ingredients="Ingredients"
+                                 UnitTypes="UnitTypes"
+                                 Index="currentIndex"
+                                 Count="Model.Ingredients.Count"
+                                 MoveUp="() => MoveIngredient(currentIndex, -1)"
+                                 MoveDown="() => MoveIngredient(currentIndex, 1)"
+                                 Remove="() => RemoveIngredient(currentIndex)" />
+        }
+        <button type="button" data-action="add-ingredient" @onclick="AddIngredient">
+            Añadir ingrediente
+        </button>
+    </section>
+
+    <section aria-labelledby="recipe-steps-heading">
+        <h2 id="recipe-steps-heading">Pasos</h2>
+        @for (var index = 0; index < Model.Steps.Count; index++)
+        {
+            var currentIndex = index;
+            var step = Model.Steps[index];
+            <RecipeStepRow @key="step.ClientId"
+                           Model="step"
+                           Index="currentIndex"
+                           Count="Model.Steps.Count"
+                           MoveUp="() => MoveStep(currentIndex, -1)"
+                           MoveDown="() => MoveStep(currentIndex, 1)"
+                           Remove="() => RemoveStep(currentIndex)" />
+        }
+        <button type="button" data-action="add-step" @onclick="AddStep">
+            Añadir paso
+        </button>
+    </section>
+
+    <fieldset>
+        <legend>Etiquetas</legend>
+        @foreach (var tag in Tags)
+        {
+            <label for="tag-@tag.Id">
+                <input id="tag-@tag.Id"
+                       type="checkbox"
+                       checked="@Model.TagIds.Contains(tag.Id)"
+                       @onchange="eventArgs => Toggle(Model.TagIds, tag.Id, eventArgs)" />
+                @tag.Name
+            </label>
+        }
+    </fieldset>
+
+    <fieldset>
+        <legend>Tipos de comida</legend>
+        @foreach (var mealType in MealTypes.OrderBy(item => item.Order))
+        {
+            <label for="meal-type-@mealType.Id">
+                <input id="meal-type-@mealType.Id"
+                       type="checkbox"
+                       checked="@Model.MealTypeIds.Contains(mealType.Id)"
+                       @onchange="eventArgs => Toggle(Model.MealTypeIds, mealType.Id, eventArgs)" />
+                @mealType.Name
+            </label>
+        }
+    </fieldset>
+
+    <button type="submit" disabled="IsSaving">
+        @(IsSaving ? "Guardando…" : "Guardar receta")
+    </button>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired]
+    public RecipeFormModel Model { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<IngredientResponse> Ingredients { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<UnitTypeResponse> UnitTypes { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<RecipeTagResponse> Tags { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<MealTypeResponse> MealTypes { get; set; } = [];
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public EventCallback OnValidSubmit { get; set; }
+
+    private void AddIngredient()
+    {
+        Model.Ingredients.Add(new RecipeIngredientFormModel
+        {
+            Order = Model.Ingredients.Count,
+        });
+    }
+
+    private void RemoveIngredient(int index)
+    {
+        Model.Ingredients.RemoveAt(index);
+        Reindex(Model.Ingredients, (item, order) => item.Order = order);
+    }
+
+    private void MoveIngredient(int index, int offset)
+    {
+        Move(Model.Ingredients, index, offset);
+        Reindex(Model.Ingredients, (item, order) => item.Order = order);
+    }
+
+    private void AddStep()
+    {
+        Model.Steps.Add(new RecipeStepFormModel { Order = Model.Steps.Count });
+    }
+
+    private void RemoveStep(int index)
+    {
+        Model.Steps.RemoveAt(index);
+        Reindex(Model.Steps, (item, order) => item.Order = order);
+    }
+
+    private void MoveStep(int index, int offset)
+    {
+        Move(Model.Steps, index, offset);
+        Reindex(Model.Steps, (item, order) => item.Order = order);
+    }
+
+    private static void Move<T>(List<T> items, int index, int offset)
+    {
+        var target = index + offset;
+        if (target < 0 || target >= items.Count)
+        {
+            return;
+        }
+
+        (items[index], items[target]) = (items[target], items[index]);
+    }
+
+    private static void Reindex<T>(IReadOnlyList<T> items, Action<T, int> setOrder)
+    {
+        for (var index = 0; index < items.Count; index++)
+        {
+            setOrder(items[index], index);
+        }
+    }
+
+    private static void Toggle(HashSet<Guid> selection, Guid id, ChangeEventArgs eventArgs)
+    {
+        if (eventArgs.Value is true)
+        {
+            selection.Add(id);
+        }
+        else
+        {
+            selection.Remove(id);
+        }
+    }
+}

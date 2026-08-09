@@ -1,0 +1,135 @@
+@page "/recipes/{Id:guid}"
+@implements IDisposable
+@using Friggy.Application.Catalogs.Ingredients.Dtos
+@using Friggy.Application.Catalogs.MealTypes.Dtos
+@using Friggy.Application.Catalogs.RecipeTags.Dtos
+@using Friggy.Application.Catalogs.UnitTypes.Dtos
+@using Friggy.Application.Recipes.Dtos
+@using Friggy.Web.Api
+@inject IRecipesApiClient RecipesApi
+@inject IIngredientsApiClient IngredientsApi
+@inject IUnitTypesApiClient UnitTypesApi
+@inject IRecipeTagsApiClient TagsApi
+@inject IMealTypesApiClient MealTypesApi
+
+<PageTitle>@(recipe?.Name ?? "Receta")</PageTitle>
+
+@if (loading)
+{
+    <h1>Receta</h1>
+    <p>Cargando receta…</p>
+}
+else if (error is not null)
+{
+    <h1>Receta</h1>
+    <p role="alert">@error</p>
+}
+else if (recipe is not null)
+{
+    <h1>@recipe.Name</h1>
+    <p>Tiempo estimado: @recipe.EstimatedMinutes minutos</p>
+    <p><a href="recipes/@recipe.Id/edit">Editar receta</a></p>
+
+    <h2>Ingredientes</h2>
+    <ul>
+        @foreach (var item in recipe.Ingredients.OrderBy(item => item.Order))
+        {
+            <li @key="item.Id">
+                @item.Quantity @UnitName(item.UnitTypeId) de @IngredientName(item.IngredientId)
+            </li>
+        }
+    </ul>
+
+    <h2>Pasos</h2>
+    <ol>
+        @foreach (var step in recipe.Steps.OrderBy(item => item.Order))
+        {
+            <li @key="step.Id">
+                @step.Description
+                @if (step.EstimatedMinutes.HasValue)
+                {
+                    <span> (@step.EstimatedMinutes min)</span>
+                }
+            </li>
+        }
+    </ol>
+
+    @if (recipe.TagIds.Count > 0)
+    {
+        <h2>Etiquetas</h2>
+        <p>@string.Join(", ", recipe.TagIds.Select(TagName))</p>
+    }
+
+    @if (recipe.MealTypeIds.Count > 0)
+    {
+        <h2>Tipos de comida</h2>
+        <p>@string.Join(", ", recipe.MealTypeIds.Select(MealTypeName))</p>
+    }
+}
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private RecipeResponse? recipe;
+    private IReadOnlyDictionary<Guid, IngredientResponse> ingredients =
+        new Dictionary<Guid, IngredientResponse>();
+    private IReadOnlyDictionary<Guid, UnitTypeResponse> unitTypes =
+        new Dictionary<Guid, UnitTypeResponse>();
+    private IReadOnlyDictionary<Guid, RecipeTagResponse> tags =
+        new Dictionary<Guid, RecipeTagResponse>();
+    private IReadOnlyDictionary<Guid, MealTypeResponse> mealTypes =
+        new Dictionary<Guid, MealTypeResponse>();
+    private string? error;
+    private bool loading = true;
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var recipeTask = RecipesApi.GetAsync(Id, cancellation.Token);
+            var ingredientsTask = IngredientsApi.ListAsync(cancellation.Token);
+            var unitTypesTask = UnitTypesApi.ListAsync(cancellation.Token);
+            var tagsTask = TagsApi.ListAsync(cancellation.Token);
+            var mealTypesTask = MealTypesApi.ListAsync(cancellation.Token);
+
+            await Task.WhenAll(recipeTask, ingredientsTask, unitTypesTask, tagsTask, mealTypesTask);
+            recipe = await recipeTask;
+            ingredients = (await ingredientsTask).ToDictionary(item => item.Id);
+            unitTypes = (await unitTypesTask).ToDictionary(item => item.Id);
+            tags = (await tagsTask).ToDictionary(item => item.Id);
+            mealTypes = (await mealTypesTask).ToDictionary(item => item.Id);
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or RecipeApiException or CatalogApiException)
+        {
+            error = $"No se pudo cargar la receta: {exception.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private string IngredientName(Guid id) =>
+        ingredients.TryGetValue(id, out var ingredient) ? ingredient.Name : "Ingrediente desconocido";
+
+    private string UnitName(Guid id) =>
+        unitTypes.TryGetValue(id, out var unitType)
+            ? $"{unitType.Name} ({unitType.Symbol})"
+            : "Unidad desconocida";
+
+    private string TagName(Guid id) =>
+        tags.TryGetValue(id, out var tag) ? tag.Name : "Etiqueta desconocida";
+
+    private string MealTypeName(Guid id) =>
+        mealTypes.TryGetValue(id, out var mealType) ? mealType.Name : "Tipo desconocido";
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

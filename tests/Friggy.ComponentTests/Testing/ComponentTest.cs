@@ -24,8 +24,15 @@ public abstract class ComponentTest : IDisposable
 
     protected IServiceCollection Services => context.Services;
 
+    protected TService GetRequiredService<TService>()
+        where TService : notnull => context.Services.GetRequiredService<TService>();
+
     protected IRenderedComponent<TComponent> Render<TComponent>()
         where TComponent : IComponent => context.Render<TComponent>();
+
+    protected IRenderedComponent<TComponent> Render<TComponent>(
+        Action<ComponentParameterCollectionBuilder<TComponent>> parameters)
+        where TComponent : IComponent => context.Render(parameters);
 
     public void Dispose()
     {

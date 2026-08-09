@@ -1,0 +1,74 @@
+@using Friggy.Application.Catalogs.Ingredients.Dtos
+@using Friggy.Application.Catalogs.UnitTypes.Dtos
+@using Friggy.Web.Recipes
+
+<fieldset data-testid="ingredient-row">
+    <legend>Ingrediente @(Index + 1)</legend>
+
+    <label for="ingredient-@Model.ClientId">Ingrediente</label>
+    <InputSelect id="@($"ingredient-{Model.ClientId}")"
+                 data-field="ingredient"
+                 @bind-Value="Model.IngredientId">
+        <option value="@Guid.Empty">Selecciona un ingrediente</option>
+        @foreach (var ingredient in Ingredients)
+        {
+            <option value="@ingredient.Id">@ingredient.Name</option>
+        }
+    </InputSelect>
+
+    <label for="unit-type-@Model.ClientId">Unidad</label>
+    <InputSelect id="@($"unit-type-{Model.ClientId}")"
+                 data-field="unit-type"
+                 @bind-Value="Model.UnitTypeId">
+        <option value="@Guid.Empty">Selecciona una unidad</option>
+        @foreach (var unitType in UnitTypes)
+        {
+            <option value="@unitType.Id">@unitType.Name (@unitType.Symbol)</option>
+        }
+    </InputSelect>
+
+    <label for="quantity-@Model.ClientId">Cantidad</label>
+    <InputNumber id="@($"quantity-{Model.ClientId}")"
+                 data-field="quantity"
+                 min="0.001"
+                 step="0.001"
+                 @bind-Value="Model.Quantity" />
+
+    <button type="button"
+            aria-label="Mover ingrediente @(Index + 1) arriba"
+            disabled="@(Index == 0)"
+            @onclick="MoveUp">Subir</button>
+    <button type="button"
+            aria-label="Mover ingrediente @(Index + 1) abajo"
+            disabled="@(Index == Count - 1)"
+            @onclick="MoveDown">Bajar</button>
+    <button type="button"
+            aria-label="Eliminar ingrediente @(Index + 1)"
+            @onclick="Remove">Eliminar</button>
+</fieldset>
+
+@code {
+    [Parameter, EditorRequired]
+    public RecipeIngredientFormModel Model { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<IngredientResponse> Ingredients { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<UnitTypeResponse> UnitTypes { get; set; } = [];
+
+    [Parameter]
+    public int Index { get; set; }
+
+    [Parameter]
+    public int Count { get; set; }
+
+    [Parameter]
+    public EventCallback MoveUp { get; set; }
+
+    [Parameter]
+    public EventCallback MoveDown { get; set; }
+
+    [Parameter]
+    public EventCallback Remove { get; set; }
+}

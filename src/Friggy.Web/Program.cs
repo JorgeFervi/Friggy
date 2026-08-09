@@ -9,10 +9,12 @@ builder.Services.AddRazorComponents()
 
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5292";
 builder.Services.AddHttpClient<CatalogApiClient>(client => client.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddHttpClient<RecipeApiClient>(client => client.BaseAddress = new Uri(apiBaseUrl));
 builder.Services.AddScoped<IIngredientsApiClient>(services => services.GetRequiredService<CatalogApiClient>());
 builder.Services.AddScoped<IUnitTypesApiClient>(services => services.GetRequiredService<CatalogApiClient>());
 builder.Services.AddScoped<IRecipeTagsApiClient>(services => services.GetRequiredService<CatalogApiClient>());
 builder.Services.AddScoped<IMealTypesApiClient>(services => services.GetRequiredService<CatalogApiClient>());
+builder.Services.AddScoped<IRecipesApiClient>(services => services.GetRequiredService<RecipeApiClient>());
 
 var app = builder.Build();
 

@@ -1,0 +1,127 @@
+@page "/recipes/new"
+@page "/recipes/{Id:guid}/edit"
+@implements IDisposable
+@using Friggy.Application.Catalogs.Ingredients.Dtos
+@using Friggy.Application.Catalogs.MealTypes.Dtos
+@using Friggy.Application.Catalogs.RecipeTags.Dtos
+@using Friggy.Application.Catalogs.UnitTypes.Dtos
+@using Friggy.Web.Api
+@using Friggy.Web.Components.Recipes
+@using Friggy.Web.Recipes
+@inject IRecipesApiClient RecipesApi
+@inject IIngredientsApiClient IngredientsApi
+@inject IUnitTypesApiClient UnitTypesApi
+@inject IRecipeTagsApiClient TagsApi
+@inject IMealTypesApiClient MealTypesApi
+@inject NavigationManager Navigation
+
+<PageTitle>@(Id.HasValue ? "Editar receta" : "Nueva receta")</PageTitle>
+<h1>@(Id.HasValue ? "Editar receta" : "Nueva receta")</h1>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+
+@if (loading)
+{
+    <p>Cargando formulario…</p>
+}
+else
+{
+    <RecipeForm Model="model"
+                Ingredients="ingredients"
+                UnitTypes="unitTypes"
+                Tags="tags"
+                MealTypes="mealTypes"
+                IsSaving="saving"
+                OnValidSubmit="SaveAsync" />
+}
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private RecipeFormModel model = new();
+    private IReadOnlyList<IngredientResponse> ingredients = [];
+    private IReadOnlyList<UnitTypeResponse> unitTypes = [];
+    private IReadOnlyList<RecipeTagResponse> tags = [];
+    private IReadOnlyList<MealTypeResponse> mealTypes = [];
+    private string? error;
+    private bool loading = true;
+    private bool saving;
+
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var ingredientsTask = IngredientsApi.ListAsync(cancellation.Token);
+            var unitTypesTask = UnitTypesApi.ListAsync(cancellation.Token);
+            var tagsTask = TagsApi.ListAsync(cancellation.Token);
+            var mealTypesTask = MealTypesApi.ListAsync(cancellation.Token);
+            var recipeTask = Id.HasValue
+                ? RecipesApi.GetAsync(Id.Value, cancellation.Token)
+                : null;
+
+            var tasks = new List<Task>
+            {
+                ingredientsTask,
+                unitTypesTask,
+                tagsTask,
+                mealTypesTask,
+            };
+            if (recipeTask is not null)
+            {
+                tasks.Add(recipeTask);
+            }
+
+            await Task.WhenAll(tasks);
+            ingredients = await ingredientsTask;
+            unitTypes = await unitTypesTask;
+            tags = await tagsTask;
+            mealTypes = await mealTypesTask;
+            if (recipeTask is not null)
+            {
+                model = RecipeFormModel.FromResponse(await recipeTask);
+            }
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or RecipeApiException or CatalogApiException)
+        {
+            error = $"No se pudo cargar el formulario: {exception.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        saving = true;
+        error = null;
+        try
+        {
+            var result = Id.HasValue
+                ? await RecipesApi.UpdateAsync(Id.Value, model.ToUpdateRequest(), cancellation.Token)
+                : await RecipesApi.CreateAsync(model.ToCreateRequest(), cancellation.Token);
+            Navigation.NavigateTo($"/recipes/{result.Id}");
+        }
+        catch (Exception exception) when (exception is HttpRequestException or RecipeApiException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

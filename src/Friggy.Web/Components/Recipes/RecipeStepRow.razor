@@ -1,0 +1,46 @@
+@using Friggy.Web.Recipes
+
+<fieldset data-testid="step-row">
+    <legend>Paso @(Index + 1)</legend>
+
+    <label for="step-description-@Model.ClientId">Descripción</label>
+    <InputTextArea id="@($"step-description-{Model.ClientId}")"
+                   @bind-Value="Model.Description" />
+
+    <label for="step-time-@Model.ClientId">Tiempo opcional (minutos)</label>
+    <InputNumber id="@($"step-time-{Model.ClientId}")"
+                 min="0"
+                 @bind-Value="Model.EstimatedMinutes" />
+
+    <button type="button"
+            aria-label="Mover paso @(Index + 1) arriba"
+            disabled="@(Index == 0)"
+            @onclick="MoveUp">Subir</button>
+    <button type="button"
+            aria-label="Mover paso @(Index + 1) abajo"
+            disabled="@(Index == Count - 1)"
+            @onclick="MoveDown">Bajar</button>
+    <button type="button"
+            aria-label="Eliminar paso @(Index + 1)"
+            @onclick="Remove">Eliminar</button>
+</fieldset>
+
+@code {
+    [Parameter, EditorRequired]
+    public RecipeStepFormModel Model { get; set; } = default!;
+
+    [Parameter]
+    public int Index { get; set; }
+
+    [Parameter]
+    public int Count { get; set; }
+
+    [Parameter]
+    public EventCallback MoveUp { get; set; }
+
+    [Parameter]
+    public EventCallback MoveDown { get; set; }
+
+    [Parameter]
+    public EventCallback Remove { get; set; }
+}

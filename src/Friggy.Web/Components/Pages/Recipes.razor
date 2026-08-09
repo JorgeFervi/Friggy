@@ -1,0 +1,75 @@
+@page "/recipes"
+@implements IDisposable
+@using Friggy.Application.Recipes.Dtos
+@using Friggy.Web.Api
+@inject IRecipesApiClient Api
+
+<PageTitle>Recetas</PageTitle>
+<h1>Recetas</h1>
+
+<p><a href="recipes/new">Crear receta</a></p>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+
+@if (loading)
+{
+    <p>Cargando recetas…</p>
+}
+else if (recipes.Count == 0)
+{
+    <p>No hay recetas. Crea la primera.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>Nombre</th><th>Tiempo</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var recipe in recipes)
+            {
+                <tr @key="recipe.Id">
+                    <td>@recipe.Name</td>
+                    <td>@recipe.EstimatedMinutes min</td>
+                    <td>
+                        <a data-testid="recipe-detail" href="recipes/@recipe.Id">Ver</a>
+                        <a href="recipes/@recipe.Id/edit">Editar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private IReadOnlyList<RecipeListItemResponse> recipes = [];
+    private string? error;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            recipes = await Api.ListAsync(cancellation.Token);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or RecipeApiException)
+        {
+            error = $"No se pudieron cargar las recetas: {exception.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}
