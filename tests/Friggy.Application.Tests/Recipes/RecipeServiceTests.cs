@@ -1,5 +1,5 @@
-using Friggy.Application.Recipes;
 using Friggy.Application.Recipes.Dtos;
+using Friggy.Application.Recipes.Exceptions;
 using Friggy.Application.Recipes.Interfaces;
 using Friggy.Application.Recipes.Services;
 using Friggy.Domain.Recipes;

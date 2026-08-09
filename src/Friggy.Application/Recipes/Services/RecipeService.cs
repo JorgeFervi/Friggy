@@ -1,7 +1,7 @@
 using Friggy.Application.Recipes.Dtos;
+using Friggy.Application.Recipes.Exceptions;
 using Friggy.Application.Recipes.Interfaces;
 using Friggy.Domain.Recipes;
-using Friggy.Application.Recipes.Exceptions;
 
 namespace Friggy.Application.Recipes.Services;
 

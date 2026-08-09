@@ -8,7 +8,7 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
 {
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task InitializeAsync_NewPhysicalDatabase_AppliesInitialMigration()
+    public async Task InitializeAsync_NewPhysicalDatabase_AppliesAllMigrations()
     {
         await using var context = Database.CreateDbContext();
 
@@ -18,7 +18,8 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
         Assert.Collection(
             appliedMigrations,
             migration => Assert.EndsWith("_InitialInfrastructure", migration, StringComparison.Ordinal),
-            migration => Assert.EndsWith("_AddCatalogs", migration, StringComparison.Ordinal));
+            migration => Assert.EndsWith("_AddCatalogs", migration, StringComparison.Ordinal),
+            migration => Assert.EndsWith("_AddRecipes", migration, StringComparison.Ordinal));
         Assert.StartsWith("friggy_tests_", Database.DatabaseName, StringComparison.Ordinal);
     }
 
@@ -46,6 +47,6 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             .GetAppliedMigrationsAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(true, tableWasRemoved);
-        Assert.Equal(2, appliedMigrations.Count());
+        Assert.Equal(3, appliedMigrations.Count());
     }
 }
