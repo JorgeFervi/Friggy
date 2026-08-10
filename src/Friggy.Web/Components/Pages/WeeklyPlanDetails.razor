@@ -87,7 +87,7 @@ else
             editModel = WeeklyPlanFormModel.FromResponse(plan);
         }
         catch (Exception exception) when (
-            exception is HttpRequestException or WeeklyPlanApiException or RecipeApiException)
+            exception is HttpRequestException or ApiProblemException)
         {
             error = $"No se pudo cargar la planificación: {exception.Message}";
         }
@@ -110,7 +110,7 @@ else
             editModel = WeeklyPlanFormModel.FromResponse(plan);
         }
         catch (Exception exception) when (
-            exception is HttpRequestException or WeeklyPlanApiException)
+            exception is HttpRequestException or ApiProblemException)
         {
             error = exception.Message;
         }
@@ -140,7 +140,7 @@ else
                     cancellation.Token);
         }
         catch (Exception exception) when (
-            exception is HttpRequestException or WeeklyPlanApiException)
+            exception is HttpRequestException or ApiProblemException)
         {
             error = exception.Message;
         }

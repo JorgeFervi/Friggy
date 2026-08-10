@@ -70,7 +70,7 @@ else
             items = await Api.ListAsync(cancellation.Token);
             error = null;
         }
-        catch (Exception exception) when (exception is HttpRequestException or CatalogApiException)
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
             error = $"No se pudieron cargar los ingredientes: {exception.Message}";
         }
@@ -96,7 +96,7 @@ else
             CancelEdit();
             await ReloadAsync();
         }
-        catch (CatalogApiException exception)
+        catch (ApiProblemException exception)
         {
             error = exception.Message;
         }
@@ -126,7 +126,7 @@ else
             await Api.DeleteAsync(item.Id, cancellation.Token);
             await ReloadAsync();
         }
-        catch (CatalogApiException exception)
+        catch (ApiProblemException exception)
         {
             error = exception.Message;
         }

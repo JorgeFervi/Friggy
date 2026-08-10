@@ -160,7 +160,7 @@ public sealed class WeeklyPlanPageTests : ComponentTest
         var api = new StubWeeklyPlansApiClient
         {
             Plan = EmptyPlan(),
-            OperationException = new WeeklyPlanApiException("No se encontró la receta."),
+            OperationException = new ApiProblemException("No se encontró la receta."),
         };
         RegisterApis(api);
         var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
@@ -251,7 +251,7 @@ public sealed class WeeklyPlanPageTests : ComponentTest
     {
         public WeeklyPlanResponse? Plan { get; set; }
         public TaskCompletionSource<WeeklyPlanResponse>? PendingGet { get; init; }
-        public WeeklyPlanApiException? OperationException { get; init; }
+        public ApiProblemException? OperationException { get; init; }
         public List<CreateWeeklyPlanRequest> Created { get; } = [];
         public List<UpdateWeeklyPlanRequest> Updated { get; } = [];
         public List<Guid> Deleted { get; } = [];

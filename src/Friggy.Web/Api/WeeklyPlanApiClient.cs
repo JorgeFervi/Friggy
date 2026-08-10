@@ -1,8 +1,6 @@
 using System.Globalization;
 using System.Net.Http.Json;
-using System.Text.Json;
 using Friggy.Application.WeeklyPlans.Dtos;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Friggy.Web.Api;
 
@@ -102,7 +100,7 @@ public sealed class WeeklyPlanApiClient(HttpClient httpClient) : IWeeklyPlansApi
         HttpResponseMessage response,
         CancellationToken cancellationToken) =>
         await response.Content.ReadFromJsonAsync<WeeklyPlanResponse>(cancellationToken) ??
-        throw new WeeklyPlanApiException("La API devolvió una respuesta vacía.");
+        throw new ApiProblemException("La API devolvió una respuesta vacía.");
 
     private static async Task EnsureSuccessAsync(
         HttpResponseMessage response,
@@ -113,15 +111,6 @@ public sealed class WeeklyPlanApiClient(HttpClient httpClient) : IWeeklyPlansApi
             return;
         }
 
-        try
-        {
-            var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(cancellationToken);
-            throw new WeeklyPlanApiException(
-                problem?.Detail ?? problem?.Title ?? "No se pudo completar la operación.");
-        }
-        catch (JsonException)
-        {
-            throw new WeeklyPlanApiException("No se pudo completar la operación.");
-        }
+        throw await ApiProblemException.FromResponseAsync(response, cancellationToken);
     }
 }

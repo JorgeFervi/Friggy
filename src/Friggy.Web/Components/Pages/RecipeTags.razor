@@ -38,10 +38,10 @@ else
     private string? error;
     private bool loading = true;
     protected override async Task OnInitializedAsync() { await ReloadAsync(); loading = false; }
-    private async Task ReloadAsync() { try { items = await Api.ListAsync(CancellationToken.None); error = null; } catch (Exception ex) when (ex is HttpRequestException or CatalogApiException) { error = ex.Message; } }
-    private async Task SaveAsync() { try { if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name), CancellationToken.None); else await Api.CreateAsync(new(model.Name), CancellationToken.None); CancelEdit(); await ReloadAsync(); } catch (CatalogApiException ex) { error = ex.Message; } }
+    private async Task ReloadAsync() { try { items = await Api.ListAsync(CancellationToken.None); error = null; } catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; } }
+    private async Task SaveAsync() { try { if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name), CancellationToken.None); else await Api.CreateAsync(new(model.Name), CancellationToken.None); CancelEdit(); await ReloadAsync(); } catch (ApiProblemException ex) { error = ex.Message; } }
     private void BeginEdit(RecipeTagResponse item) { editingId = item.Id; model.Name = item.Name; }
     private void CancelEdit() { editingId = null; model.Name = string.Empty; }
-    private async Task DeleteAsync(RecipeTagResponse item) { if (await JavaScript.InvokeAsync<bool>("confirm", $"¿Borrar {item.Name}?")) { try { await Api.DeleteAsync(item.Id, CancellationToken.None); await ReloadAsync(); } catch (CatalogApiException ex) { error = ex.Message; } } }
+    private async Task DeleteAsync(RecipeTagResponse item) { if (await JavaScript.InvokeAsync<bool>("confirm", $"¿Borrar {item.Name}?")) { try { await Api.DeleteAsync(item.Id, CancellationToken.None); await ReloadAsync(); } catch (ApiProblemException ex) { error = ex.Message; } } }
     private sealed class TagInput { [Required(ErrorMessage = "El nombre es obligatorio.")] [StringLength(120)] public string Name { get; set; } = string.Empty; }
 }

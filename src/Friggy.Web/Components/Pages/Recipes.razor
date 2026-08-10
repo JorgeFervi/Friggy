@@ -56,7 +56,7 @@ else
         {
             recipes = await Api.ListAsync(cancellation.Token);
         }
-        catch (Exception exception) when (exception is HttpRequestException or RecipeApiException)
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
             error = $"No se pudieron cargar las recetas: {exception.Message}";
         }

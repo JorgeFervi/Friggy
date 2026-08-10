@@ -91,7 +91,7 @@ else
             error = null;
         }
         catch (Exception exception) when (
-            exception is HttpRequestException or WeeklyPlanApiException)
+            exception is HttpRequestException or ApiProblemException)
         {
             error = $"No se pudieron cargar los planes semanales: {exception.Message}";
         }
@@ -111,7 +111,7 @@ else
             Navigation.NavigateTo($"/weekly-plans/{plan.Id}");
         }
         catch (Exception exception) when (
-            exception is HttpRequestException or WeeklyPlanApiException)
+            exception is HttpRequestException or ApiProblemException)
         {
             error = exception.Message;
         }
@@ -136,7 +136,7 @@ else
             await ReloadAsync();
         }
         catch (Exception exception) when (
-            exception is HttpRequestException or WeeklyPlanApiException)
+            exception is HttpRequestException or ApiProblemException)
         {
             error = exception.Message;
         }

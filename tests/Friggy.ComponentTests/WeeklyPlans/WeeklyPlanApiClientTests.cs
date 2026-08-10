@@ -72,7 +72,7 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
-    public async Task Get_ProblemDetails_ThrowsWeeklyPlanApiExceptionWithDetail()
+    public async Task Get_ProblemDetails_ThrowsApiProblemExceptionWithDetail()
     {
         Api.RespondWith(
             HttpStatusCode.NotFound,
@@ -80,7 +80,7 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
             """{"title":"No encontrado","detail":"No se encontró el plan semanal."}""");
         var client = new WeeklyPlanApiClient(ApiClient);
 
-        var exception = await Assert.ThrowsAsync<WeeklyPlanApiException>(
+        var exception = await Assert.ThrowsAsync<ApiProblemException>(
             () => client.GetAsync(PlanId, TestContext.Current.CancellationToken));
 
         Assert.Equal("No se encontró el plan semanal.", exception.Message);

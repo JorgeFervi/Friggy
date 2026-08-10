@@ -87,7 +87,7 @@ else
             }
         }
         catch (Exception exception) when (
-            exception is HttpRequestException or RecipeApiException or CatalogApiException)
+            exception is HttpRequestException or ApiProblemException)
         {
             error = $"No se pudo cargar el formulario: {exception.Message}";
         }
@@ -108,7 +108,7 @@ else
                 : await RecipesApi.CreateAsync(model.ToCreateRequest(), cancellation.Token);
             Navigation.NavigateTo($"/recipes/{result.Id}");
         }
-        catch (Exception exception) when (exception is HttpRequestException or RecipeApiException)
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
             error = exception.Message;
         }

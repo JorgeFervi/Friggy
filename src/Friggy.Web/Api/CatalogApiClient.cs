@@ -1,10 +1,8 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using Friggy.Application.Catalogs.Ingredients.Dtos;
 using Friggy.Application.Catalogs.MealTypes.Dtos;
 using Friggy.Application.Catalogs.RecipeTags.Dtos;
 using Friggy.Application.Catalogs.UnitTypes.Dtos;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Friggy.Web.Api;
 
@@ -47,7 +45,7 @@ public sealed class CatalogApiClient(HttpClient httpClient) :
         using var response = await httpClient.SendAsync(request, cancellationToken);
         await EnsureSuccessAsync(response, cancellationToken);
         return await response.Content.ReadFromJsonAsync<T>(cancellationToken) ??
-            throw new CatalogApiException("La API devolvió una respuesta vacía.");
+            throw new ApiProblemException("La API devolvió una respuesta vacía.");
     }
 
     private async Task DeleteAsync(string uri, CancellationToken cancellationToken)
@@ -63,14 +61,6 @@ public sealed class CatalogApiClient(HttpClient httpClient) :
             return;
         }
 
-        try
-        {
-            var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(cancellationToken);
-            throw new CatalogApiException(problem?.Detail ?? problem?.Title ?? "No se pudo completar la operación.");
-        }
-        catch (JsonException)
-        {
-            throw new CatalogApiException("No se pudo completar la operación.");
-        }
+        throw await ApiProblemException.FromResponseAsync(response, cancellationToken);
     }
 }

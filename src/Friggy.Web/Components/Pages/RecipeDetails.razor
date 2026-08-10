@@ -102,7 +102,7 @@ else if (recipe is not null)
             mealTypes = (await mealTypesTask).ToDictionary(item => item.Id);
         }
         catch (Exception exception) when (
-            exception is HttpRequestException or RecipeApiException or CatalogApiException)
+            exception is HttpRequestException or ApiProblemException)
         {
             error = $"No se pudo cargar la receta: {exception.Message}";
         }

@@ -125,7 +125,7 @@ public sealed class RecipePageTests : ComponentTest
         var recipes = new StubRecipesApiClient
         {
             Recipe = CompleteRecipe(),
-            SaveException = new RecipeApiException("Ya existe una receta con ese nombre."),
+            SaveException = new ApiProblemException("Ya existe una receta con ese nombre."),
         };
         RegisterApis(recipes);
         var component = Render<global::Friggy.Web.Components.Pages.RecipeEdit>();
@@ -176,7 +176,7 @@ public sealed class RecipePageTests : ComponentTest
     {
         public IReadOnlyList<RecipeListItemResponse> Recipes { get; init; } = [];
         public RecipeResponse? Recipe { get; init; }
-        public RecipeApiException? SaveException { get; init; }
+        public ApiProblemException? SaveException { get; init; }
         public List<CreateRecipeRequest> Created { get; } = [];
         public List<(Guid Id, UpdateRecipeRequest Request)> Updated { get; } = [];
 

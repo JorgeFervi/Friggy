@@ -1,7 +1,5 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using Friggy.Application.Recipes.Dtos;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Friggy.Web.Api;
 
@@ -58,7 +56,7 @@ public sealed class RecipeApiClient(HttpClient httpClient) : IRecipesApiClient
         HttpResponseMessage response,
         CancellationToken cancellationToken) =>
         await response.Content.ReadFromJsonAsync<RecipeResponse>(cancellationToken) ??
-        throw new RecipeApiException("La API devolvió una respuesta vacía.");
+        throw new ApiProblemException("La API devolvió una respuesta vacía.");
 
     private static async Task EnsureSuccessAsync(
         HttpResponseMessage response,
@@ -69,15 +67,6 @@ public sealed class RecipeApiClient(HttpClient httpClient) : IRecipesApiClient
             return;
         }
 
-        try
-        {
-            var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(cancellationToken);
-            throw new RecipeApiException(
-                problem?.Detail ?? problem?.Title ?? "No se pudo completar la operación.");
-        }
-        catch (JsonException)
-        {
-            throw new RecipeApiException("No se pudo completar la operación.");
-        }
+        throw await ApiProblemException.FromResponseAsync(response, cancellationToken);
     }
 }
