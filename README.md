@@ -2,9 +2,9 @@
 
 Friggy es una aplicación para organizar y planificar tus comidas semanales de forma sencilla.
 
-La aplicación te permite registrar los alimentos que tienes en casa, guardar tus propias recetas, definir distintos tipos de comida y organizar tu menú mediante un calendario semanal.
+El MVP actual permite administrar ingredientes, guardar recetas propias, definir distintos tipos de comida y organizar el menú mediante un calendario semanal.
 
-Además, Friggy puede conectar tus datos con un sistema de inteligencia artificial para ayudarte a:
+El frigorífico virtual y la integración con inteligencia artificial pertenecen a fases posteriores. La visión del producto contempla que esas capacidades permitan:
 
 * Crear una planificación semanal adaptada a tus preferencias.
 * Aprovechar los alimentos que ya tienes disponibles.
@@ -32,7 +32,9 @@ La interfaz `Friggy.Web` se ejecuta con Blazor Server y consume `Friggy.Api` exc
 Friggy.Web ──HTTP──> Friggy.Api ──> Application ──> Infrastructure ──> PostgreSQL/Docker
 ```
 
-El piloto técnico local está registrado en [plans/pilot/20260810-local-technical-pilot.md](plans/pilot/20260810-local-technical-pilot.md).
+El recorrido completo de creación de una receta está explicado en [docs/development/recipe-creation-walkthrough.md](docs/development/recipe-creation-walkthrough.md).
+
+El piloto técnico local está registrado en [plans/pilot/20260810-local-technical-pilot.md](plans/pilot/20260810-local-technical-pilot.md). El [guion del piloto humano](plans/pilot/guided-human-pilot.md) queda preparado para la siguiente sesión con una persona ajena al código.
 
 ## Entorno verificado
 

@@ -27,4 +27,6 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1 a 6 están completadas. La subfase 6.7 cerró el piloto técnico local con setup idempotente, API/Web disponibles, 15/15 E2E y sin defectos bloqueantes confirmados. El MVP queda como candidato a piloto guiado; el registro está en [plans/pilot/20260810-local-technical-pilot.md](pilot/20260810-local-technical-pilot.md). El siguiente trabajo es una fase independiente para frigorífico virtual e inventario.
+Las fases 1 a 6 están completadas. La subfase 6.7 cerró el piloto técnico local con setup idempotente, API/Web disponibles, 15/15 E2E y sin defectos bloqueantes confirmados. El MVP queda como candidato a piloto guiado; el registro está en [plans/pilot/20260810-local-technical-pilot.md](pilot/20260810-local-technical-pilot.md).
+
+Antes de abrir una nueva fase deben completarse el [piloto humano guiado](pilot/guided-human-pilot.md) y el [registro de decisiones de inventario](discovery/07-inventory-decisions.md). El frigorífico virtual se planificará después como una capacidad dentro de las capas actuales; la lista de la compra y la IA permanecen fuera de esa primera entrega.
