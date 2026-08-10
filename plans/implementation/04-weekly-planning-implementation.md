@@ -126,7 +126,7 @@ internal sealed class MealPlanEntryConfiguration
 
 La migración debe reflejar índice compuesto y FK restrict. Probar con PostgreSQL real: colisión concurrente, sustitución atómica y lectura ordenada desde un nuevo scope.
 
-## 4.5 — API idempotente por celda
+## 4.5 — API idempotente por celda — Completada
 
 ```csharp
 group.MapPut("/{planId:guid}/days/{date}/meal-types/{mealTypeId:guid}", SetEntryAsync)
