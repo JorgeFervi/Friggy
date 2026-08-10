@@ -9,12 +9,24 @@ public sealed class StubHttpMessageHandler : HttpMessageHandler
 
     public HttpRequestMessage? LastRequest { get; private set; }
 
+    public List<(HttpMethod Method, Uri? Uri)> Requests { get; } = [];
+
     public void RespondWith(string mediaType, string content)
     {
-        responses.Enqueue(new HttpResponseMessage(HttpStatusCode.OK)
+        RespondWith(HttpStatusCode.OK, mediaType, content);
+    }
+
+    public void RespondWith(HttpStatusCode statusCode, string mediaType, string content)
+    {
+        responses.Enqueue(new HttpResponseMessage(statusCode)
         {
             Content = new StringContent(content, Encoding.UTF8, mediaType),
         });
+    }
+
+    public void RespondWith(HttpStatusCode statusCode)
+    {
+        responses.Enqueue(new HttpResponseMessage(statusCode));
     }
 
     protected override Task<HttpResponseMessage> SendAsync(
@@ -23,6 +35,7 @@ public sealed class StubHttpMessageHandler : HttpMessageHandler
     {
         cancellationToken.ThrowIfCancellationRequested();
         LastRequest = request;
+        Requests.Add((request.Method, request.RequestUri));
 
         if (!responses.TryDequeue(out var response))
         {

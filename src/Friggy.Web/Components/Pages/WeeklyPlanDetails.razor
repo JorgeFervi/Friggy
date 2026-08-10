@@ -1,0 +1,159 @@
+@page "/weekly-plans/{Id:guid}"
+@implements IDisposable
+@using Friggy.Application.Recipes.Dtos
+@using Friggy.Application.WeeklyPlans.Dtos
+@using Friggy.Web.Api
+@using Friggy.Web.Components.WeeklyPlans
+@using Friggy.Web.WeeklyPlans
+@inject IWeeklyPlansApiClient WeeklyPlansApi
+@inject IRecipesApiClient RecipesApi
+
+<PageTitle>@(plan?.Name ?? "Plan semanal")</PageTitle>
+
+@if (loading)
+{
+    <h1>Plan semanal</h1>
+    <p>Cargando planificación…</p>
+}
+else if (plan is null)
+{
+    <h1>Plan semanal</h1>
+    <p role="alert">@(error ?? "No se pudo cargar el plan semanal.")</p>
+}
+else
+{
+    <h1>@plan.Name</h1>
+    <p>
+        Semana del @plan.StartDate.ToString("dd/MM/yyyy")
+        al @plan.EndDate.ToString("dd/MM/yyyy")
+    </p>
+    <p><a href="weekly-plans">Volver a planes semanales</a></p>
+
+    <EditForm Model="editModel"
+              OnValidSubmit="UpdateAsync"
+              FormName="weekly-plan-edit-form"
+              data-testid="weekly-plan-edit-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div>
+            <label for="weekly-plan-edit-name">Nombre</label>
+            <InputText id="weekly-plan-edit-name" @bind-Value="editModel.Name" />
+            <ValidationMessage For="() => editModel.Name" />
+        </div>
+        <div>
+            <label for="weekly-plan-edit-description">Descripción</label>
+            <InputTextArea id="weekly-plan-edit-description" @bind-Value="editModel.Description" />
+        </div>
+        <button type="submit" disabled="@saving">@(saving ? "Guardando…" : "Guardar detalles")</button>
+    </EditForm>
+
+    @if (error is not null)
+    {
+        <p role="alert">@error</p>
+    }
+
+    @if (recipes.Count == 0)
+    {
+        <p>No hay recetas disponibles. Crea una receta antes de asignarla.</p>
+    }
+
+    <WeeklyPlanCalendar Model="plan"
+                        Recipes="recipes"
+                        IsSaving="saving"
+                        OnChanged="ChangeEntryAsync" />
+}
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private WeeklyPlanResponse? plan;
+    private WeeklyPlanFormModel editModel = new();
+    private IReadOnlyList<RecipeListItemResponse> recipes = [];
+    private string? error;
+    private bool loading = true;
+    private bool saving;
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var planTask = WeeklyPlansApi.GetAsync(Id, cancellation.Token);
+            var recipesTask = RecipesApi.ListAsync(cancellation.Token);
+            await Task.WhenAll(planTask, recipesTask);
+            plan = await planTask;
+            recipes = await recipesTask;
+            editModel = WeeklyPlanFormModel.FromResponse(plan);
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or WeeklyPlanApiException or RecipeApiException)
+        {
+            error = $"No se pudo cargar la planificación: {exception.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task UpdateAsync()
+    {
+        saving = true;
+        error = null;
+        try
+        {
+            plan = await WeeklyPlansApi.UpdateAsync(
+                Id,
+                editModel.ToUpdateRequest(),
+                cancellation.Token);
+            editModel = WeeklyPlanFormModel.FromResponse(plan);
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or WeeklyPlanApiException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task ChangeEntryAsync(MealPlanCellChange change)
+    {
+        saving = true;
+        error = null;
+        try
+        {
+            plan = change.RecipeId is Guid recipeId
+                ? await WeeklyPlansApi.SetEntryAsync(
+                    Id,
+                    change.Date,
+                    change.MealTypeId,
+                    new(recipeId),
+                    cancellation.Token)
+                : await WeeklyPlansApi.RemoveEntryAsync(
+                    Id,
+                    change.Date,
+                    change.MealTypeId,
+                    cancellation.Token);
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or WeeklyPlanApiException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

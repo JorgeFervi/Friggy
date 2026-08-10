@@ -142,7 +142,7 @@ group.MapDelete("/{planId:guid}/days/{date}/meal-types/{mealTypeId:guid}", Remov
 
 Documentar `DateOnly` como `yyyy-MM-dd`. Tests previos: PUT nuevo, PUT sustitución, DELETE, fecha inválida/fuera de semana, IDs inexistentes, `ProblemDetails` y lectura posterior.
 
-## 4.6 — Calendario Blazor y bUnit
+## 4.6 — Calendario Blazor y bUnit — Completada
 
 ```razor
 @foreach (var day in Model.Days)

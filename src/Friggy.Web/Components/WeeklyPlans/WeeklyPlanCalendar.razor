@@ -1,0 +1,79 @@
+@using System.Globalization
+@using Friggy.Application.Recipes.Dtos
+@using Friggy.Application.WeeklyPlans.Dtos
+@using Friggy.Web.WeeklyPlans
+
+<div class="weekly-plan-calendar" data-testid="weekly-plan-calendar">
+    @foreach (var day in Model.Days.OrderBy(day => day.Date))
+    {
+        <section class="weekly-plan-day"
+                 data-testid="weekly-plan-day"
+                 aria-label="@DayLabel(day.Date)"
+                 @key="day.Date">
+            <h2>@DayLabel(day.Date)</h2>
+            @foreach (var meal in day.Meals.OrderBy(meal => meal.MealTypeOrder))
+            {
+                var selectId = $"meal-{day.Date:yyyyMMdd}-{meal.MealTypeId:N}";
+                <div class="meal-slot" data-testid="meal-slot" @key="meal.MealTypeId">
+                    <label for="@selectId">@meal.MealTypeName</label>
+                    <select id="@selectId"
+                            value="@(meal.RecipeId?.ToString() ?? string.Empty)"
+                            data-date="@day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                            data-meal-type-id="@meal.MealTypeId"
+                            disabled="@IsSaving"
+                            @onchange="args => SelectRecipeAsync(day.Date, meal.MealTypeId, args)">
+                        <option value="">Sin receta</option>
+                        @foreach (var recipe in Recipes.OrderBy(recipe => recipe.Name, StringComparer.CurrentCultureIgnoreCase))
+                        {
+                            <option value="@recipe.Id">@recipe.Name</option>
+                        }
+                    </select>
+                    @if (meal.RecipeId.HasValue)
+                    {
+                        <button type="button"
+                                data-date="@day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                                data-meal-type-id="@meal.MealTypeId"
+                                disabled="@IsSaving"
+                                aria-label="Retirar receta de @meal.MealTypeName del @DayLabel(day.Date)"
+                                @onclick="() => OnChanged.InvokeAsync(new(day.Date, meal.MealTypeId, null))">
+                            Retirar
+                        </button>
+                    }
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private static readonly CultureInfo SpanishCulture = CultureInfo.GetCultureInfo("es-ES");
+
+    [Parameter, EditorRequired]
+    public WeeklyPlanResponse Model { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<RecipeListItemResponse> Recipes { get; set; } = [];
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public EventCallback<MealPlanCellChange> OnChanged { get; set; }
+
+    private async Task SelectRecipeAsync(
+        DateOnly date,
+        Guid mealTypeId,
+        ChangeEventArgs args)
+    {
+        var recipeId = Guid.TryParse(args.Value?.ToString(), out var parsed)
+            ? parsed
+            : (Guid?)null;
+        await OnChanged.InvokeAsync(new(date, mealTypeId, recipeId));
+    }
+
+    private static string DayLabel(DateOnly date)
+    {
+        var label = date.ToString("dddd, d 'de' MMMM", SpanishCulture);
+        return char.ToUpper(label[0], SpanishCulture) + label[1..];
+    }
+}

@@ -1,0 +1,31 @@
+.weekly-plan-calendar {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.weekly-plan-day {
+    border: 1px solid #d5d5d5;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.weekly-plan-day h2 {
+    font-size: 1.1rem;
+    margin-top: 0;
+}
+
+.meal-slot {
+    display: grid;
+    gap: 0.35rem;
+    margin-bottom: 0.85rem;
+}
+
+.meal-slot select {
+    min-width: 0;
+    padding: 0.4rem;
+}
+
+.meal-slot button {
+    justify-self: start;
+}

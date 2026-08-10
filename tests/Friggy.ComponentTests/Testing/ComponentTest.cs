@@ -24,6 +24,8 @@ public abstract class ComponentTest : IDisposable
 
     protected IServiceCollection Services => context.Services;
 
+    protected BunitJSInterop JavaScript => context.JSInterop;
+
     protected TService GetRequiredService<TService>()
         where TService : notnull => context.Services.GetRequiredService<TService>();
 

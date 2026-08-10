@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1, 2 y 3 están completadas y la fase 4 está en progreso. La solución dispone de arquitectura y banco de pruebas, catálogos y recetas operables de extremo a extremo mediante PostgreSQL, Minimal APIs y Blazor. El dominio, los casos de uso, la persistencia PostgreSQL y la API de planificación semanal de las subfases 4.1 a 4.5 están completados; la siguiente unidad ejecutable es la subfase 4.6 de [Planificación semanal](implementation/04-weekly-planning-implementation.md).
+Las fases 1, 2 y 3 están completadas y la fase 4 está en progreso. La solución dispone de arquitectura y banco de pruebas, catálogos y recetas operables de extremo a extremo mediante PostgreSQL, Minimal APIs y Blazor. El dominio, los casos de uso, la persistencia PostgreSQL, la API y el calendario Blazor de planificación semanal de las subfases 4.1 a 4.6 están completados; la siguiente unidad ejecutable es la subfase 4.7 de [Planificación semanal](implementation/04-weekly-planning-implementation.md).

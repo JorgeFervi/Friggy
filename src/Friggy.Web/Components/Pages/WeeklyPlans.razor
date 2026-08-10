@@ -1,0 +1,151 @@
+@page "/weekly-plans"
+@implements IDisposable
+@using Friggy.Application.WeeklyPlans.Dtos
+@using Friggy.Web.Api
+@using Friggy.Web.WeeklyPlans
+@inject IWeeklyPlansApiClient Api
+@inject IJSRuntime JavaScript
+@inject NavigationManager Navigation
+
+<PageTitle>Planes semanales</PageTitle>
+<h1>Planes semanales</h1>
+
+<EditForm Model="model"
+          OnValidSubmit="CreateAsync"
+          FormName="weekly-plan-create-form"
+          data-testid="weekly-plan-create-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="weekly-plan-name">Nombre</label>
+        <InputText id="weekly-plan-name" @bind-Value="model.Name" />
+        <ValidationMessage For="() => model.Name" />
+    </div>
+    <div>
+        <label for="weekly-plan-start-date">Lunes de inicio</label>
+        <InputDate id="weekly-plan-start-date" @bind-Value="model.StartDate" />
+        <ValidationMessage For="() => model.StartDate" />
+    </div>
+    <div>
+        <label for="weekly-plan-description">Descripción</label>
+        <InputTextArea id="weekly-plan-description" @bind-Value="model.Description" />
+    </div>
+    <button type="submit" disabled="@saving">@(saving ? "Creando…" : "Crear plan")</button>
+</EditForm>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+
+@if (loading)
+{
+    <p>Cargando planes semanales…</p>
+}
+else if (plans.Count == 0)
+{
+    <p>No hay planes semanales. Crea el primero.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>Nombre</th><th>Semana</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var plan in plans)
+            {
+                <tr @key="plan.Id">
+                    <td>@plan.Name</td>
+                    <td>@plan.StartDate.ToString("dd/MM/yyyy") – @plan.EndDate.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a href="weekly-plans/@plan.Id">Abrir calendario</a>
+                        <button type="button"
+                                data-action="delete-weekly-plan"
+                                @onclick="() => DeleteAsync(plan)">
+                            Borrar
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private WeeklyPlanFormModel model = new();
+    private IReadOnlyList<WeeklyPlanListItemResponse> plans = [];
+    private string? error;
+    private bool loading = true;
+    private bool saving;
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        try
+        {
+            plans = await Api.ListAsync(cancellation.Token);
+            error = null;
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or WeeklyPlanApiException)
+        {
+            error = $"No se pudieron cargar los planes semanales: {exception.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        saving = true;
+        error = null;
+        try
+        {
+            var plan = await Api.CreateAsync(model.ToCreateRequest(), cancellation.Token);
+            Navigation.NavigateTo($"/weekly-plans/{plan.Id}");
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or WeeklyPlanApiException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync(WeeklyPlanListItemResponse plan)
+    {
+        if (!await JavaScript.InvokeAsync<bool>(
+            "confirm",
+            $"¿Borrar el plan {plan.Name}?"))
+        {
+            return;
+        }
+
+        try
+        {
+            await Api.DeleteAsync(plan.Id, cancellation.Token);
+            await ReloadAsync();
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or WeeklyPlanApiException)
+        {
+            error = exception.Message;
+        }
+    }
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}
