@@ -1,6 +1,6 @@
 # Fase 5 — Integración completa
 
-- **Estado:** Bloqueada por fase 4
+- **Estado:** Pendiente
 - **Estimación:** 2 días
 - **Dependencias:** [Fase 4](04-weekly-planning.md)
 - **Guía ejecutable:** [Implementación de la fase 5](../implementation/05-full-integration-implementation.md)

@@ -173,7 +173,7 @@ public void Render_EmptyWeek_ShowsSevenDaysAndEmptySlots()
 
 Cubrir loading, error, asignación, sustitución y retirada. Preferir rol, label o `data-testid` semántico a selectores visuales.
 
-## 4.7 — Gate y handoff
+## 4.7 — Gate y handoff — Completada
 
 ```powershell
 dotnet test --project tests/Friggy.Domain.Tests/Friggy.Domain.Tests.csproj `

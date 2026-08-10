@@ -1,0 +1,72 @@
+using Friggy.EndToEndTests.Testing;
+using Microsoft.Playwright;
+
+namespace Friggy.EndToEndTests;
+
+public sealed class WeeklyPlanJourneyTests : FriggyPageTest
+{
+    [Fact]
+    [Trait("Category", "E2E")]
+    public async Task CreateWeeklyPlan_AssignRecipe_PersistsSelectedDayAndMeal()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var ingredientName = $"Calabacín E2E {suffix}";
+        var recipeName = $"Crema E2E {suffix}";
+        var planName = $"Semana E2E {suffix}";
+
+        await RunScenarioAsync(async () =>
+        {
+            await CreateRecipeAsync(ingredientName, recipeName);
+
+            await NavigateToInteractivePageAsync("/weekly-plans");
+            await Page.GetByLabel("Nombre", new() { Exact = true }).FillAsync(planName);
+            await Page.GetByLabel("Lunes de inicio", new() { Exact = true })
+                .FillAsync("2030-01-07");
+            await Page.GetByLabel("Descripción", new() { Exact = true })
+                .FillAsync("Plan semanal creado desde Playwright");
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Crear plan", Exact = true })
+                .ClickAsync();
+
+            var monday = Page.Locator("section[data-testid='weekly-plan-day']").First;
+            await Expect(monday.GetByRole(AriaRole.Heading))
+                .ToContainTextAsync("Lunes, 7 de enero");
+            var lunch = monday.GetByLabel("Comida", new() { Exact = true });
+            await lunch.SelectOptionAsync(new SelectOptionValue { Label = recipeName });
+            await Expect(lunch.Locator("option:checked")).ToHaveTextAsync(recipeName);
+
+            await Page.ReloadAsync();
+            await Page.Locator("[data-testid='weekly-plan-calendar']").WaitForAsync();
+            monday = Page.Locator("section[data-testid='weekly-plan-day']").First;
+            lunch = monday.GetByLabel("Comida", new() { Exact = true });
+            await Expect(lunch.Locator("option:checked")).ToHaveTextAsync(recipeName);
+        });
+    }
+
+    private async Task CreateRecipeAsync(string ingredientName, string recipeName)
+    {
+        await NavigateToInteractivePageAsync("/ingredients");
+        await Page.GetByLabel("Nombre", new() { Exact = true }).FillAsync(ingredientName);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Cell, new() { Name = ingredientName, Exact = true }))
+            .ToBeVisibleAsync();
+
+        await NavigateToInteractivePageAsync("/recipes/new");
+        await Page.GetByLabel("Nombre", new() { Exact = true }).FillAsync(recipeName);
+        await Page.GetByLabel("Tiempo estimado (minutos)", new() { Exact = true }).FillAsync("25");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir ingrediente", Exact = true })
+            .ClickAsync();
+        await Page.GetByLabel("Ingrediente", new() { Exact = true })
+            .SelectOptionAsync(new SelectOptionValue { Label = ingredientName });
+        await Page.GetByLabel("Unidad", new() { Exact = true })
+            .SelectOptionAsync(new SelectOptionValue { Label = "Gramo (g)" });
+        await Page.GetByLabel("Cantidad", new() { Exact = true }).FillAsync("1");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir paso", Exact = true })
+            .ClickAsync();
+        await Page.GetByLabel("Descripción", new() { Exact = true }).FillAsync("Cocinar y triturar");
+        await Page.GetByLabel("Comida", new() { Exact = true }).CheckAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Guardar receta", Exact = true })
+            .ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = recipeName, Exact = true }))
+            .ToBeVisibleAsync();
+    }
+}

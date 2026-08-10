@@ -76,6 +76,13 @@ public abstract class FriggyPageTest : PageTest
         }
     }
 
+    protected async Task NavigateToInteractivePageAsync(string path)
+    {
+        await Page.GotoAsync(path);
+        await Page.Locator("[data-testid='interactive-ready']").WaitForAsync(
+            new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+    }
+
     private async Task PreserveFailureArtifactsAsync(string scenarioName)
     {
         var artifactDirectory = Path.Combine(

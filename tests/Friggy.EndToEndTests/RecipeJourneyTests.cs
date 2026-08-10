@@ -55,11 +55,4 @@ public sealed class RecipeJourneyTests : FriggyPageTest
             await Expect(Page.GetByText(ingredientName, new() { Exact = false })).ToBeVisibleAsync();
         });
     }
-
-    private async Task NavigateToInteractivePageAsync(string path)
-    {
-        await Page.GotoAsync(path);
-        await Page.Locator("[data-testid='interactive-ready']").WaitForAsync(
-            new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
-    }
 }
