@@ -15,11 +15,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Playwright.Xunit.v3" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="xunit.v3.mtp-v2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Friggy.Api\Friggy.Api.csproj" />
+    <ProjectReference Include="..\..\src\Friggy.Infrastructure\Friggy.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Friggy.Web\Friggy.Web.csproj" />
   </ItemGroup>
 

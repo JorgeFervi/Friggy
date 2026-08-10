@@ -3,6 +3,7 @@ using Microsoft.Playwright;
 
 namespace Friggy.EndToEndTests;
 
+[Collection(FullStackTestGroup.Name)]
 public sealed class RecipeJourneyTests : FriggyPageTest
 {
     [Fact]
