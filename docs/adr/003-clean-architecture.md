@@ -42,3 +42,7 @@ Las referencias se protegerán mediante pruebas arquitectónicas. No se introduc
 * **Negativo/Riesgo:** La solución contiene más proyectos y mapeos que una aplicación monolítica pequeña.
 * **Negativo/Riesgo:** Compartir contratos de Application con Web exige mantenerlos libres de detalles internos y de persistencia.
 * **Negativo/Riesgo:** La excepción de abstracciones de inyección de dependencias en Application debe permanecer limitada al registro de servicios para no convertir el contenedor en una dependencia de los casos de uso.
+
+## Validación del piloto
+
+El piloto técnico local del 10 de agosto de 2026 recorrió la aplicación mediante `Friggy.Web`, verificó las llamadas HTTP a `Friggy.Api` y confirmó la persistencia PostgreSQL tras reiniciar los servicios. No se introdujeron referencias nuevas ni capas adicionales; el registro está en [plans/pilot/20260810-local-technical-pilot.md](../../plans/pilot/20260810-local-technical-pilot.md).

@@ -166,4 +166,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.6 consolidó el gate reproducible en `scripts/quality-gate.ps1` y dejó 225 pruebas verdes sin vulnerabilidades; la siguiente unidad ejecutable es la subfase 6.7 — Piloto y cierre.
+Las fases 1 a 6 quedaron completadas el 10 de agosto de 2026. La subfase 6.7 cerró el piloto técnico local y dejó el MVP como candidato a piloto guiado, sin defectos bloqueantes confirmados. El siguiente trabajo debe abrir una fase independiente para frigorífico virtual e inventario, seguida de lista de la compra.

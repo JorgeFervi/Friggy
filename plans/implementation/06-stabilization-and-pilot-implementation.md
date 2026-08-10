@@ -105,15 +105,16 @@ Gate final ejecutado el 10 de agosto de 2026:
 
 La siguiente unidad ejecutable es la subfase 6.7 — Piloto y cierre.
 
-## 6.7 — Piloto y cierre
+## 6.7 — Piloto y cierre — Completada
 
-Registrar tiempo de instalación, tareas sin ayuda, errores y artefactos, lenguaje confuso, severidad de defectos y mejoras fuera de alcance. Corregir defectos con rojo previo. Actualizar README, ADR y documentación MVP para reflejar Web → HTTP → API, PostgreSQL/Docker y scripts.
+Se ejecutó un piloto técnico local y se registró en [plans/pilot/20260810-local-technical-pilot.md](../pilot/20260810-local-technical-pilot.md). El ensayo cubrió dos ejecuciones idempotentes de `setup.ps1`, `start.ps1`, navegación de las pantallas principales, el recorrido E2E completo y persistencia después de reiniciar servicios.
 
-```powershell
-dotnet restore Friggy.sln
-dotnet build Friggy.sln --no-restore
-dotnet format Friggy.sln --verify-no-changes --no-restore
-./scripts/test.ps1
-```
+Resultados:
 
-La entrega termina cuando una instalación limpia, todas las suites y el piloto acordado están verdes; no al alcanzar un número de cobertura o una fecha sin gates.
+- `setup.ps1`: 17.19 s en la primera ejecución y 10.24 s en la segunda; la segunda no aplicó migraciones.
+- `start.ps1`: API y Web disponibles en 14.00 s mediante health checks.
+- E2E: 15/15 pruebas correctas en 29.1 s.
+- No se confirmaron defectos bloqueantes, pérdida de datos ni errores funcionales de severidad alta.
+- La valoración con una persona real queda explícitamente pendiente: esta sesión fue técnica y automatizada.
+
+README, ADR y definición del MVP reflejan ahora el flujo Web → HTTP → API, PostgreSQL/Docker y los scripts de operación. La fase 6 queda cerrada como **candidata a piloto guiado local**; el trabajo posterior al MVP se abre en una fase independiente.

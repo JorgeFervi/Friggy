@@ -24,6 +24,16 @@ La definición funcional, el alcance y el calendario de desarrollo se encuentran
 
 Las decisiones que gobiernan la implementación están recogidas en [Clean Architecture](docs/adr/003-clean-architecture.md) y [TDD y estrategia de pruebas](docs/adr/004-tdd-and-testing-strategy.md).
 
+## Flujo del MVP
+
+La interfaz `Friggy.Web` se ejecuta con Blazor Server y consume `Friggy.Api` exclusivamente por HTTP. La API aplica los casos de uso de `Friggy.Application` y persiste mediante `Friggy.Infrastructure` en PostgreSQL ejecutado por Docker Compose:
+
+```text
+Friggy.Web ──HTTP──> Friggy.Api ──> Application ──> Infrastructure ──> PostgreSQL/Docker
+```
+
+El piloto técnico local está registrado en [plans/pilot/20260810-local-technical-pilot.md](plans/pilot/20260810-local-technical-pilot.md).
+
 ## Entorno verificado
 
 | Componente | Versión |
