@@ -155,6 +155,25 @@ public sealed class WeeklyPlanPageTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void WeeklyPlanDetails_AssignmentCompletes_ShowsSavedStatus()
+    {
+        var api = new StubWeeklyPlansApiClient { Plan = EmptyPlan() };
+        RegisterApis(api);
+        var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
+            parameters.Add(page => page.Id, PlanId));
+        var selector = CellSelector(WeekStart, LunchId);
+        component.WaitForElement(selector);
+
+        component.Find(selector).Change(FirstRecipeId.ToString());
+
+        component.WaitForAssertion(() =>
+            Assert.Equal(
+                "Asignación guardada.",
+                component.Find("[role='status']").TextContent));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void WeeklyPlanDetails_AssignmentFails_ShowsErrorAndPreservesCalendar()
     {
         var api = new StubWeeklyPlansApiClient

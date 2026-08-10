@@ -52,6 +52,11 @@ else
         <p role="alert">@error</p>
     }
 
+    @if (status is not null)
+    {
+        <p role="status">@status</p>
+    }
+
     @if (recipes.Count == 0)
     {
         <p>No hay recetas disponibles. Crea una receta antes de asignarla.</p>
@@ -69,6 +74,7 @@ else
     private WeeklyPlanFormModel editModel = new();
     private IReadOnlyList<RecipeListItemResponse> recipes = [];
     private string? error;
+    private string? status;
     private bool loading = true;
     private bool saving;
 
@@ -101,6 +107,7 @@ else
     {
         saving = true;
         error = null;
+        status = null;
         try
         {
             plan = await WeeklyPlansApi.UpdateAsync(
@@ -124,6 +131,7 @@ else
     {
         saving = true;
         error = null;
+        status = null;
         try
         {
             plan = change.RecipeId is Guid recipeId
@@ -138,6 +146,9 @@ else
                     change.Date,
                     change.MealTypeId,
                     cancellation.Token);
+            status = change.RecipeId.HasValue
+                ? "Asignación guardada."
+                : "Asignación retirada.";
         }
         catch (Exception exception) when (
             exception is HttpRequestException or ApiProblemException)

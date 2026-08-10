@@ -8,12 +8,11 @@ public sealed class WeeklyPlanJourneyTests : FriggyPageTest
 {
     [Fact]
     [Trait("Category", "E2E")]
-    public async Task CreateWeeklyPlan_AssignRecipe_PersistsSelectedDayAndMeal()
+    public async Task User_CreatesCatalogRecipeAndWeeklyAssignment_PersistsAfterReload()
     {
-        var suffix = Guid.NewGuid().ToString("N")[..8];
-        var ingredientName = $"Calabacín E2E {suffix}";
-        var recipeName = $"Crema E2E {suffix}";
-        var planName = $"Semana E2E {suffix}";
+        const string ingredientName = "Calabacín E2E principal";
+        const string recipeName = "Crema E2E principal";
+        const string planName = "Semana E2E principal";
 
         await RunScenarioAsync(async () =>
         {
@@ -33,7 +32,8 @@ public sealed class WeeklyPlanJourneyTests : FriggyPageTest
                 .ToContainTextAsync("Lunes, 7 de enero");
             var lunch = monday.GetByLabel("Comida", new() { Exact = true });
             await lunch.SelectOptionAsync(new SelectOptionValue { Label = recipeName });
-            await Expect(lunch.Locator("option:checked")).ToHaveTextAsync(recipeName);
+            await Expect(Page.GetByRole(AriaRole.Status))
+                .ToHaveTextAsync("Asignación guardada.");
 
             await Page.ReloadAsync();
             await Page.Locator("[data-testid='weekly-plan-calendar']").WaitForAsync();
