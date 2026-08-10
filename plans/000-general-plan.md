@@ -165,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.3 completó la auditoría de calidad de tests con 222 pruebas verdes y sin defectos críticos o altos; la cobertura queda reservada para un diagnóstico independiente en 6.4. La siguiente unidad ejecutable es la subfase 6.4 — Cobertura como diagnóstico.
+Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.4 completó el diagnóstico de cobertura (73.5% de líneas, 56.3% de ramas) y dejó como prioridad accionable la validación de `RecipeFormModel.Validate`; la siguiente unidad ejecutable es la subfase 6.5 — Rendimiento medido.

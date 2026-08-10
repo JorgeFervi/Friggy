@@ -49,19 +49,29 @@ El proveedor de cobertura no está referenciado todavía y no existe Cobertura X
 
 Gate verificado: `scripts/test.ps1` superó 222/222 (59 Domain, 40 Application, 53 Integration, 55 Component y 15 End-to-End), 0 fallos y 0 omitidas; `dotnet format Friggy.sln --verify-no-changes --no-restore` limpio; auditoría NuGet sin vulnerabilidades. La siguiente unidad ejecutable es la subfase 6.4.
 
-## 6.4 — Cobertura como diagnóstico
+## 6.4 — Cobertura como diagnóstico — Completada
 
-Configurar un proveedor compatible con MTP, preferiblemente `Microsoft.Testing.Extensions.CodeCoverage`, y generar Cobertura por proyecto. La opción exacta se verifica contra la versión instalada antes de incorporarla a scripts.
+Se configuró `Microsoft.Testing.Extensions.CodeCoverage` 18.9.0 en las cinco suites xUnit v3/Microsoft Testing Platform. El proveedor oficial de MTP admite `--coverage-output-format cobertura` en .NET 10; se generó un fichero Cobertura independiente por proyecto para evitar sobrescrituras.
 
 ```powershell
 ./.codex/skills/coverage-analysis/scripts/Extract-MethodCoverage.ps1 `
-  -CoverageFile ./TestResults/coverage.cobertura.xml
+  -CoberturaPath ./TestResults/coverage-analysis/raw/*/*.cobertura.xml `
+  -CoverageThreshold 80 -BranchThreshold 70 -Filter below-threshold
 
 ./.codex/skills/coverage-analysis/scripts/Compute-CrapScores.ps1 `
-  -CoverageFile ./TestResults/coverage.cobertura.xml
+  -CoberturaPath ./TestResults/coverage-analysis/raw/*/*.cobertura.xml `
+  -CrapThreshold 30 -TopN 10
 ```
 
-No imponer un porcentaje arbitrario ni escribir tests de getters triviales. Añadir pruebas donde exista regla, rama, integración o fallo sin protección.
+Resultado del diagnóstico:
+
+- Cobertura de línea: **73.5%**; cobertura de ramas: **56.3%**; 734 métodos analizados y 9 hotspots con CRAP superior a 30.
+- Los hotspots dominantes son código generado por OpenAPI y artefactos de migraciones; se excluyen de la prioridad de producto.
+- El hotspot accionable es `RecipeFormModel.Validate`: complejidad 18, 36.4% de cobertura y CRAP 101.5. Con 80% de cobertura su CRAP bajaría aproximadamente a 20.6.
+- Los huecos de producto se concentran en `RecipeFormModel.cs` (21 líneas), `Ingredients.razor` (16), `CatalogApiClient.cs` (14), `WeeklyPlans.razor` (14) y `RecipeForm.razor` (13).
+- No se escriben tests nuevos en esta subfase: 6.4 identifica riesgo; la cobertura conductual se abordará en 6.5/6.6 con pruebas dirigidas y sin perseguir getters triviales.
+
+El informe completo, con tabla CRAP y rutas de los cinco XML, queda en `TestResults/coverage-analysis/coverage-analysis.md`. La siguiente unidad ejecutable es la subfase 6.5.
 
 ## 6.5 — Rendimiento medido
 

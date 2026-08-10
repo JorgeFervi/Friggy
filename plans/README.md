@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.3 cerró la auditoría de calidad con 222 pruebas verdes, sin defectos críticos o altos, y dejó la cobertura como diagnóstico separado. La siguiente unidad ejecutable es la [subfase 6.4 — Cobertura como diagnóstico](implementation/06-stabilization-and-pilot-implementation.md#64--cobertura-como-diagnóstico).
+Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.4 midió 73.5% de líneas y 56.3% de ramas, identificó `RecipeFormModel.Validate` como hotspot accionable y dejó los artefactos Cobertura por proyecto. La siguiente unidad ejecutable es la [subfase 6.5 — Rendimiento medido](implementation/06-stabilization-and-pilot-implementation.md#65--rendimiento-medido).
