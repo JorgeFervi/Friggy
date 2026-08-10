@@ -4,11 +4,11 @@ using Microsoft.Playwright;
 namespace Friggy.EndToEndTests;
 
 [Collection(FullStackTestGroup.Name)]
-public sealed class WeeklyPlanJourneyTests : FriggyPageTest
+public sealed class WeeklyPlanJourneyTests(FullStackFixture fixture) : FriggyPageTest
 {
     [Fact]
     [Trait("Category", "E2E")]
-    public async Task User_CreatesCatalogRecipeAndWeeklyAssignment_PersistsAfterReload()
+    public async Task User_CreatesCatalogRecipeAndWeeklyAssignment_PersistsAfterServiceRestart()
     {
         const string ingredientName = "Calabacín E2E principal";
         const string recipeName = "Crema E2E principal";
@@ -35,8 +35,9 @@ public sealed class WeeklyPlanJourneyTests : FriggyPageTest
             await Expect(Page.GetByRole(AriaRole.Status))
                 .ToHaveTextAsync("Asignación guardada.");
 
-            await Page.ReloadAsync();
-            await Page.Locator("[data-testid='weekly-plan-calendar']").WaitForAsync();
+            var planPath = new Uri(Page.Url).PathAndQuery;
+            await fixture.RestartServicesAsync(TestContext.Current.CancellationToken);
+            await NavigateToInteractivePageAsync(planPath);
             monday = Page.Locator("section[data-testid='weekly-plan-day']").First;
             lunch = monday.GetByLabel("Comida", new() { Exact = true });
             await Expect(lunch.Locator("option:checked")).ToHaveTextAsync(recipeName);

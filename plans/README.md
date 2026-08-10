@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1 a 4 están completadas. La solución dispone de arquitectura y banco de pruebas, catálogos, recetas y planificación semanal operables de extremo a extremo mediante PostgreSQL, Minimal APIs, Blazor y Playwright. La siguiente unidad ejecutable es la [Fase 5 — Integración completa](implementation/05-full-integration-implementation.md).
+Las fases 1 a 5 están completadas. La solución dispone de arquitectura y banco de pruebas, catálogos, recetas y planificación semanal operables de extremo a extremo mediante PostgreSQL, Minimal APIs, Blazor y Playwright, incluido el reinicio controlado de servicios sin pérdida de datos. La siguiente unidad ejecutable es la [Fase 6 — Estabilización y piloto](implementation/06-stabilization-and-pilot-implementation.md).

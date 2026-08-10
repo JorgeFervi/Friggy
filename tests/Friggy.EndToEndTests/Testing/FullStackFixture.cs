@@ -49,14 +49,17 @@ public sealed class FullStackFixture : IAsyncLifetime
 
     public async Task RestartServicesAsync(CancellationToken cancellationToken)
     {
-        if (!initialized)
-        {
-            throw new InvalidOperationException("El entorno full-stack debe iniciarse antes de reiniciarlo.");
-        }
+        EnsureInitialized("reiniciarlo");
 
         await runtime.StopWebAsync(cancellationToken);
         await runtime.StopApiAsync(cancellationToken);
         await StartServicesAsync(cancellationToken);
+    }
+
+    public async Task StopApiAsync(CancellationToken cancellationToken)
+    {
+        EnsureInitialized("detener la API");
+        await runtime.StopApiAsync(cancellationToken);
     }
 
     public async ValueTask DisposeAsync()
@@ -80,6 +83,15 @@ public sealed class FullStackFixture : IAsyncLifetime
         await runtime.StopWebAsync(cancellationToken);
         await runtime.StopApiAsync(cancellationToken);
         await runtime.StopDatabaseAsync(cancellationToken);
+    }
+
+    private void EnsureInitialized(string operation)
+    {
+        if (!initialized)
+        {
+            throw new InvalidOperationException(
+                $"El entorno full-stack debe iniciarse antes de {operation}.");
+        }
     }
 }
 

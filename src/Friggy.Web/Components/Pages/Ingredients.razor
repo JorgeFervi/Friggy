@@ -30,7 +30,7 @@
 {
     <p>Cargando ingredientes…</p>
 }
-else if (items.Count == 0)
+else if (string.IsNullOrWhiteSpace(error) && items.Count == 0)
 {
     <p>No hay ingredientes. Añade el primero.</p>
 }

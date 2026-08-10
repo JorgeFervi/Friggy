@@ -165,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1, 2 y 3 quedaron completadas el 9 de agosto de 2026. La solución base, los cuatro catálogos y la vertical completa de recetas están implementados con pruebas de Domain, Application, PostgreSQL, HTTP, Blazor y Playwright. La fase 4 — Planificación semanal está en progreso: el dominio, los casos de uso y la persistencia PostgreSQL de las subfases 4.1 a 4.4 están completados; la API idempotente por celda de la subfase 4.5 es la siguiente unidad ejecutable.
+Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026. La solución base, los cuatro catálogos, las recetas y la planificación semanal están integrados mediante PostgreSQL, Minimal APIs, Blazor y Playwright, con un entorno full-stack efímero, reinicio controlado y artefactos de diagnóstico al fallar. La siguiente unidad ejecutable es la fase 6 — Estabilización y piloto.

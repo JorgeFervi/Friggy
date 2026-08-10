@@ -40,6 +40,22 @@ public sealed class FullStackFixtureTests
 
     [Fact]
     [Trait("Category", "E2E")]
+    public async Task StopApiAsync_RunningEnvironment_StopsOnlyApiProcess()
+    {
+        var runtime = new RecordingFullStackRuntime();
+        var fixture = new FullStackFixture(runtime, new RecordingEnvironmentVariables());
+        await fixture.InitializeAsync();
+        runtime.Operations.Clear();
+
+        await fixture.StopApiAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(["stop-api"], runtime.Operations);
+
+        await fixture.DisposeAsync();
+    }
+
+    [Fact]
+    [Trait("Category", "E2E")]
     public async Task DisposeAsync_InitializedEnvironment_StopsProcessesAndRestoresRunnerVariable()
     {
         var runtime = new RecordingFullStackRuntime();
