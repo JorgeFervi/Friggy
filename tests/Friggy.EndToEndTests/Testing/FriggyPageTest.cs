@@ -21,8 +21,9 @@ public abstract class FriggyPageTest : PageTest
         ViewportSize = settings.Viewport,
         Locale = settings.Locale,
         TimezoneId = settings.TimezoneId,
-        ColorScheme = ColorScheme.Light,
-        DeviceScaleFactor = 1,
+        ColorScheme = settings.ColorScheme,
+        ReducedMotion = settings.ReducedMotion,
+        DeviceScaleFactor = settings.DeviceScaleFactor,
         RecordVideoDir = videoStagingDirectory,
         RecordVideoSize = new RecordVideoSize
         {
@@ -51,6 +52,7 @@ public abstract class FriggyPageTest : PageTest
         [CallerMemberName] string scenarioName = "scenario")
     {
         ArgumentNullException.ThrowIfNull(scenario);
+        ClearArtifactDirectory(scenarioName);
 
         try
         {
@@ -83,12 +85,33 @@ public abstract class FriggyPageTest : PageTest
             new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
     }
 
+    protected static string GetArtifactDirectory(string scenarioName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(scenarioName);
+
+        var artifactRoot = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "playwright-artifacts"));
+        var artifactDirectory = Path.GetFullPath(Path.Combine(
+            artifactRoot,
+            SanitizeFileName(scenarioName)));
+        var rootPrefix = artifactRoot + Path.DirectorySeparatorChar;
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        if (!artifactDirectory.StartsWith(rootPrefix, comparison))
+        {
+            throw new InvalidOperationException(
+                "El directorio de artefactos debe permanecer dentro de playwright-artifacts.");
+        }
+
+        return artifactDirectory;
+    }
+
     private async Task PreserveFailureArtifactsAsync(string scenarioName)
     {
-        var artifactDirectory = Path.Combine(
-            AppContext.BaseDirectory,
-            "playwright-artifacts",
-            SanitizeFileName(scenarioName));
+        var artifactDirectory = GetArtifactDirectory(scenarioName);
         Directory.CreateDirectory(artifactDirectory);
 
         await Page.ScreenshotAsync(new PageScreenshotOptions
@@ -140,6 +163,15 @@ public abstract class FriggyPageTest : PageTest
         if (Directory.Exists(videoStagingDirectory))
         {
             Directory.Delete(videoStagingDirectory, recursive: true);
+        }
+    }
+
+    private static void ClearArtifactDirectory(string scenarioName)
+    {
+        var artifactDirectory = GetArtifactDirectory(scenarioName);
+        if (Directory.Exists(artifactDirectory))
+        {
+            Directory.Delete(artifactDirectory, recursive: true);
         }
     }
 

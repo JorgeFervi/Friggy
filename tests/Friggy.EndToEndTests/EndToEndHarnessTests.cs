@@ -1,4 +1,5 @@
 using Friggy.EndToEndTests.Testing;
+using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit.v3;
 
 namespace Friggy.EndToEndTests;
@@ -27,6 +28,9 @@ public sealed class EndToEndHarnessTests
         Assert.Equal(720, settings.Viewport.Height);
         Assert.Equal("es-ES", settings.Locale);
         Assert.Equal("Europe/Madrid", settings.TimezoneId);
+        Assert.Equal(ColorScheme.Light, settings.ColorScheme);
+        Assert.Equal(ReducedMotion.Reduce, settings.ReducedMotion);
+        Assert.Equal(1f, settings.DeviceScaleFactor);
     }
 
     [Fact]

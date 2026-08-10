@@ -6,7 +6,10 @@ public sealed record EndToEndSettings(
     Uri WebBaseUrl,
     ViewportSize Viewport,
     string Locale,
-    string TimezoneId)
+    string TimezoneId,
+    ColorScheme ColorScheme,
+    ReducedMotion ReducedMotion,
+    float DeviceScaleFactor)
 {
     public static EndToEndSettings Load(Func<string, string?> getEnvironmentVariable)
     {
@@ -24,6 +27,9 @@ public sealed record EndToEndSettings(
             baseUrl,
             new ViewportSize { Width = 1280, Height = 720 },
             "es-ES",
-            "Europe/Madrid");
+            "Europe/Madrid",
+            ColorScheme.Light,
+            ReducedMotion.Reduce,
+            1f);
     }
 }

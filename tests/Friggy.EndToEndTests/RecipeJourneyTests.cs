@@ -10,9 +10,8 @@ public sealed class RecipeJourneyTests : FriggyPageTest
     [Trait("Category", "E2E")]
     public async Task CreateRecipe_FromBrowser_PersistsAndCanBeRecoveredFromList()
     {
-        var suffix = Guid.NewGuid().ToString("N")[..8];
-        var ingredientName = $"Tomate E2E {suffix}";
-        var recipeName = $"Gazpacho E2E {suffix}";
+        const string ingredientName = "Tomate E2E receta";
+        const string recipeName = "Gazpacho E2E receta";
 
         await RunScenarioAsync(async () =>
         {
