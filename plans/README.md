@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1 a 5 están completadas. La solución dispone de arquitectura y banco de pruebas, catálogos, recetas y planificación semanal operables de extremo a extremo mediante PostgreSQL, Minimal APIs, Blazor y Playwright, incluido el reinicio controlado de servicios sin pérdida de datos. La siguiente unidad ejecutable es la [Fase 6 — Estabilización y piloto](implementation/06-stabilization-and-pilot-implementation.md).
+Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.1 verificó una instalación limpia e idempotente, el arranque con PostgreSQL detenido, el recorrido principal, la persistencia tras reiniciar todos los servicios y las cinco suites con 212 pruebas verdes. La siguiente unidad ejecutable es la [subfase 6.2 — Regresión guiada por TDD](implementation/06-stabilization-and-pilot-implementation.md#62--regresión-guiada-por-tdd).

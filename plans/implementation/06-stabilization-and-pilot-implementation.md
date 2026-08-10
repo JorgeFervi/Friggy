@@ -6,11 +6,19 @@
 
 La fase estabiliza una aplicación funcional. No añade alcance por conveniencia: todo defecto se reproduce primero con un rojo y toda optimización requiere una medida.
 
-## 6.1 — Ensayo de instalación limpia
+## 6.1 — Ensayo de instalación limpia — Completada
 
 En un entorno limpio: comprobar prerrequisitos, ejecutar `scripts/setup.ps1` dos veces, arrancar con PostgreSQL detenido, completar el recorrido, reiniciar servicios, verificar persistencia y ejecutar `scripts/test.ps1`.
 
 Los scripts dan mensajes accionables y exit code distinto de cero ante requisitos ausentes. Nunca sobrescriben `.env` ni borran volúmenes del usuario.
+
+Resultado verificado el 10 de agosto de 2026 desde una copia limpia de `HEAD` y un volumen PostgreSQL aislado:
+
+- `scripts/setup.ps1` finalizó correctamente dos veces; la segunda ejecución no aplicó migraciones adicionales.
+- `scripts/start.ps1` recuperó PostgreSQL detenido e inició API y Web con ambos endpoints disponibles.
+- El recorrido ingrediente → receta → plan semanal persistió sus datos y la asignación después de reiniciar PostgreSQL, API y Web.
+- `scripts/test.ps1` compiló en Release sin warnings y superó 212 pruebas: 59 Domain, 40 Application, 52 Integration, 46 Component y 15 End-to-End; 0 fallos y 0 omitidas.
+- El entorno aislado se retiró y los servicios locales habituales se restauraron conservando su volumen original.
 
 ## 6.2 — Regresión guiada por TDD
 

@@ -165,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026. La solución base, los cuatro catálogos, las recetas y la planificación semanal están integrados mediante PostgreSQL, Minimal APIs, Blazor y Playwright, con un entorno full-stack efímero, reinicio controlado y artefactos de diagnóstico al fallar. La siguiente unidad ejecutable es la fase 6 — Estabilización y piloto.
+Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.1 confirmó desde una copia limpia la idempotencia de `setup.ps1`, el arranque con PostgreSQL detenido, el recorrido principal, la persistencia tras reiniciar PostgreSQL, API y Web y las cinco suites con 212 pruebas verdes. La siguiente unidad ejecutable es la subfase 6.2 — Regresión guiada por TDD.
