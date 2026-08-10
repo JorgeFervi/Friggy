@@ -1,6 +1,6 @@
 # Fase 6 — Estabilización y piloto
 
-- **Estado:** En progreso — subfase 6.4 completada el 10 de agosto de 2026
+- **Estado:** En progreso — subfase 6.5 completada el 10 de agosto de 2026
 - **Estimación:** 1–3 días
 - **Dependencias:** [Fase 5](05-full-integration.md)
 - **Guía ejecutable:** [Implementación de la fase 6](../implementation/06-stabilization-and-pilot-implementation.md)

@@ -73,22 +73,22 @@ Resultado del diagnóstico:
 
 El informe completo, con tabla CRAP y rutas de los cinco XML, queda en `TestResults/coverage-analysis/coverage-analysis.md`. La siguiente unidad ejecutable es la subfase 6.5.
 
-## 6.5 — Rendimiento medido
+## 6.5 — Rendimiento medido — Completada
 
-`optimizing-ef-core-queries` se recomendó automáticamente, pero se reserva para esta subfase y solo se instalará/empleará si una medida revela un problema. Primero registrar duración, filas y SQL.
+Se midieron los listados contra PostgreSQL real usando un escenario reproducible de 12 recetas con 3 ingredientes, 3 pasos, 2 etiquetas y 3 tipos de comida, además de 8 planes con 21 asignaciones cada uno. El test `PerformanceMeasurementTests.ReadModels_RecordDurationRowsAndSql` registra duración, filas, comandos y SQL en `TestResults/performance/6.5/read-models.json`.
 
-```csharp
-return await dbContext.Recipes
-    .AsNoTracking()
-    .OrderBy(recipe => recipe.Name.Normalized)
-    .Select(recipe => new RecipeListItemResponse(
-        recipe.Id,
-        recipe.Name.Value,
-        recipe.EstimatedTime.TotalMinutes))
-    .ToListAsync(cancellationToken);
-```
+Resultado del diagnóstico en el mismo contenedor:
 
-Evitar `Include` masivo, tracking en lecturas y N+1. No añadir caché o infraestructura sin evidencia y alcance acordado.
+| Escenario | Duración | Filas relacionadas | Comandos SQL |
+| --- | ---: | ---: | ---: |
+| `recipes.list.aggregate-baseline` | 370.9 ms | 132 | 5 |
+| `recipes.list.summary` | 15.9 ms | 0 | 1 |
+| `weekly-plans.list.aggregate-baseline` | 36.5 ms | 168 | 1 |
+| `weekly-plans.list.summary` | 6.9 ms | 0 | 1 |
+
+La evidencia confirma impacto observable: el listado de recetas hacía cinco viajes y materializaba el grafo completo para devolver solo tres campos; el listado de planes también cargaba todas sus asignaciones. Se añadieron `ListSummariesAsync` a los repositorios existentes, con proyecciones `AsNoTracking` de raíz, y los servicios de listado usan ahora esas proyecciones. Los métodos completos se conservan para detalle, edición y borrado.
+
+No cambian rutas, DTO públicos, esquema ni migraciones. No se añade caché ni infraestructura adicional. La siguiente unidad ejecutable es la subfase 6.6.
 
 ## 6.6 — Gate automatizado
 

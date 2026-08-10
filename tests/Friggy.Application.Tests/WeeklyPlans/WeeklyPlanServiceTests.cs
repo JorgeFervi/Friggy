@@ -378,6 +378,18 @@ public sealed class WeeklyPlanServiceTests
             return Task.FromResult<IReadOnlyList<WeeklyPlan>>(Items);
         }
 
+        public Task<IReadOnlyList<WeeklyPlanListItemResponse>> ListSummariesAsync(
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<WeeklyPlanListItemResponse>>(
+                Items.Select(item => new WeeklyPlanListItemResponse(
+                    item.Id,
+                    item.Name.Value,
+                    item.StartDate,
+                    item.EndDate)).ToArray());
+        }
+
         public Task<WeeklyPlan?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

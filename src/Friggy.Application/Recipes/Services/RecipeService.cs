@@ -11,12 +11,8 @@ public sealed class RecipeService(
 {
     public async Task<IReadOnlyList<RecipeListItemResponse>> ListAsync(
         CancellationToken cancellationToken) =>
-        (await recipes.ListAsync(cancellationToken))
-            .OrderBy(item => item.Name.Value, StringComparer.CurrentCultureIgnoreCase)
-            .Select(item => new RecipeListItemResponse(
-                item.Id,
-                item.Name.Value,
-                ToMinutes(item.EstimatedTime)))
+        (await recipes.ListSummariesAsync(cancellationToken))
+            .OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
 
     public async Task<RecipeResponse> GetAsync(

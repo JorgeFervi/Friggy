@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.4 midió 73.5% de líneas y 56.3% de ramas, identificó `RecipeFormModel.Validate` como hotspot accionable y dejó los artefactos Cobertura por proyecto. La siguiente unidad ejecutable es la [subfase 6.5 — Rendimiento medido](implementation/06-stabilization-and-pilot-implementation.md#65--rendimiento-medido).
+Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.5 midió los listados contra PostgreSQL y sustituyó la carga de agregados completos por proyecciones resumidas: recetas pasaron de 5 a 1 comandos SQL y planes mantienen 1 comando sin materializar asignaciones. La siguiente unidad ejecutable es la [subfase 6.6 — Gate automatizado](implementation/06-stabilization-and-pilot-implementation.md#66--gate-automatizado).

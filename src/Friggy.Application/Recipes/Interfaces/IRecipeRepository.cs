@@ -1,3 +1,4 @@
+using Friggy.Application.Recipes.Dtos;
 using Friggy.Domain.Recipes;
 
 namespace Friggy.Application.Recipes.Interfaces;
@@ -5,6 +6,9 @@ namespace Friggy.Application.Recipes.Interfaces;
 public interface IRecipeRepository
 {
     Task<IReadOnlyList<Recipe>> ListAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<RecipeListItemResponse>> ListSummariesAsync(
+        CancellationToken cancellationToken);
 
     Task<Recipe?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 

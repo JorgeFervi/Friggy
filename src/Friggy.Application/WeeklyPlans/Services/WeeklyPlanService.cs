@@ -12,14 +12,9 @@ public sealed class WeeklyPlanService(
 {
     public async Task<IReadOnlyList<WeeklyPlanListItemResponse>> ListAsync(
         CancellationToken cancellationToken) =>
-        (await plans.ListAsync(cancellationToken))
+        (await plans.ListSummariesAsync(cancellationToken))
             .OrderBy(plan => plan.StartDate)
-            .ThenBy(plan => plan.Name.Value, StringComparer.CurrentCultureIgnoreCase)
-            .Select(plan => new WeeklyPlanListItemResponse(
-                plan.Id,
-                plan.Name.Value,
-                plan.StartDate,
-                plan.EndDate))
+            .ThenBy(plan => plan.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
 
     public async Task<WeeklyPlanResponse> GetAsync(

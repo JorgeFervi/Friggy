@@ -165,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.4 completó el diagnóstico de cobertura (73.5% de líneas, 56.3% de ramas) y dejó como prioridad accionable la validación de `RecipeFormModel.Validate`; la siguiente unidad ejecutable es la subfase 6.5 — Rendimiento medido.
+Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.5 midió los listados contra PostgreSQL y dejó las consultas resumidas de recetas y planes como ruta de lectura; la siguiente unidad ejecutable es la subfase 6.6 — Gate automatizado.

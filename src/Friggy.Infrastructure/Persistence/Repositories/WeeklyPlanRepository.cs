@@ -1,3 +1,4 @@
+using Friggy.Application.WeeklyPlans.Dtos;
 using Friggy.Application.WeeklyPlans.Interfaces;
 using Friggy.Domain.WeeklyPlans;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,30 @@ public sealed class WeeklyPlanRepository(FriggyDbContext context) : IWeeklyPlanR
         await CompleteQuery()
             .AsNoTrackingWithIdentityResolution()
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<WeeklyPlanListItemResponse>> ListSummariesAsync(
+        CancellationToken cancellationToken)
+    {
+        var items = await context.WeeklyPlans
+            .AsNoTracking()
+            .OrderBy(plan => plan.StartDate)
+            .ThenBy(plan => plan.Name.Normalized)
+            .Select(plan => new
+            {
+                plan.Id,
+                Name = plan.Name.Value,
+                plan.StartDate,
+            })
+            .ToListAsync(cancellationToken);
+
+        return items
+            .Select(item => new WeeklyPlanListItemResponse(
+                item.Id,
+                item.Name,
+                item.StartDate,
+                item.StartDate.AddDays(6)))
+            .ToArray();
+    }
 
     public Task<WeeklyPlan?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         CompleteQuery().SingleOrDefaultAsync(plan => plan.Id == id, cancellationToken);

@@ -1,3 +1,4 @@
+using Friggy.Application.WeeklyPlans.Dtos;
 using Friggy.Domain.WeeklyPlans;
 
 namespace Friggy.Application.WeeklyPlans.Interfaces;
@@ -5,6 +6,9 @@ namespace Friggy.Application.WeeklyPlans.Interfaces;
 public interface IWeeklyPlanRepository
 {
     Task<IReadOnlyList<WeeklyPlan>> ListAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<WeeklyPlanListItemResponse>> ListSummariesAsync(
+        CancellationToken cancellationToken);
 
     Task<WeeklyPlan?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 

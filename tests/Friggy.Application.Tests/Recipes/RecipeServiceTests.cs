@@ -344,6 +344,17 @@ public sealed class RecipeServiceTests
             return Task.FromResult<IReadOnlyList<Recipe>>(Items);
         }
 
+        public Task<IReadOnlyList<RecipeListItemResponse>> ListSummariesAsync(
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<RecipeListItemResponse>>(
+                Items.Select(item => new RecipeListItemResponse(
+                    item.Id,
+                    item.Name.Value,
+                    checked((int)item.EstimatedTime.TotalMinutes))).ToArray());
+        }
+
         public Task<Recipe?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

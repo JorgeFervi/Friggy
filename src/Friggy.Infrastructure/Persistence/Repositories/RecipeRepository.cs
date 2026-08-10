@@ -1,3 +1,4 @@
+using Friggy.Application.Recipes.Dtos;
 using Friggy.Application.Recipes.Interfaces;
 using Friggy.Domain.Recipes;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,28 @@ public sealed class RecipeRepository(FriggyDbContext context) : IRecipeRepositor
         await CompleteQuery()
             .AsNoTrackingWithIdentityResolution()
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<RecipeListItemResponse>> ListSummariesAsync(
+        CancellationToken cancellationToken)
+    {
+        var items = await context.Recipes
+            .AsNoTracking()
+            .OrderBy(recipe => recipe.Name.Normalized)
+            .Select(recipe => new
+            {
+                recipe.Id,
+                Name = recipe.Name.Value,
+                recipe.EstimatedTime,
+            })
+            .ToListAsync(cancellationToken);
+
+        return items
+            .Select(item => new RecipeListItemResponse(
+                item.Id,
+                item.Name,
+                checked((int)item.EstimatedTime.TotalMinutes)))
+            .ToArray();
+    }
 
     public Task<Recipe?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         CompleteQuery().SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
