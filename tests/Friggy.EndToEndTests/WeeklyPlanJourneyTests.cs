@@ -36,6 +36,7 @@ public sealed class WeeklyPlanJourneyTests(FullStackFixture fixture) : FriggyPag
                 .ToHaveTextAsync("Asignación guardada.");
 
             var planPath = new Uri(Page.Url).PathAndQuery;
+            await Page.GotoAsync("about:blank");
             await fixture.RestartServicesAsync(TestContext.Current.CancellationToken);
             await NavigateToInteractivePageAsync(planPath);
             monday = Page.Locator("section[data-testid='weekly-plan-day']").First;

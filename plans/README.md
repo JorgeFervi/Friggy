@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.1 verificó una instalación limpia e idempotente, el arranque con PostgreSQL detenido, el recorrido principal, la persistencia tras reiniciar todos los servicios y las cinco suites con 212 pruebas verdes. La siguiente unidad ejecutable es la [subfase 6.2 — Regresión guiada por TDD](implementation/06-stabilization-and-pilot-implementation.md#62--regresión-guiada-por-tdd).
+Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.2 corrigió mediante TDD el manejo de caídas de API en catálogos, la cancelación del lifecycle y la exposición de detalles técnicos en conflictos de persistencia. La siguiente unidad ejecutable es la [subfase 6.3 — Auditoría de calidad de tests](implementation/06-stabilization-and-pilot-implementation.md#63--auditoría-de-calidad-de-tests).

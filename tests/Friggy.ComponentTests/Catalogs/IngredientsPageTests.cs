@@ -115,10 +115,33 @@ public sealed class IngredientsPageTests : ComponentTest
         Assert.Empty(api.Created);
     }
 
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Submit_ApiUnavailable_ShowsDetailAndKeepsFormData()
+    {
+        var api = new StubIngredientsApiClient
+        {
+            CreateException = new HttpRequestException("Conexión rechazada."),
+        };
+        Services.AddSingleton<IIngredientsApiClient>(api);
+        var component = Render<global::Friggy.Web.Components.Pages.Ingredients>();
+        component.WaitForElement("form");
+
+        component.Find("#ingredient-name").Change("Tomate");
+        component.Find("form").Submit();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Equal("Conexión rechazada.", component.Find("[role='alert']").TextContent);
+            Assert.Equal("Tomate", component.Find("#ingredient-name").GetAttribute("value"));
+        });
+        Assert.Empty(api.Created);
+    }
+
     private sealed class StubIngredientsApiClient : IIngredientsApiClient
     {
         public Exception? ListException { get; init; }
-        public ApiProblemException? CreateException { get; init; }
+        public Exception? CreateException { get; init; }
         public List<string> Created { get; } = [];
         public Task<IReadOnlyList<IngredientResponse>> ListAsync(CancellationToken cancellationToken)
         {

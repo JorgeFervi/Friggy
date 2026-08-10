@@ -165,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.1 confirmó desde una copia limpia la idempotencia de `setup.ps1`, el arranque con PostgreSQL detenido, el recorrido principal, la persistencia tras reiniciar PostgreSQL, API y Web y las cinco suites con 212 pruebas verdes. La siguiente unidad ejecutable es la subfase 6.2 — Regresión guiada por TDD.
+Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.2 corrigió mediante regresiones TDD los errores de red durante escrituras de catálogos, la cancelación del lifecycle de sus páginas y la exposición de detalles técnicos en conflictos de persistencia, sin cambiar contratos ni esquema. La siguiente unidad ejecutable es la subfase 6.3 — Auditoría de calidad de tests.

@@ -1,4 +1,5 @@
 @page "/meal-types"
+@implements IDisposable
 @using System.ComponentModel.DataAnnotations
 @using Friggy.Application.Catalogs.MealTypes.Dtos
 @using Friggy.Web.Api
@@ -16,7 +17,7 @@
 </EditForm>
 @if (error is not null) { <p role="alert">@error</p> }
 @if (loading) { <p>Cargando tipos de comida…</p> }
-else if (items.Count == 0) { <p>No hay tipos de comida.</p> }
+else if (string.IsNullOrWhiteSpace(error) && items.Count == 0) { <p>No hay tipos de comida.</p> }
 else
 {
     <table><thead><tr><th>Nombre</th><th>Orden</th><th>Acciones</th></tr></thead><tbody>
@@ -24,14 +25,16 @@ else
     </tbody></table>
 }
 @code {
+    private readonly CancellationTokenSource cancellation = new();
     private readonly MealInput model = new();
     private IReadOnlyList<MealTypeResponse> items = [];
     private Guid? editingId; private string? error; private bool loading = true;
-    protected override async Task OnInitializedAsync() { await ReloadAsync(); loading = false; }
-    private async Task ReloadAsync() { try { items = await Api.ListAsync(CancellationToken.None); error = null; } catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; } }
-    private async Task SaveAsync() { try { if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name, model.Order), CancellationToken.None); else await Api.CreateAsync(new(model.Name, model.Order), CancellationToken.None); CancelEdit(); await ReloadAsync(); } catch (ApiProblemException ex) { error = ex.Message; } }
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+    private async Task ReloadAsync() { try { items = await Api.ListAsync(cancellation.Token); error = null; } catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = $"No se pudieron cargar los tipos de comida: {ex.Message}"; } finally { loading = false; } }
+    private async Task SaveAsync() { try { if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name, model.Order), cancellation.Token); else await Api.CreateAsync(new(model.Name, model.Order), cancellation.Token); CancelEdit(); await ReloadAsync(); } catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; } }
     private void BeginEdit(MealTypeResponse item) { editingId = item.Id; model.Name = item.Name; model.Order = item.Order; }
     private void CancelEdit() { editingId = null; model.Name = string.Empty; model.Order = 0; }
-    private async Task DeleteAsync(MealTypeResponse item) { if (await JavaScript.InvokeAsync<bool>("confirm", $"¿Borrar {item.Name}?")) { try { await Api.DeleteAsync(item.Id, CancellationToken.None); await ReloadAsync(); } catch (ApiProblemException ex) { error = ex.Message; } } }
+    private async Task DeleteAsync(MealTypeResponse item) { if (await JavaScript.InvokeAsync<bool>("confirm", $"¿Borrar {item.Name}?")) { try { await Api.DeleteAsync(item.Id, cancellation.Token); await ReloadAsync(); } catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; } } }
+    public void Dispose() { cancellation.Cancel(); cancellation.Dispose(); GC.SuppressFinalize(this); }
     private sealed class MealInput { [Required(ErrorMessage = "El nombre es obligatorio.")] [StringLength(120)] public string Name { get; set; } = string.Empty; [Range(0, int.MaxValue, ErrorMessage = "El orden no puede ser negativo.")] public int Order { get; set; } }
 }

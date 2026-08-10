@@ -96,7 +96,8 @@ else
             CancelEdit();
             await ReloadAsync();
         }
-        catch (ApiProblemException exception)
+        catch (Exception exception) when (
+            exception is HttpRequestException or ApiProblemException)
         {
             error = exception.Message;
         }
@@ -126,7 +127,8 @@ else
             await Api.DeleteAsync(item.Id, cancellation.Token);
             await ReloadAsync();
         }
-        catch (ApiProblemException exception)
+        catch (Exception exception) when (
+            exception is HttpRequestException or ApiProblemException)
         {
             error = exception.Message;
         }

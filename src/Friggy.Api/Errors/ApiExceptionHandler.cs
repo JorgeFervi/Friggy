@@ -22,7 +22,7 @@ public sealed class ApiExceptionHandler : IExceptionHandler
         await Results.Problem(
                 statusCode: failure.Status,
                 title: failure.Title,
-                detail: exception.Message,
+                detail: failure.Detail ?? exception.Message,
                 instance: httpContext.Request.Path,
                 extensions: new Dictionary<string, object?> { ["code"] = failure.Code })
             .ExecuteAsync(httpContext);
@@ -68,7 +68,9 @@ public sealed class ApiExceptionHandler : IExceptionHandler
 
         return exception switch
         {
-            DbUpdateException => Conflict("persistence.conflict"),
+            DbUpdateException => Conflict(
+                "persistence.conflict",
+                "La operación entra en conflicto con el estado actual de los datos."),
             _ => null,
         };
     }
@@ -79,8 +81,8 @@ public sealed class ApiExceptionHandler : IExceptionHandler
     private static ApiFailure NotFound(string code) =>
         new(StatusCodes.Status404NotFound, "No se encontró el recurso.", code);
 
-    private static ApiFailure Conflict(string code) =>
-        new(StatusCodes.Status409Conflict, "La operación produce un conflicto.", code);
+    private static ApiFailure Conflict(string code, string? detail = null) =>
+        new(StatusCodes.Status409Conflict, "La operación produce un conflicto.", code, detail);
 
-    private sealed record ApiFailure(int Status, string Title, string Code);
+    private sealed record ApiFailure(int Status, string Title, string Code, string? Detail = null);
 }

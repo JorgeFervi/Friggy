@@ -20,27 +20,19 @@ Resultado verificado el 10 de agosto de 2026 desde una copia limpia de `HEAD` y 
 - `scripts/test.ps1` compiló en Release sin warnings y superó 212 pruebas: 59 Domain, 40 Application, 52 Integration, 46 Component y 15 End-to-End; 0 fallos y 0 omitidas.
 - El entorno aislado se retiró y los servicios locales habituales se restauraron conservando su volumen original.
 
-## 6.2 — Regresión guiada por TDD
+## 6.2 — Regresión guiada por TDD — Completada
 
-```csharp
-[Fact]
-public async Task GetWeek_AfterApiRestart_ReturnsPreviouslyAssignedRecipe()
-{
-    var planId = await fixture.CreatePlannedRecipeAsync();
-    await fixture.RestartApiAsync();
+La revisión priorizó corrección, integridad de datos, seguridad, errores de red, cancelación y lifecycle. Cada defecto confirmado se reprodujo primero con xUnit v3 sobre MTP y se corrigió con el cambio mínimo:
 
-    var response = await fixture.Client.GetFromJsonAsync<WeeklyPlanResponse>(
-        $"/api/weekly-plans/{planId}");
+- **P1 — Resuelto:** una caída de la API durante alta, edición o borrado de catálogos escapaba del componente Blazor. Los cuatro catálogos conservan ahora el formulario y muestran el error recuperable.
+- **P2 — Resuelto:** unidades, etiquetas y tipos de comida usaban `CancellationToken.None`. Ahora mantienen un token de lifecycle cancelado al liberar el componente.
+- **P2 — Resuelto:** los conflictos de EF Core publicaban `DbUpdateException.Message`. `ProblemDetails` conserva el código `persistence.conflict`, pero devuelve un detalle estable sin información técnica.
+- **P1 — Resuelto:** el recorrido E2E de persistencia conservaba un circuito Blazor del proceso Web detenido y podía competir con la reconexión automática. El navegador se desconecta de forma observable antes del reinicio y vuelve al plan después de los health checks.
+- **Mejora posterior:** los listados que cargan agregados completos no se modifican sin una medición; se revisarán en 6.5.
 
-    Assert.NotNull(response);
-    var assignedMeal = Assert.Single(
-        response.Days.SelectMany(day => day.Meals)
-            .Where(meal => meal.Recipe is not null));
-    Assert.Equal("Gazpacho", assignedMeal.Recipe!.Name);
-}
-```
+La dependencia de `DateTime.Today` en `WeeklyPlanFormModel` se revisó expresamente. El cálculo lee el reloj una sola vez, conserva el lunes actual y avanza al siguiente desde domingo, por lo que no se demostró una regresión ni se añadió una abstracción temporal. Se elimina el ejemplo anterior porque usaba una propiedad `WeeklyPlanMealResponse.Recipe` inexistente y duplicaba el recorrido E2E que ya verifica la asignación después de reiniciar servicios.
 
-Después: implementación mínima, verde focalizado, refactor, suite de capa y solución completa. No desactivar tests inestables: aislar reloj, datos, red o lifecycle.
+La subfase añade nueve regresiones de componentes y una del manejador de excepciones. El gate final superó 222 pruebas: 59 Domain, 40 Application, 53 Integration, 55 Component y 15 End-to-End; 0 fallos y 0 omitidas. No cambia rutas, DTO, esquema ni migraciones. La siguiente unidad ejecutable es la subfase 6.3.
 
 ## 6.3 — Auditoría de calidad de tests
 
