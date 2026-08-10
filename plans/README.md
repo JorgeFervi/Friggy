@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.2 corrigió mediante TDD el manejo de caídas de API en catálogos, la cancelación del lifecycle y la exposición de detalles técnicos en conflictos de persistencia. La siguiente unidad ejecutable es la [subfase 6.3 — Auditoría de calidad de tests](implementation/06-stabilization-and-pilot-implementation.md#63--auditoría-de-calidad-de-tests).
+Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.3 cerró la auditoría de calidad con 222 pruebas verdes, sin defectos críticos o altos, y dejó la cobertura como diagnóstico separado. La siguiente unidad ejecutable es la [subfase 6.4 — Cobertura como diagnóstico](implementation/06-stabilization-and-pilot-implementation.md#64--cobertura-como-diagnóstico).

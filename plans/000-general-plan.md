@@ -165,4 +165,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.2 corrigió mediante regresiones TDD los errores de red durante escrituras de catálogos, la cancelación del lifecycle de sus páginas y la exposición de detalles técnicos en conflictos de persistencia, sin cambiar contratos ni esquema. La siguiente unidad ejecutable es la subfase 6.3 — Auditoría de calidad de tests.
+Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.3 completó la auditoría de calidad de tests con 222 pruebas verdes y sin defectos críticos o altos; la cobertura queda reservada para un diagnóstico independiente en 6.4. La siguiente unidad ejecutable es la subfase 6.4 — Cobertura como diagnóstico.

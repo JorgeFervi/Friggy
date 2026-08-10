@@ -34,11 +34,20 @@ La dependencia de `DateTime.Today` en `WeeklyPlanFormModel` se revisó expresame
 
 La subfase añade nueve regresiones de componentes y una del manejador de excepciones. El gate final superó 222 pruebas: 59 Domain, 40 Application, 53 Integration, 55 Component y 15 End-to-End; 0 fallos y 0 omitidas. No cambia rutas, DTO, esquema ni migraciones. La siguiente unidad ejecutable es la subfase 6.3.
 
-## 6.3 — Auditoría de calidad de tests
+## 6.3 — Auditoría de calidad de tests — Completada
 
-Ejecutar en orden: `test-anti-patterns`, `assertion-quality`, huecos conductuales, `coverage-analysis` y revisión profunda solo donde haya hallazgos.
+La auditoría se ejecutó el 10 de agosto de 2026 sobre las cinco suites xUnit v3/Microsoft Testing Platform. Se revisaron anti-patrones, diversidad de assertions, huecos conductuales y los puntos de integración API, componentes y E2E.
 
-Gate: cero tests sin assertions/tautológicos, `async void`, sleeps, reloj real, dependencia de orden u omitidos. API comprueba status, body/headers y persistencia; componentes DOM y efecto; E2E datos recuperados tras reinicio.
+Resultado:
+
+- **0 críticos y 0 altos:** no hay tests sin assertions, tautológicos, `async void`, esperas fijas, reloj real, excepciones tragadas, dependencia de orden ni tests omitidos. Los tests E2E usan `Expect` de Playwright y los tests de lifecycle delegan sus assertions en helpers verificables.
+- **1 menor:** `Create_DescriptionIsMissing_NormalizesDescriptionToNull` comprueba únicamente `null`; es el resultado completo del contrato de normalización y no genera falsa confianza.
+- **1 mejora de mantenibilidad:** 14 escenarios superan 30 líneas (4 superan 50) porque cubren recorridos completos de API, persistencia o navegador. Se conservan como escenarios de regresión coherentes y se podrán descomponer durante una futura revisión de mantenibilidad.
+- Los 197 métodos de test (222 casos ejecutados por las teorías) cubren equality, boolean, null, exception, type, string, collection, negative, estado/efectos y assertions estructurales. No se detectaron huecos bloqueantes en status/body/headers/persistencia de API, DOM/efecto de componentes ni recuperación E2E tras reinicio.
+
+El proveedor de cobertura no está referenciado todavía y no existe Cobertura XML. No se añade durante esta subfase: la configuración MTP y el diagnóstico CRAP pertenecen a 6.4, sin alterar el baseline de paquetes de 6.3.
+
+Gate verificado: `scripts/test.ps1` superó 222/222 (59 Domain, 40 Application, 53 Integration, 55 Component y 15 End-to-End), 0 fallos y 0 omitidas; `dotnet format Friggy.sln --verify-no-changes --no-restore` limpio; auditoría NuGet sin vulnerabilidades. La siguiente unidad ejecutable es la subfase 6.4.
 
 ## 6.4 — Cobertura como diagnóstico
 
