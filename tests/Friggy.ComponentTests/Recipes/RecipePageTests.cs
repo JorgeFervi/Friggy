@@ -21,6 +21,46 @@ public sealed class RecipePageTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void Recipes_PendingApi_ShowsLoadingThenEmptyState()
+    {
+        var pending = new TaskCompletionSource<IReadOnlyList<RecipeListItemResponse>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        Services.AddSingleton<IRecipesApiClient>(new StubRecipesApiClient
+        {
+            PendingList = pending,
+        });
+
+        var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
+
+        Assert.Contains("Cargando recetas", component.Markup, StringComparison.Ordinal);
+        pending.SetResult([]);
+        component.WaitForAssertion(() =>
+            Assert.Contains("No hay recetas", component.Markup, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Recipes_ApiUnavailable_ShowsActionableErrorWithoutEmptyState()
+    {
+        Services.AddSingleton<IRecipesApiClient>(new StubRecipesApiClient
+        {
+            ListException = new HttpRequestException("La API no está disponible."),
+        });
+
+        var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Contains(
+                "La API no está disponible",
+                component.Find("[role='alert']").TextContent,
+                StringComparison.Ordinal);
+            Assert.DoesNotContain("No hay recetas", component.Markup, StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void Recipes_ApiReturnsRecipe_RendersListAndDetailLink()
     {
         Services.AddSingleton<IRecipesApiClient>(new StubRecipesApiClient
@@ -141,6 +181,31 @@ public sealed class RecipePageTests : ComponentTest
         });
     }
 
+    [Fact]
+    [Trait("Category", "Component")]
+    public void RecipeEdit_CatalogLoadFails_ShowsErrorWithoutEmptyForm()
+    {
+        Services.AddSingleton<IRecipesApiClient>(new StubRecipesApiClient());
+        Services.AddSingleton<IIngredientsApiClient>(new IngredientsApiClientStub
+        {
+            ListException = new HttpRequestException("La API no está disponible."),
+        });
+        Services.AddSingleton<IUnitTypesApiClient>(new UnitTypesApiClientStub());
+        Services.AddSingleton<IRecipeTagsApiClient>(new RecipeTagsApiClientStub());
+        Services.AddSingleton<IMealTypesApiClient>(new MealTypesApiClientStub());
+
+        var component = Render<global::Friggy.Web.Components.Pages.RecipeEdit>();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Contains(
+                "No se pudo cargar el formulario",
+                component.Find("[role='alert']").TextContent,
+                StringComparison.Ordinal);
+            Assert.Empty(component.FindAll("form"));
+        });
+    }
+
     private void RegisterApis(StubRecipesApiClient recipes)
     {
         Services.AddSingleton<IRecipesApiClient>(recipes);
@@ -176,12 +241,21 @@ public sealed class RecipePageTests : ComponentTest
     {
         public IReadOnlyList<RecipeListItemResponse> Recipes { get; init; } = [];
         public RecipeResponse? Recipe { get; init; }
+        public TaskCompletionSource<IReadOnlyList<RecipeListItemResponse>>? PendingList { get; init; }
+        public Exception? ListException { get; init; }
         public ApiProblemException? SaveException { get; init; }
         public List<CreateRecipeRequest> Created { get; } = [];
         public List<(Guid Id, UpdateRecipeRequest Request)> Updated { get; } = [];
 
-        public Task<IReadOnlyList<RecipeListItemResponse>> ListAsync(CancellationToken cancellationToken) =>
-            Task.FromResult(Recipes);
+        public Task<IReadOnlyList<RecipeListItemResponse>> ListAsync(CancellationToken cancellationToken)
+        {
+            if (ListException is not null)
+            {
+                throw ListException;
+            }
+
+            return PendingList?.Task ?? Task.FromResult(Recipes);
+        }
 
         public Task<RecipeResponse> GetAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Recipe ?? throw new InvalidOperationException("Falta configurar la receta."));
@@ -209,8 +283,17 @@ public sealed class RecipePageTests : ComponentTest
 
     private sealed class IngredientsApiClientStub : IIngredientsApiClient
     {
-        public Task<IReadOnlyList<IngredientResponse>> ListAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<IngredientResponse>>([new(IngredientId, "Tomate")]);
+        public Exception? ListException { get; init; }
+
+        public Task<IReadOnlyList<IngredientResponse>> ListAsync(CancellationToken cancellationToken)
+        {
+            if (ListException is not null)
+            {
+                throw ListException;
+            }
+
+            return Task.FromResult<IReadOnlyList<IngredientResponse>>([new(IngredientId, "Tomate")]);
+        }
         public Task<IngredientResponse> CreateAsync(CreateIngredientRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IngredientResponse> UpdateAsync(Guid id, UpdateIngredientRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();

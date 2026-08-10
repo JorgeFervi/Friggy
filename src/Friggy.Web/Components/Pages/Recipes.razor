@@ -18,11 +18,11 @@
 {
     <p>Cargando recetas…</p>
 }
-else if (recipes.Count == 0)
+else if (error is null && recipes.Count == 0)
 {
     <p>No hay recetas. Crea la primera.</p>
 }
-else
+else if (error is null)
 {
     <table>
         <thead>

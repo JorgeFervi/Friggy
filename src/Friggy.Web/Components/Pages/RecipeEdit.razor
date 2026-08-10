@@ -27,7 +27,7 @@
 {
     <p>Cargando formulario…</p>
 }
-else
+else if (!loadFailed)
 {
     <RecipeForm Model="model"
                 Ingredients="ingredients"
@@ -47,6 +47,7 @@ else
     private IReadOnlyList<MealTypeResponse> mealTypes = [];
     private string? error;
     private bool loading = true;
+    private bool loadFailed;
     private bool saving;
 
     [Parameter]
@@ -89,6 +90,7 @@ else
         catch (Exception exception) when (
             exception is HttpRequestException or ApiProblemException)
         {
+            loadFailed = true;
             error = $"No se pudo cargar el formulario: {exception.Message}";
         }
         finally
