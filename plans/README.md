@@ -27,4 +27,4 @@ Esta carpeta traduce la definición del MVP en un itinerario ejecutable. La docu
 
 ## Estado actual
 
-Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.5 midió los listados contra PostgreSQL y sustituyó la carga de agregados completos por proyecciones resumidas: recetas pasaron de 5 a 1 comandos SQL y planes mantienen 1 comando sin materializar asignaciones. La siguiente unidad ejecutable es la [subfase 6.6 — Gate automatizado](implementation/06-stabilization-and-pilot-implementation.md#66--gate-automatizado).
+Las fases 1 a 5 están completadas y la fase 6 está en progreso. La subfase 6.6 consolidó restore, build Release, formato, las cinco suites y auditoría NuGet en `scripts/quality-gate.ps1`, con 225 pruebas verdes y 0 omitidas. La siguiente unidad ejecutable es la [subfase 6.7 — Piloto y cierre](implementation/06-stabilization-and-pilot-implementation.md#67--piloto-y-cierre).

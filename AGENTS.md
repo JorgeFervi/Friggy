@@ -20,6 +20,7 @@
 ./scripts/setup.ps1
 ./scripts/start.ps1
 ./scripts/test.ps1
+./scripts/quality-gate.ps1
 dotnet format Friggy.sln --verify-no-changes --no-restore
 ```
 

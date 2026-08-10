@@ -1,3 +1,7 @@
+param(
+    [switch]$SkipBuild
+)
+
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -14,10 +18,12 @@ try {
         -Description 'docker info' `
         -FilePath 'docker' `
         -ArgumentList @('info', '--format', '{{.ServerVersion}}')
-    Invoke-Checked `
-        -Description 'dotnet build Friggy.sln --configuration Release' `
-        -FilePath 'dotnet' `
-        -ArgumentList @('build', 'Friggy.sln', '--configuration', 'Release')
+    if (-not $SkipBuild) {
+        Invoke-Checked `
+            -Description 'dotnet build Friggy.sln --configuration Release' `
+            -FilePath 'dotnet' `
+            -ArgumentList @('build', 'Friggy.sln', '--configuration', 'Release')
+    }
     Invoke-Checked `
         -Description 'dotnet test --project tests/Friggy.Domain.Tests/Friggy.Domain.Tests.csproj --configuration Release --no-build --no-restore' `
         -FilePath 'dotnet' `

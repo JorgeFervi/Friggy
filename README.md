@@ -58,19 +58,17 @@ Para compilar una vez y ejecutar todas las suites en orden:
 ./scripts/test.ps1
 ```
 
-El script usa la configuración `Release` para no interferir con los procesos locales `Debug` iniciados por `start.ps1`, y termina inmediatamente si falla cualquier comando o suite.
+El script usa la configuración `Release` para no interferir con los procesos locales `Debug` iniciados por `start.ps1`, y termina inmediatamente si falla cualquier comando o suite. El parámetro `-SkipBuild` permite reutilizar una compilación previa desde el gate completo.
 
 ## Puerta de calidad
 
 Antes de incorporar cambios, ejecutar:
 
 ```powershell
-dotnet restore Friggy.sln --configfile NuGet.Config
-dotnet build Friggy.sln --configuration Release --no-restore
-dotnet format Friggy.sln --verify-no-changes --no-restore
-./scripts/test.ps1
-dotnet list Friggy.sln package --vulnerable --include-transitive --no-restore
+./scripts/quality-gate.ps1
 ```
+
+El gate restaura con `NuGet.Config`, compila Release, verifica formato, ejecuta las cinco suites mediante Microsoft Testing Platform y falla si la auditoría JSON de NuGet encuentra vulnerabilidades.
 
 Para ejecutar únicamente las reglas arquitectónicas con xUnit v3 sobre MTP:
 

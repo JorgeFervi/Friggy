@@ -113,7 +113,8 @@ Las pruebas de persistencia usarán PostgreSQL real en un contenedor efímero. N
 
 - `scripts/setup.ps1`: comprobar .NET 10, Docker y Compose; restaurar; iniciar PostgreSQL; aplicar migraciones; instalar Chromium de Playwright.
 - `scripts/start.ps1`: iniciar PostgreSQL, API y Web, esperar health checks y mostrar las URL.
-- `scripts/test.ps1`: ejecutar Domain, Application, Integration, Component y End-to-End en ese orden, deteniéndose ante el primer fallo.
+- `scripts/test.ps1`: ejecutar Domain, Application, Integration, Component y End-to-End en ese orden, deteniéndose ante el primer fallo; acepta `-SkipBuild` para gates que ya compilaron.
+- `scripts/quality-gate.ps1`: restaurar, compilar Release, verificar formato, ejecutar las cinco suites y auditar vulnerabilidades NuGet.
 
 Los scripts serán idempotentes, no sobrescribirán configuración local ni eliminarán volúmenes y devolverán códigos de salida accionables. La configuración se proporcionará mediante variables de entorno; no se versionarán secretos.
 
@@ -165,4 +166,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.5 midió los listados contra PostgreSQL y dejó las consultas resumidas de recetas y planes como ruta de lectura; la siguiente unidad ejecutable es la subfase 6.6 — Gate automatizado.
+Las fases 1 a 5 quedaron completadas el 10 de agosto de 2026 y la fase 6 está en progreso. La subfase 6.6 consolidó el gate reproducible en `scripts/quality-gate.ps1` y dejó 225 pruebas verdes sin vulnerabilidades; la siguiente unidad ejecutable es la subfase 6.7 — Piloto y cierre.

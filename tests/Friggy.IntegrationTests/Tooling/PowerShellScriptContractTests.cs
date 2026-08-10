@@ -8,6 +8,7 @@ public sealed class PowerShellScriptContractTests
     [InlineData("setup.ps1")]
     [InlineData("start.ps1")]
     [InlineData("test.ps1")]
+    [InlineData("quality-gate.ps1")]
     public void Script_Always_EnablesStrictFailFastExecution(string scriptName)
     {
         var script = ReadScript(scriptName);
@@ -66,6 +67,23 @@ public sealed class PowerShellScriptContractTests
             "tests/Friggy.ComponentTests/Friggy.ComponentTests.csproj",
             "tests/Friggy.EndToEndTests/Friggy.EndToEndTests.csproj");
         Assert.Equal(5, CountOccurrences(script, "dotnet test --project"));
+        Assert.DoesNotContain(" -- ", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void QualityGateScript_RunsRestoreBuildFormatTestsAndAuditInOrder()
+    {
+        var script = ReadScript("quality-gate.ps1");
+
+        AssertInOrder(
+            script,
+            "dotnet restore Friggy.sln",
+            "dotnet build Friggy.sln",
+            "dotnet format Friggy.sln",
+            "./scripts/test.ps1 -SkipBuild",
+            "dotnet list Friggy.sln package");
+        Assert.Contains("--format json", script, StringComparison.Ordinal);
+        Assert.Contains("Get-VulnerabilityCount", script, StringComparison.Ordinal);
         Assert.DoesNotContain(" -- ", script, StringComparison.Ordinal);
     }
 

@@ -90,30 +90,20 @@ La evidencia confirma impacto observable: el listado de recetas hacía cinco via
 
 No cambian rutas, DTO públicos, esquema ni migraciones. No se añade caché ni infraestructura adicional. La siguiente unidad ejecutable es la subfase 6.6.
 
-## 6.6 — Gate automatizado
+## 6.6 — Gate automatizado — Completada
 
-```powershell
-$ErrorActionPreference = 'Stop'
-Set-StrictMode -Version Latest
+Se creó `scripts/quality-gate.ps1` como entrada única y reproducible del gate local. Ejecuta, en orden, `dotnet restore` con `NuGet.Config`, build Release sin restore, `dotnet format --verify-no-changes`, las cinco suites mediante `scripts/test.ps1 -SkipBuild` y la auditoría de paquetes con salida JSON. El parámetro `-SkipBuild` evita recompilar cuando el gate ya ha construido la solución.
 
-dotnet build Friggy.sln --no-restore
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+La auditoría recorre la salida estructurada de `dotnet list package --vulnerable --include-transitive --format json` y falla si encuentra vulnerabilidades. Los tests de contrato de scripts verifican el modo fail-fast, el orden de los pasos y la ausencia del separador `--` incompatible con MTP sobre .NET 10.
 
-$projects = @(
-    'tests/Friggy.Domain.Tests/Friggy.Domain.Tests.csproj',
-    'tests/Friggy.Application.Tests/Friggy.Application.Tests.csproj',
-    'tests/Friggy.IntegrationTests/Friggy.IntegrationTests.csproj',
-    'tests/Friggy.ComponentTests/Friggy.ComponentTests.csproj',
-    'tests/Friggy.EndToEndTests/Friggy.EndToEndTests.csproj'
-)
+Gate final ejecutado el 10 de agosto de 2026:
 
-foreach ($project in $projects) {
-    dotnet test --project $project --no-build
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-}
-```
+- Build Release correcto, con 0 errores y 0 warnings.
+- Formato correcto.
+- 225 pruebas verdes: 59 Domain, 40 Application, 56 Integration, 55 Component y 15 End-to-End; 0 fallos y 0 omitidas.
+- Auditoría NuGet sin vulnerabilidades.
 
-Verificar `--no-build` contra la versión MTP instalada; si no está soportado, usar la opción equivalente documentada.
+La siguiente unidad ejecutable es la subfase 6.7 — Piloto y cierre.
 
 ## 6.7 — Piloto y cierre
 
