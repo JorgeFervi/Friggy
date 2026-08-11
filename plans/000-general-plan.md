@@ -166,4 +166,4 @@ Una tarea está terminada cuando:
 
 ## Estado actual
 
-Las fases 1 a 6 quedaron completadas el 10 de agosto de 2026. La subfase 6.7 cerró el piloto técnico local y dejó el MVP como candidato a piloto guiado, sin defectos bloqueantes confirmados. El siguiente trabajo debe abrir una fase independiente para frigorífico virtual e inventario, seguida de lista de la compra.
+Las fases 1 a 6 quedaron completadas el 10 de agosto de 2026. La evolución posterior del producto, comenzando por correcciones del MVP y continuando con inventario, está definida en el [plan general post-MVP](001-general-plan.md).

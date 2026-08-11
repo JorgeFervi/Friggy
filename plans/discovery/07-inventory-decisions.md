@@ -1,7 +1,7 @@
 # Decisiones previas — Inventario doméstico
 
-- **Estado:** Decisiones funcionales confirmadas — listo para redactar el plan de la Fase 7
-- **Efecto:** El análisis de requisitos queda cerrado; la implementación no comenzará hasta completar el gate de este documento
+- **Estado:** Decisiones funcionales confirmadas — incorporadas al plan de la Fase 8
+- **Efecto:** El análisis de requisitos queda cerrado; la implementación de inventario no comenzará hasta completar el gate de este documento
 
 El primer incremento incorporará el inventario como una capacidad nueva dentro de las capas actuales. Permitirá registrar existencias por lotes, conocer su caducidad, conservar el historial de cambios y comparar las cantidades disponibles con las necesidades de una planificación semanal.
 
@@ -68,11 +68,11 @@ El primer incremento incorporará el inventario como una capacidad nueva dentro 
 - Una comida completada no puede volver a generar consumos por una repetición de la misma solicitud.
 - Una comida completada permanece cerrada en el primer incremento; las correcciones posteriores afectan al inventario mediante ajustes, no al estado de la comida.
 
-## Gate para abrir la Fase 7
+## Gate para abrir la Fase 8
 
 - La validación manual previa se considera cerrada expresamente por el propietario del producto y no quedan defectos bloqueantes abiertos.
 - Los límites de la primera entrega permanecen sin lista de la compra, conversiones, ubicaciones, IA, autenticación ni despliegue público.
-- Los contratos, la migración y los escenarios de integración con PostgreSQL están identificados en un plan de fase separado.
+- Los contratos, la migración y los escenarios de integración con PostgreSQL están identificados en el [plan de la Fase 8](../phases/08-inventory-and-meal-completion.md) y su [guía ejecutable](../implementation/08-inventory-and-meal-completion-implementation.md).
 - `scripts/quality-gate.ps1` está en verde sobre el commit de partida.
 
 La implementación deberá seguir TDD y mantener `Domain <- Application <- Infrastructure <- Api`. `Friggy.Web` consumirá los nuevos contratos exclusivamente por HTTP.
