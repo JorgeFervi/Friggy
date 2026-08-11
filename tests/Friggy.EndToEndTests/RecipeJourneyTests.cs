@@ -8,7 +8,7 @@ public sealed class RecipeJourneyTests : FriggyPageTest
 {
     [Fact]
     [Trait("Category", "E2E")]
-    public async Task CreateRecipe_FromBrowser_PersistsAndCanBeRecoveredFromList()
+    public async Task RecipeJourney_CreateNavigateAndDelete_PersistsExpectedBrowserState()
     {
         const string ingredientName = "Tomate E2E receta";
         const string recipeName = "Gazpacho E2E receta";
@@ -45,14 +45,30 @@ public sealed class RecipeJourneyTests : FriggyPageTest
             await Expect(Page.GetByText(ingredientName, new() { Exact = false })).ToBeVisibleAsync();
             await Expect(Page.GetByText("Triturar y servir", new() { Exact = false })).ToBeVisibleAsync();
 
-            await NavigateToInteractivePageAsync("/recipes");
+            await Page.GetByRole(AriaRole.Navigation, new() { Name = "Principal", Exact = true })
+                .GetByRole(AriaRole.Link, new() { Name = "Recetas", Exact = true })
+                .ClickAsync();
             var recipeRow = Page.GetByRole(AriaRole.Row)
                 .Filter(new LocatorFilterOptions { HasText = recipeName });
-            await recipeRow.GetByRole(AriaRole.Link, new() { Name = "Ver", Exact = true }).ClickAsync();
+            await Expect(recipeRow).ToBeVisibleAsync();
+            Page.Dialog += async (_, dialog) => await dialog.AcceptAsync();
+            await recipeRow.GetByRole(AriaRole.Button, new() { Name = "Borrar", Exact = true })
+                .ClickAsync();
 
-            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = recipeName, Exact = true }))
+            await Expect(recipeRow)
+                .Not.ToBeVisibleAsync();
+
+            await Page.GetByRole(AriaRole.Navigation, new() { Name = "Principal", Exact = true })
+                .GetByRole(AriaRole.Link, new() { Name = "Planes semanales", Exact = true })
+                .ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Planes semanales", Exact = true }))
                 .ToBeVisibleAsync();
-            await Expect(Page.GetByText(ingredientName, new() { Exact = false })).ToBeVisibleAsync();
+
+            await Page.GetByRole(AriaRole.Navigation, new() { Name = "Principal", Exact = true })
+                .GetByRole(AriaRole.Link, new() { Name = "Catálogos", Exact = true })
+                .ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Navigation, new() { Name = "Catálogos", Exact = true }))
+                .ToBeVisibleAsync();
         });
     }
 }

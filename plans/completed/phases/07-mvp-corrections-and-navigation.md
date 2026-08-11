@@ -1,8 +1,8 @@
 # Fase 7 — Correcciones del MVP y navegación
 
-- **Estado:** Planificada
+- **Estado:** Completada — 11 de agosto de 2026; quality gate verde con 235 pruebas
 - **Estimación:** 1–2 días
-- **Dependencias:** [Fase 6 completada](../completed/phases/06-stabilization-and-pilot.md)
+- **Dependencias:** [Fase 6 completada](06-stabilization-and-pilot.md)
 - **Guía ejecutable:** [Implementación de la fase 7](../implementation/07-mvp-corrections-and-navigation-implementation.md)
 
 ## Resultado esperado
@@ -45,4 +45,11 @@ No cambia el esquema, las entidades de Domain ni las rutas HTTP existentes.
 
 ## Handoff
 
-Habilitar [Fase 8 — Inventario y finalización de comidas](08-inventory-and-meal-completion.md) sobre una base funcional y navegable.
+La [Fase 8 — Inventario y finalización de comidas](../../phases/08-inventory-and-meal-completion.md) queda habilitada sobre una base funcional y navegable.
+
+## Cierre
+
+- Eliminación Web confirmada, cancelable, sin envíos duplicados y con conservación del listado ante conflictos.
+- Navegación principal persistente y accesible desde todas las páginas.
+- Conflicto PostgreSQL de receta referenciada verificado como `409 ProblemDetails` sin detalles técnicos.
+- Quality gate final: 235/235 pruebas, 0 fallos, 0 omitidas, formato limpio y auditoría NuGet sin vulnerabilidades.

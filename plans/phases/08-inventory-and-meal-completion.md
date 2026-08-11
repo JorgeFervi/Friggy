@@ -2,7 +2,7 @@
 
 - **Estado:** Planificada
 - **Estimación:** 5–8 días
-- **Dependencias:** [Fase 7](07-mvp-corrections-and-navigation.md) y [decisiones de inventario](../discovery/07-inventory-decisions.md)
+- **Dependencias:** [Fase 7 completada](../completed/phases/07-mvp-corrections-and-navigation.md) y [decisiones de inventario](../discovery/07-inventory-decisions.md)
 - **Guía ejecutable:** [Implementación de la fase 8](../implementation/08-inventory-and-meal-completion-implementation.md)
 
 ## Resultado esperado

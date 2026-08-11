@@ -3,6 +3,7 @@
 @using Friggy.Application.Recipes.Dtos
 @using Friggy.Web.Api
 @inject IRecipesApiClient Api
+@inject IJSRuntime JavaScript
 
 <PageTitle>Recetas</PageTitle>
 <h1>Recetas</h1>
@@ -22,7 +23,7 @@ else if (error is null && recipes.Count == 0)
 {
     <p>No hay recetas. Crea la primera.</p>
 }
-else if (error is null)
+else if (recipes.Count > 0)
 {
     <table>
         <thead>
@@ -37,6 +38,12 @@ else if (error is null)
                     <td>
                         <a data-testid="recipe-detail" href="recipes/@recipe.Id">Ver</a>
                         <a href="recipes/@recipe.Id/edit">Editar</a>
+                        <button type="button"
+                                data-action="delete-recipe"
+                                disabled="@pendingDeletes.Contains(recipe.Id)"
+                                @onclick="() => DeleteAsync(recipe)">
+                            @(pendingDeletes.Contains(recipe.Id) ? "Borrando…" : "Borrar")
+                        </button>
                     </td>
                 </tr>
             }
@@ -46,6 +53,7 @@ else if (error is null)
 
 @code {
     private readonly CancellationTokenSource cancellation = new();
+    private readonly HashSet<Guid> pendingDeletes = [];
     private IReadOnlyList<RecipeListItemResponse> recipes = [];
     private string? error;
     private bool loading = true;
@@ -63,6 +71,42 @@ else if (error is null)
         finally
         {
             loading = false;
+        }
+    }
+
+    private async Task DeleteAsync(RecipeListItemResponse recipe)
+    {
+        if (!pendingDeletes.Add(recipe.Id))
+        {
+            return;
+        }
+
+        try
+        {
+            var confirmed = await JavaScript.InvokeAsync<bool>(
+                "confirm",
+                $"¿Borrar la receta {recipe.Name}?");
+            if (!confirmed)
+            {
+                return;
+            }
+
+            error = null;
+            await Api.DeleteAsync(recipe.Id, cancellation.Token);
+            recipes = recipes.Where(item => item.Id != recipe.Id).ToArray();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception is ApiProblemException
+                {
+                    StatusCode: System.Net.HttpStatusCode.Conflict,
+                }
+                ? "No se pudo borrar la receta porque está asignada a un plan semanal."
+                : $"No se pudo borrar la receta: {exception.Message}";
+        }
+        finally
+        {
+            pendingDeletes.Remove(recipe.Id);
         }
     }
 

@@ -3,6 +3,8 @@
 - **Fase relacionada:** [Fase 7 — Correcciones del MVP y navegación](../phases/07-mvp-corrections-and-navigation.md)
 - **Skills aplicables:** `code-review`, `blazor`, `xunit`, `run-tests`, `test-anti-patterns`
 
+> **Progreso:** fase completada. Las subfases 7.1 a 7.5 están verdes; la siguiente unidad ejecutable es la Fase 8.
+
 Esta fase no cambia Domain ni PostgreSQL. Corrige dos recorridos de Web apoyándose en contratos ya existentes y debe permanecer pequeña.
 
 ## Matriz de comportamiento

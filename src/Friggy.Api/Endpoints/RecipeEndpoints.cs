@@ -36,7 +36,8 @@ public static class RecipeEndpoints
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("DeleteRecipe")
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }

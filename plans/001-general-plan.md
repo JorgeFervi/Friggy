@@ -21,7 +21,7 @@ El recorrido objetivo es:
 
 | Fase | Capacidad | Dependencia principal | Resultado |
 |---|---|---|---|
-| 7 | [Correcciones del MVP y navegación](phases/07-mvp-corrections-and-navigation.md) | Fase 6 | Recetas eliminables cuando proceda y navegación persistente |
+| 7 | [Correcciones del MVP y navegación](completed/phases/07-mvp-corrections-and-navigation.md) | Fase 6 | Recetas eliminables cuando proceda y navegación persistente |
 | 8 | [Inventario y finalización de comidas](phases/08-inventory-and-meal-completion.md) | Fase 7 y decisiones de inventario | Lotes, movimientos, raciones, carencias y consumo al completar |
 | 9 | [Planificación semanal avanzada](phases/09-advanced-weekly-planning.md) | Fase 8 | Tipos por día, horarios y registro explícito de comidas no realizadas |
 | 10 | [Ingredientes asociados a pasos](phases/10-recipe-step-ingredients.md) | Fase 9 | Cada paso identifica qué líneas de ingrediente utiliza |
@@ -65,4 +65,4 @@ Una fase está terminada cuando su comportamiento está cubierto en la capa más
 
 ## Estado actual
 
-Las fases 1 a 6 están completadas. La siguiente unidad ejecutable es la Fase 7, limitada a corregir la eliminación de recetas y añadir navegación principal antes de introducir cambios de esquema de inventario.
+Las fases 1 a 7 están completadas. La siguiente unidad ejecutable es la Fase 8 — Inventario y finalización de comidas, con sus decisiones funcionales ya confirmadas.

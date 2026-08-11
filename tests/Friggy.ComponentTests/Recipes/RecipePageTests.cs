@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http.Json;
 using Bunit;
 using Friggy.Application.Catalogs.Ingredients.Dtos;
 using Friggy.Application.Catalogs.MealTypes.Dtos;
@@ -7,6 +9,7 @@ using Friggy.Application.Recipes.Dtos;
 using Friggy.ComponentTests.Testing;
 using Friggy.Web.Api;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Friggy.ComponentTests.Recipes;
@@ -74,6 +77,108 @@ public sealed class RecipePageTests : ComponentTest
         {
             Assert.Contains("Gazpacho", component.Markup, StringComparison.Ordinal);
             Assert.Equal($"recipes/{RecipeId}", component.Find("a[data-testid='recipe-detail']").GetAttribute("href"));
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Recipes_DeleteConfirmed_DeletesOnceAndRemovesRecipeFromList()
+    {
+        var recipes = new StubRecipesApiClient
+        {
+            Recipes = [new(RecipeId, "Gazpacho", 20)],
+        };
+        Services.AddSingleton<IRecipesApiClient>(recipes);
+        JavaScript.Setup<bool>("confirm", _ => true).SetResult(true);
+        var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
+        component.WaitForElement("button[data-action='delete-recipe']");
+
+        component.Find("button[data-action='delete-recipe']").Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Equal(RecipeId, Assert.Single(recipes.Deleted));
+            Assert.DoesNotContain("Gazpacho", component.Markup, StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Recipes_DeleteCancelled_KeepsRecipeWithoutCallingApi()
+    {
+        var recipes = new StubRecipesApiClient
+        {
+            Recipes = [new(RecipeId, "Gazpacho", 20)],
+        };
+        Services.AddSingleton<IRecipesApiClient>(recipes);
+        JavaScript.Setup<bool>("confirm", _ => true).SetResult(false);
+        var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
+        component.WaitForElement("button[data-action='delete-recipe']");
+
+        component.Find("button[data-action='delete-recipe']").Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Empty(recipes.Deleted);
+            Assert.Contains("Gazpacho", component.Markup, StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Recipes_DeletePending_DisablesActionAndPreventsDuplicateRequest()
+    {
+        var pendingDelete = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var recipes = new StubRecipesApiClient
+        {
+            Recipes = [new(RecipeId, "Gazpacho", 20)],
+            PendingDelete = pendingDelete,
+        };
+        Services.AddSingleton<IRecipesApiClient>(recipes);
+        JavaScript.Setup<bool>("confirm", _ => true).SetResult(true);
+        var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
+        component.WaitForElement("button[data-action='delete-recipe']");
+
+        component.Find("button[data-action='delete-recipe']").Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Single(recipes.Deleted);
+            Assert.True(component.Find("button[data-action='delete-recipe']").HasAttribute("disabled"));
+        });
+        component.Find("button[data-action='delete-recipe']").Click();
+        Assert.Single(recipes.Deleted);
+
+        pendingDelete.SetResult();
+        component.WaitForAssertion(() =>
+            Assert.DoesNotContain("Gazpacho", component.Markup, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public async Task Recipes_DeleteRejected_ShowsReferenceConflictAndKeepsRecipe()
+    {
+        var recipes = new StubRecipesApiClient
+        {
+            Recipes = [new(RecipeId, "Gazpacho", 20)],
+            DeleteException = await CreatePersistenceConflictAsync(),
+        };
+        Services.AddSingleton<IRecipesApiClient>(recipes);
+        JavaScript.Setup<bool>("confirm", _ => true).SetResult(true);
+        var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
+        component.WaitForElement("button[data-action='delete-recipe']");
+
+        component.Find("button[data-action='delete-recipe']").Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Contains(
+                "asignada a un plan semanal",
+                component.Find("[role='alert']").TextContent,
+                StringComparison.Ordinal);
+            Assert.Contains("Gazpacho", component.Markup, StringComparison.Ordinal);
+            Assert.False(component.Find("button[data-action='delete-recipe']").HasAttribute("disabled"));
         });
     }
 
@@ -237,15 +342,35 @@ public sealed class RecipePageTests : ComponentTest
             [TagId],
             [MealTypeId]);
 
+    private static async Task<ApiProblemException> CreatePersistenceConflictAsync()
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.Conflict)
+        {
+            Content = JsonContent.Create(new ProblemDetails
+            {
+                Status = (int)HttpStatusCode.Conflict,
+                Detail = "La operación entra en conflicto con el estado actual de los datos.",
+                Extensions = { ["code"] = "persistence.conflict" },
+            }),
+        };
+
+        return await ApiProblemException.FromResponseAsync(
+            response,
+            Xunit.TestContext.Current.CancellationToken);
+    }
+
     private sealed class StubRecipesApiClient : IRecipesApiClient
     {
         public IReadOnlyList<RecipeListItemResponse> Recipes { get; init; } = [];
         public RecipeResponse? Recipe { get; init; }
         public TaskCompletionSource<IReadOnlyList<RecipeListItemResponse>>? PendingList { get; init; }
+        public TaskCompletionSource? PendingDelete { get; init; }
         public Exception? ListException { get; init; }
         public ApiProblemException? SaveException { get; init; }
+        public ApiProblemException? DeleteException { get; init; }
         public List<CreateRecipeRequest> Created { get; } = [];
         public List<(Guid Id, UpdateRecipeRequest Request)> Updated { get; } = [];
+        public List<Guid> Deleted { get; } = [];
 
         public Task<IReadOnlyList<RecipeListItemResponse>> ListAsync(CancellationToken cancellationToken)
         {
@@ -277,8 +402,17 @@ public sealed class RecipePageTests : ComponentTest
             return Task.FromResult(Recipe ?? throw new InvalidOperationException("Falta configurar la receta."));
         }
 
-        public Task DeleteAsync(Guid id, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+        public Task DeleteAsync(Guid id, CancellationToken cancellationToken)
+        {
+            Deleted.Add(id);
+
+            if (DeleteException is not null)
+            {
+                throw DeleteException;
+            }
+
+            return PendingDelete?.Task ?? Task.CompletedTask;
+        }
     }
 
     private sealed class IngredientsApiClientStub : IIngredientsApiClient

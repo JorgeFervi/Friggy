@@ -1,6 +1,18 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<header class="site-header">
+    <a class="site-title" href="/">Friggy</a>
+    <nav aria-label="Principal">
+        <a href="/">Inicio</a>
+        <a href="/recipes">Recetas</a>
+        <a href="/weekly-plans">Planes semanales</a>
+        <a href="/#catalogs">Catálogos</a>
+    </nav>
+</header>
+
+<main class="site-content">
+    @Body
+</main>
 
 @if (interactive)
 {
