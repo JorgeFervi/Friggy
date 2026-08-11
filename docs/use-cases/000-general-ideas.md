@@ -47,11 +47,12 @@ Ideas principales para la Fase 1 del proyecto de desarrollo de la aplicación:
   - Utilidad IA (Opcional):
     - Que establezca automáticamente las comidas para cada uno de los días.
   
-Ideas principales para la Fase 2 del proyecto de desarrollo de la aplicación:
+Ideas posteriores al MVP:
 
-- Registro de alimentos disponibles. Crear un "frigorífico virtual" para indicar que alimentos tienes disponibles en casa.
-
-- Creación automática de la lista de la compra basandose en la planificación semanal activa, los alimentos que tienes disponibles en casa y los que te faltan.
+- Registrar existencias domésticas mediante lotes con cantidad, unidad y caducidad, conservando el historial de sus movimientos.
+- Comparar el inventario utilizable con un plan semanal seleccionado, teniendo en cuenta las raciones asignadas a cada receta.
+- Registrar el consumo únicamente cuando una comida se complete y mediante selección manual de los lotes utilizados.
+- Crear la lista de la compra en una fase independiente posterior, a partir de las carencias calculadas y confirmadas por el usuario.
 
 ## Definición del MVP
 
