@@ -107,7 +107,7 @@ La siguiente unidad ejecutable es la subfase 6.7 — Piloto y cierre.
 
 ## 6.7 — Piloto y cierre — Completada
 
-Se ejecutó un piloto técnico local y se registró en [plans/pilot/20260810-local-technical-pilot.md](../pilot/20260810-local-technical-pilot.md). El ensayo cubrió dos ejecuciones idempotentes de `setup.ps1`, `start.ps1`, navegación de las pantallas principales, el recorrido E2E completo y persistencia después de reiniciar servicios.
+Se ejecutó un piloto técnico local y se registró en [plans/pilot/20260810-local-technical-pilot.md](../../pilot/20260810-local-technical-pilot.md). El ensayo cubrió dos ejecuciones idempotentes de `setup.ps1`, `start.ps1`, navegación de las pantallas principales, el recorrido E2E completo y persistencia después de reiniciar servicios.
 
 Resultados:
 

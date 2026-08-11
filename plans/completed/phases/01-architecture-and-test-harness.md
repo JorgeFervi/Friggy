@@ -2,7 +2,7 @@
 
 - **Estado:** Completada — 6 de agosto de 2026
 - **Estimación:** 2 días
-- **Dependencias:** [Plan general](../000-general-plan.md)
+- **Dependencias:** [Plan general](../../000-general-plan.md)
 - **Guía ejecutable:** [Implementación de la fase 1](../implementation/01-architecture-and-test-harness-implementation.md)
 
 ## Resultado esperado
@@ -58,6 +58,6 @@ Registrar versiones y comandos verificados en el README, marcar la fase en verde
 ## Resultado del cierre
 
 - Las seis subfases están completadas y la puerta reproducible finaliza en verde.
-- Las decisiones de [Clean Architecture](../../docs/adr/003-clean-architecture.md) y [TDD/testing](../../docs/adr/004-tdd-and-testing-strategy.md) están aceptadas.
+- Las decisiones de [Clean Architecture](../../../docs/adr/003-clean-architecture.md) y [TDD/testing](../../../docs/adr/004-tdd-and-testing-strategy.md) están aceptadas.
 - Las versiones y los comandos comprobados están registrados en el README.
 - La fase 2 queda habilitada como siguiente unidad ejecutable.

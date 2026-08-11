@@ -102,12 +102,12 @@ Las pruebas de persistencia usarán PostgreSQL real en un contenedor efímero. N
 
 ## Fases
 
-1. [Arquitectura y banco de pruebas](phases/01-architecture-and-test-harness.md): solución, límites, PostgreSQL, automatización y runner.
-2. [Catálogos](phases/02-catalogs.md): ingredientes, unidades, etiquetas y tipos de comida.
-3. [Recetas](phases/03-recipes.md): agregado, ingredientes, etiquetas, pasos, API y UI.
-4. [Planificación semanal](phases/04-weekly-planning.md): semanas, entradas y calendario.
-5. [Integración completa](phases/05-full-integration.md): comunicación Web–API, bUnit y Playwright.
-6. [Estabilización y piloto](phases/06-stabilization-and-pilot.md): calidad, regresión, documentación y sesión piloto.
+1. [Arquitectura y banco de pruebas](completed/phases/01-architecture-and-test-harness.md): solución, límites, PostgreSQL, automatización y runner.
+2. [Catálogos](completed/phases/02-catalogs.md): ingredientes, unidades, etiquetas y tipos de comida.
+3. [Recetas](completed/phases/03-recipes.md): agregado, ingredientes, etiquetas, pasos, API y UI.
+4. [Planificación semanal](completed/phases/04-weekly-planning.md): semanas, entradas y calendario.
+5. [Integración completa](completed/phases/05-full-integration.md): comunicación Web–API, bUnit y Playwright.
+6. [Estabilización y piloto](completed/phases/06-stabilization-and-pilot.md): calidad, regresión, documentación y sesión piloto.
 
 ## Automatización local
 
