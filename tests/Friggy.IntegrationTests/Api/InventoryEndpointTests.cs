@@ -108,6 +108,81 @@ public sealed class InventoryEndpointTests(PostgreSqlDatabaseFixture database)
             problem.GetProperty("code").GetString());
     }
 
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task SkippedAndCompletedMeals_OnlyCompletedMealConsumesInventory()
+    {
+        await using var factory = new FriggyApiFactory(Database.ConnectionString);
+        using var client = factory.CreateClient();
+        var ingredient = await CreateIngredientAsync(client);
+        var recipe = await CreateRecipeAsync(client, ingredient.Id);
+        var plan = await CreatePlanAsync(client);
+        var skippedDate = plan.StartDate;
+        var completedDate = plan.StartDate.AddDays(1);
+        var skippedPath = CellPath(plan.Id, skippedDate);
+        var completedPath = CellPath(plan.Id, completedDate);
+
+        using var skippedAssignment = await client.PutAsJsonAsync(
+            skippedPath,
+            new SetMealPlanEntryRequest(recipe.Id),
+            TestContext.Current.CancellationToken);
+        using var completedAssignment = await client.PutAsJsonAsync(
+            completedPath,
+            new SetMealPlanEntryRequest(recipe.Id),
+            TestContext.Current.CancellationToken);
+        using var createLotResponse = await client.PostAsJsonAsync(
+            "/api/inventory-lots",
+            new CreateInventoryLotRequest(
+                ingredient.Id,
+                CatalogSeedIds.Gram,
+                3m,
+                DateOnly.FromDateTime(DateTime.Today).AddDays(5)),
+            TestContext.Current.CancellationToken);
+        var lot = await createLotResponse.Content.ReadFromJsonAsync<InventoryLotResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(lot);
+
+        using var skipResponse = await client.PostAsJsonAsync(
+            $"{skippedPath}/skip",
+            new SkipMealPlanEntryRequest("Viaje", "Bocadillo"),
+            TestContext.Current.CancellationToken);
+        var requirementsAfterSkip = await client.GetFromJsonAsync<InventoryRequirementResponse[]>(
+            $"/api/weekly-plans/{plan.Id}/inventory-requirements",
+            TestContext.Current.CancellationToken);
+        using var completeResponse = await client.PostAsJsonAsync(
+            $"{completedPath}/complete",
+            new CompleteMealRequest([new(lot.Id, 1m)]),
+            TestContext.Current.CancellationToken);
+        var storedLot = await client.GetFromJsonAsync<InventoryLotResponse>(
+            $"/api/inventory-lots/{lot.Id}",
+            TestContext.Current.CancellationToken);
+        var loadedPlan = await client.GetFromJsonAsync<WeeklyPlanResponse>(
+            $"/api/weekly-plans/{plan.Id}",
+            TestContext.Current.CancellationToken);
+
+        skippedAssignment.EnsureSuccessStatusCode();
+        completedAssignment.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK, skipResponse.StatusCode);
+        Assert.Equal(1m, Assert.Single(requirementsAfterSkip ?? []).RequiredQuantity);
+        Assert.Equal(HttpStatusCode.OK, completeResponse.StatusCode);
+        Assert.Equal(2m, storedLot?.Quantity);
+        Assert.Equal(2, storedLot?.Movements.Count);
+        Assert.NotNull(loadedPlan);
+        Assert.Equal(
+            MealPlanEntryState.Skipped,
+            GetMeal(loadedPlan, skippedDate).Status);
+        Assert.Equal(
+            MealPlanEntryState.Completed,
+            GetMeal(loadedPlan, completedDate).Status);
+    }
+
+    private static string CellPath(Guid planId, DateOnly date) =>
+        $"/api/weekly-plans/{planId}/days/{date:yyyy-MM-dd}/meal-types/{CatalogSeedIds.Lunch}";
+
+    private static WeeklyPlanMealResponse GetMeal(WeeklyPlanResponse plan, DateOnly date) =>
+        plan.Days.Single(day => day.Date == date).Meals
+            .Single(meal => meal.MealTypeId == CatalogSeedIds.Lunch);
+
     private static async Task<IngredientResponse> CreateIngredientAsync(HttpClient client)
     {
         using var response = await client.PostAsJsonAsync(

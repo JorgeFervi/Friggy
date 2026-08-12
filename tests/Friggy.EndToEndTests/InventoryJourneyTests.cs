@@ -36,14 +36,16 @@ public sealed class InventoryJourneyTests(FullStackFixture fixture) : FriggyPage
             await Page.GetByRole(AriaRole.Button, new() { Name = "Crear plan", Exact = true })
                 .ClickAsync();
             var monday = Page.Locator("section[data-testid='weekly-plan-day']").First;
-            await monday.GetByLabel("Comida", new() { Exact = true })
+            var lunch = monday.Locator("[data-testid='meal-slot']")
+                .Filter(new LocatorFilterOptions { HasText = "Comida" });
+            await lunch.GetByLabel("Receta", new() { Exact = true })
                 .SelectOptionAsync(new SelectOptionValue { Label = recipeName });
-            await monday.GetByLabel("Raciones", new() { Exact = true }).FillAsync("2");
-            await monday.GetByLabel("Raciones", new() { Exact = true }).PressAsync("Tab");
+            await lunch.GetByLabel("Raciones", new() { Exact = true }).FillAsync("2");
+            await lunch.GetByLabel("Raciones", new() { Exact = true }).PressAsync("Tab");
             await Expect(Page.GetByRole(AriaRole.Cell, new() { Name = "2,000 g", Exact = true }))
                 .ToBeVisibleAsync();
 
-            await monday.GetByRole(AriaRole.Button, new() { Name = "Completar", Exact = true })
+            await lunch.GetByRole(AriaRole.Button, new() { Name = "Completar", Exact = true })
                 .ClickAsync();
             await Page.GetByLabel(new Regex(ingredientName)).FillAsync("2");
             await Page.GetByRole(AriaRole.Button, new() { Name = "Confirmar finalización", Exact = true })

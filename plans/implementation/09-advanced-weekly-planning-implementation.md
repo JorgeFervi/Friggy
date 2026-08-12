@@ -5,7 +5,7 @@
 
 Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni reabre comidas completadas.
 
-> **Progreso:** subfase 9.5 implementada por indicación expresa pese al gate PostgreSQL pendiente. Compilación, formato y suites sin Docker están verdes; la validación integrada de las subfases 9.2–9.5 queda pendiente porque el entorno actual no permite acceder al daemon. No iniciar 9.6 hasta ejecutar esas pruebas.
+> **Progreso:** subfase 9.6 preparada, pero el gate no está completado. Compilación, formato y suites sin Docker están verdes; las pruebas PostgreSQL/E2E no pueden iniciar porque el entorno deniega el acceso a `docker_engine`, y la restauración y auditoría del script oficial no pueden leer la configuración global de NuGet. La Fase 9 permanece abierta hasta ejecutar el gate completo en un entorno con esos accesos.
 
 ## 9.1 — Tipos de comida por día — Completada
 
@@ -54,9 +54,13 @@ La omisión es una transición irreversible con motivo obligatorio y alternativa
 
 La API permite añadir, retirar y reordenar huecos, actualizar su hora y omitir asignaciones. La respuesta semanal contiene únicamente los huecos elegidos para cada día, con identidad, orden, horario, inicio derivado y estado. El calendario Blazor ofrece controles accesibles para esas operaciones, conserva el borrador de omisión ante errores y mantiene separada la finalización con inventario.
 
-## 9.6 — Gate
+## 9.6 — Gate — Preparado, ejecución bloqueada por el entorno
 
 1. Integration: migración, restricciones y transiciones.
 2. E2E: configurar días diferentes, asignar horas, omitir una comida y completar otra.
 3. Verificar que inventario solo cambia por la completada.
 4. Ejecutar `scripts/quality-gate.ps1` y cerrar la fase.
+
+Se añadieron una prueba integrada del recorrido omitida/completada —incluida la comprobación de que solo la completada consume inventario— y un recorrido E2E que configura días diferentes, asigna horas, omite una comida y completa otra. También se adaptaron los E2E existentes a las etiquetas accesibles del calendario avanzado.
+
+El gate oficial se intentó ejecutar con una política de PowerShell limitada al proceso. Quedó bloqueado en `dotnet restore` por acceso denegado a la configuración global de NuGet. Los intentos directos de las nuevas pruebas quedaron bloqueados al construir sus fixtures porque Testcontainers no puede acceder a `npipe://./pipe/docker_engine`. No se ha cerrado ni movido la fase a completadas.
