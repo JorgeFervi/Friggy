@@ -11,13 +11,15 @@ public sealed class MealPlanEntry
         Guid weeklyPlanId,
         DateOnly date,
         Guid mealTypeId,
-        Guid recipeId)
+        Guid recipeId,
+        int servings)
     {
         Id = id;
         WeeklyPlanId = weeklyPlanId;
         Date = date;
         MealTypeId = mealTypeId;
         RecipeId = recipeId;
+        Servings = servings;
     }
 
     public Guid Id { get; private set; }
@@ -30,12 +32,35 @@ public sealed class MealPlanEntry
 
     public Guid RecipeId { get; private set; }
 
+    public int Servings { get; private set; }
+
+    public DateTimeOffset? CompletedAt { get; private set; }
+
+    public bool IsCompleted => CompletedAt.HasValue;
+
     internal static MealPlanEntry Create(
         Guid weeklyPlanId,
         DateOnly date,
         Guid mealTypeId,
-        Guid recipeId) =>
-        new(Guid.NewGuid(), weeklyPlanId, date, mealTypeId, recipeId);
+        Guid recipeId,
+        int servings) =>
+        new(Guid.NewGuid(), weeklyPlanId, date, mealTypeId, recipeId, servings);
 
-    internal void ReplaceRecipe(Guid recipeId) => RecipeId = recipeId;
+    internal void Replace(Guid recipeId, int servings)
+    {
+        RecipeId = recipeId;
+        Servings = servings;
+    }
+
+    internal void Complete(DateTimeOffset completedAt)
+    {
+        if (IsCompleted)
+        {
+            throw new Catalogs.DomainValidationException(
+                "weekly-plan.entry.already-completed",
+                "La comida ya está completada.");
+        }
+
+        CompletedAt = completedAt;
+    }
 }

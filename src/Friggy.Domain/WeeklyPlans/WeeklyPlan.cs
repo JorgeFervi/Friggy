@@ -61,21 +61,38 @@ public sealed class WeeklyPlan
             NormalizeDescription(description));
     }
 
-    public void Assign(DateOnly date, Guid mealTypeId, Guid recipeId)
+    public void Assign(
+        DateOnly date,
+        Guid mealTypeId,
+        Guid recipeId,
+        int servings = 1)
     {
         ValidateDate(date);
         ValidateRequiredId(mealTypeId, "weekly-plan.entry.meal-type-id.required");
         ValidateRequiredId(recipeId, "weekly-plan.entry.recipe-id.required");
+        if (servings <= 0)
+        {
+            throw new DomainValidationException(
+                "weekly-plan.entry.servings.positive",
+                "Las raciones deben ser mayores que cero.");
+        }
 
         var existing = entries.SingleOrDefault(entry =>
             entry.Date == date && entry.MealTypeId == mealTypeId);
         if (existing is null)
         {
-            entries.Add(MealPlanEntry.Create(Id, date, mealTypeId, recipeId));
+            entries.Add(MealPlanEntry.Create(Id, date, mealTypeId, recipeId, servings));
             return;
         }
 
-        existing.ReplaceRecipe(recipeId);
+        if (existing.IsCompleted)
+        {
+            throw new DomainValidationException(
+                "weekly-plan.entry.completed",
+                "No se puede modificar una comida completada.");
+        }
+
+        existing.Replace(recipeId, servings);
     }
 
     public bool RemoveEntry(DateOnly date, Guid mealTypeId)
@@ -85,7 +102,30 @@ public sealed class WeeklyPlan
 
         var existing = entries.SingleOrDefault(entry =>
             entry.Date == date && entry.MealTypeId == mealTypeId);
+        if (existing?.IsCompleted is true)
+        {
+            throw new DomainValidationException(
+                "weekly-plan.entry.completed",
+                "No se puede retirar una comida completada.");
+        }
+
         return existing is not null && entries.Remove(existing);
+    }
+
+    public MealPlanEntry CompleteEntry(
+        DateOnly date,
+        Guid mealTypeId,
+        DateTimeOffset completedAt)
+    {
+        ValidateDate(date);
+        ValidateRequiredId(mealTypeId, "weekly-plan.entry.meal-type-id.required");
+        var entry = entries.SingleOrDefault(item =>
+            item.Date == date && item.MealTypeId == mealTypeId) ??
+            throw new DomainValidationException(
+                "weekly-plan.entry.not-assigned",
+                "No hay una receta asignada a la comida.");
+        entry.Complete(completedAt);
+        return entry;
     }
 
     public void UpdateDetails(string? name, string? description)
