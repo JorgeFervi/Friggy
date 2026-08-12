@@ -275,6 +275,274 @@ public sealed class WeeklyPlanTests
     }
 
     [Fact]
+    public void AddSlot_ValidMealType_AppendsStableSlotToSelectedDay()
+    {
+        var plan = CreatePlan();
+        var date = plan.StartDate.AddDays(1);
+        var breakfastId = Guid.NewGuid();
+        var lunchId = Guid.NewGuid();
+
+        var breakfast = plan.AddSlot(date, breakfastId);
+        var lunch = plan.AddSlot(date, lunchId);
+
+        Assert.NotEqual(Guid.Empty, breakfast.Id);
+        Assert.Equal(plan.Id, breakfast.WeeklyPlanId);
+        Assert.Equal(date, breakfast.Date);
+        Assert.Equal(breakfastId, breakfast.MealTypeId);
+        Assert.Equal(0, breakfast.Order);
+        Assert.Equal(1, lunch.Order);
+        Assert.Equal([breakfast.Id, lunch.Id], plan.Slots.Select(slot => slot.Id));
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(7)]
+    public void AddSlot_DateIsOutsideWeek_ThrowsAndDoesNotMutate(int dayOffset)
+    {
+        var plan = CreatePlan();
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.AddSlot(plan.StartDate.AddDays(dayOffset), Guid.NewGuid()));
+
+        Assert.Equal("weekly-plan.slot.date.out-of-range", exception.Code);
+        Assert.Empty(plan.Slots);
+    }
+
+    [Fact]
+    public void AddSlot_MealTypeIdIsEmpty_ThrowsAndDoesNotMutate()
+    {
+        var plan = CreatePlan();
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.AddSlot(plan.StartDate, Guid.Empty));
+
+        Assert.Equal("weekly-plan.slot.meal-type-id.required", exception.Code);
+        Assert.Empty(plan.Slots);
+    }
+
+    [Fact]
+    public void AddSlot_DuplicateMealTypeOnSameDay_ThrowsAndPreservesExistingSlot()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        var existing = plan.AddSlot(plan.StartDate, mealTypeId);
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.AddSlot(plan.StartDate, mealTypeId));
+
+        Assert.Equal("weekly-plan.slot.meal-type.duplicate", exception.Code);
+        Assert.Equal(existing.Id, Assert.Single(plan.Slots).Id);
+    }
+
+    [Fact]
+    public void AddSlot_SameMealTypeOnDifferentDays_IsAllowedAndEachDayStartsAtZero()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+
+        var monday = plan.AddSlot(plan.StartDate, mealTypeId);
+        var tuesday = plan.AddSlot(plan.StartDate.AddDays(1), mealTypeId);
+
+        Assert.Equal(0, monday.Order);
+        Assert.Equal(0, tuesday.Order);
+        Assert.NotEqual(monday.Id, tuesday.Id);
+    }
+
+    [Fact]
+    public void ReorderSlots_CompleteDayPermutation_UpdatesOrderAndPreservesStableIdsAndAssignment()
+    {
+        var plan = CreatePlan();
+        var breakfastId = Guid.NewGuid();
+        var lunchId = Guid.NewGuid();
+        var dinnerId = Guid.NewGuid();
+        var breakfast = plan.AddSlot(plan.StartDate, breakfastId);
+        var lunch = plan.AddSlot(plan.StartDate, lunchId);
+        var dinner = plan.AddSlot(plan.StartDate, dinnerId);
+        var recipeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, lunchId, recipeId, 2);
+
+        plan.ReorderSlots(plan.StartDate, [dinner.Id, breakfast.Id, lunch.Id]);
+
+        Assert.Equal(
+            [dinner.Id, breakfast.Id, lunch.Id],
+            plan.Slots
+                .Where(slot => slot.Date == plan.StartDate)
+                .OrderBy(slot => slot.Order)
+                .Select(slot => slot.Id));
+        Assert.Equal([0, 1, 2], plan.Slots.OrderBy(slot => slot.Order).Select(slot => slot.Order));
+        var assignment = Assert.Single(plan.Entries);
+        Assert.Equal(lunchId, assignment.MealTypeId);
+        Assert.Equal(recipeId, assignment.RecipeId);
+        Assert.Equal(2, assignment.Servings);
+    }
+
+    [Fact]
+    public void ReorderSlots_DifferentDay_DoesNotChangeOtherDaysOrder()
+    {
+        var plan = CreatePlan();
+        var mondayFirst = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var mondaySecond = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var tuesdayFirst = plan.AddSlot(plan.StartDate.AddDays(1), Guid.NewGuid());
+        var tuesdaySecond = plan.AddSlot(plan.StartDate.AddDays(1), Guid.NewGuid());
+
+        plan.ReorderSlots(plan.StartDate, [mondaySecond.Id, mondayFirst.Id]);
+
+        Assert.Equal(0, tuesdayFirst.Order);
+        Assert.Equal(1, tuesdaySecond.Order);
+    }
+
+    [Fact]
+    public void ReorderSlots_IncompletePermutation_ThrowsAndDoesNotMutate()
+    {
+        var plan = CreatePlan();
+        var first = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var second = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.ReorderSlots(plan.StartDate, [second.Id]));
+
+        Assert.Equal("weekly-plan.slot.order.invalid", exception.Code);
+        Assert.Equal([(first.Id, 0), (second.Id, 1)], plan.Slots.Select(slot => (slot.Id, slot.Order)));
+    }
+
+    [Fact]
+    public void ReorderSlots_DateIsOutsideWeek_ThrowsAndDoesNotMutate()
+    {
+        var plan = CreatePlan();
+        var existing = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.ReorderSlots(plan.StartDate.AddDays(7), [existing.Id]));
+
+        Assert.Equal("weekly-plan.slot.date.out-of-range", exception.Code);
+        var preserved = Assert.Single(plan.Slots);
+        Assert.Equal((existing.Id, 0), (preserved.Id, preserved.Order));
+    }
+
+    [Fact]
+    public void ReorderSlots_RepeatedOrForeignIds_ThrowAndDoNotMutate()
+    {
+        var plan = CreatePlan();
+        var first = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var second = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var tuesday = plan.AddSlot(plan.StartDate.AddDays(1), Guid.NewGuid());
+
+        var repeatedException = Assert.Throws<DomainValidationException>(() =>
+            plan.ReorderSlots(plan.StartDate, [first.Id, first.Id]));
+        var foreignException = Assert.Throws<DomainValidationException>(() =>
+            plan.ReorderSlots(plan.StartDate, [second.Id, tuesday.Id]));
+
+        Assert.Equal("weekly-plan.slot.order.invalid", repeatedException.Code);
+        Assert.Equal("weekly-plan.slot.order.invalid", foreignException.Code);
+        Assert.Equal([(first.Id, 0), (second.Id, 1)], plan.Slots
+            .Where(slot => slot.Date == plan.StartDate)
+            .Select(slot => (slot.Id, slot.Order)));
+    }
+
+    [Fact]
+    public void RemoveSlot_EmptySlot_RemovesItAndCompactsDayOrder()
+    {
+        var plan = CreatePlan();
+        var first = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var removed = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var last = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        var wasRemoved = plan.RemoveSlot(removed.Id);
+
+        Assert.True(wasRemoved);
+        Assert.Equal([(first.Id, 0), (last.Id, 1)], plan.Slots.Select(slot => (slot.Id, slot.Order)));
+    }
+
+    [Fact]
+    public void RemoveSlot_MissingSlot_ReturnsFalseAndPreservesSlots()
+    {
+        var plan = CreatePlan();
+        var existing = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        var wasRemoved = plan.RemoveSlot(Guid.NewGuid());
+
+        Assert.False(wasRemoved);
+        Assert.Equal(existing.Id, Assert.Single(plan.Slots).Id);
+    }
+
+    [Fact]
+    public void RemoveSlot_IdIsEmpty_ThrowsAndPreservesSlots()
+    {
+        var plan = CreatePlan();
+        var existing = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.RemoveSlot(Guid.Empty));
+
+        Assert.Equal("weekly-plan.slot.id.required", exception.Code);
+        Assert.Equal(existing.Id, Assert.Single(plan.Slots).Id);
+    }
+
+    [Fact]
+    public void RemoveSlot_AssignedSlot_ThrowsUntilAssignmentIsExplicitlyRemoved()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        var slot = plan.AddSlot(plan.StartDate, mealTypeId);
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid());
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.RemoveSlot(slot.Id));
+
+        Assert.Equal("weekly-plan.slot.assigned", exception.Code);
+        Assert.Single(plan.Slots);
+        Assert.Single(plan.Entries);
+
+        Assert.True(plan.RemoveEntry(plan.StartDate, mealTypeId));
+        Assert.True(plan.RemoveSlot(slot.Id));
+        Assert.Empty(plan.Slots);
+    }
+
+    [Fact]
+    public void RemoveSlot_CompletedSlot_ThrowsAndPreservesSlotAndEntry()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        var slot = plan.AddSlot(plan.StartDate, mealTypeId);
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid());
+        plan.CompleteEntry(plan.StartDate, mealTypeId, DateTimeOffset.UtcNow);
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.RemoveSlot(slot.Id));
+
+        Assert.Equal("weekly-plan.slot.completed", exception.Code);
+        Assert.Equal(slot.Id, Assert.Single(plan.Slots).Id);
+        Assert.True(Assert.Single(plan.Entries).IsCompleted);
+    }
+
+    [Fact]
+    public void Assign_MissingSlot_CreatesCompatibilitySlotWithoutDuplicatingItOnReplace()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid());
+        var slotId = Assert.Single(plan.Slots).Id;
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid(), 3);
+
+        var slot = Assert.Single(plan.Slots);
+        Assert.Equal(slotId, slot.Id);
+        Assert.Equal(0, slot.Order);
+        Assert.Equal(3, Assert.Single(plan.Entries).Servings);
+    }
+
+    [Fact]
+    public void Slots_CannotBeMutatedFromOutsideAggregate()
+    {
+        var plan = CreatePlan();
+        plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        Assert.Throws<NotSupportedException>(() =>
+            ((IList<MealPlanSlot>)plan.Slots).Clear());
+        Assert.Single(plan.Slots);
+    }
+
+    [Fact]
     public void CompleteEntry_AssignedMeal_StoresCompletionMoment()
     {
         var plan = CreatePlan();

@@ -6,6 +6,7 @@ public sealed class WeeklyPlan
 {
     private const int DaysInWeek = 7;
     private readonly List<MealPlanEntry> entries = [];
+    private readonly List<MealPlanSlot> slots = [];
 
     private WeeklyPlan()
     {
@@ -35,6 +36,8 @@ public sealed class WeeklyPlan
     public string? Description { get; private set; }
 
     public IReadOnlyList<MealPlanEntry> Entries => entries.AsReadOnly();
+
+    public IReadOnlyList<MealPlanSlot> Slots => slots.AsReadOnly();
 
     public IReadOnlyList<DateOnly> Dates => Enumerable
         .Range(0, DaysInWeek)
@@ -79,20 +82,93 @@ public sealed class WeeklyPlan
 
         var existing = entries.SingleOrDefault(entry =>
             entry.Date == date && entry.MealTypeId == mealTypeId);
-        if (existing is null)
-        {
-            entries.Add(MealPlanEntry.Create(Id, date, mealTypeId, recipeId, servings));
-            return;
-        }
-
-        if (existing.IsCompleted)
+        if (existing?.IsCompleted is true)
         {
             throw new DomainValidationException(
                 "weekly-plan.entry.completed",
                 "No se puede modificar una comida completada.");
         }
 
-        existing.Replace(recipeId, servings);
+        EnsureSlot(date, mealTypeId);
+        if (existing is null)
+        {
+            entries.Add(MealPlanEntry.Create(Id, date, mealTypeId, recipeId, servings));
+        }
+        else
+        {
+            existing.Replace(recipeId, servings);
+        }
+    }
+
+    public MealPlanSlot AddSlot(DateOnly date, Guid mealTypeId)
+    {
+        ValidateDate(date, "weekly-plan.slot.date.out-of-range");
+        ValidateRequiredId(mealTypeId, "weekly-plan.slot.meal-type-id.required");
+        if (slots.Any(slot => slot.Date == date && slot.MealTypeId == mealTypeId))
+        {
+            throw new DomainValidationException(
+                "weekly-plan.slot.meal-type.duplicate",
+                "El tipo de comida ya existe en este día.");
+        }
+
+        var order = slots.Count(slot => slot.Date == date);
+        var slot = MealPlanSlot.Create(Id, date, mealTypeId, order);
+        slots.Add(slot);
+        return slot;
+    }
+
+    public void ReorderSlots(DateOnly date, IReadOnlyList<Guid> orderedSlotIds)
+    {
+        ArgumentNullException.ThrowIfNull(orderedSlotIds);
+        ValidateDate(date, "weekly-plan.slot.date.out-of-range");
+        var daySlots = slots
+            .Where(slot => slot.Date == date)
+            .ToArray();
+        var uniqueIds = orderedSlotIds.Distinct().ToArray();
+        if (orderedSlotIds.Count != daySlots.Length ||
+            uniqueIds.Length != orderedSlotIds.Count ||
+            uniqueIds.Any(id => daySlots.All(slot => slot.Id != id)))
+        {
+            throw new DomainValidationException(
+                "weekly-plan.slot.order.invalid",
+                "El orden debe incluir una vez todos los huecos del día.");
+        }
+
+        var slotsById = daySlots.ToDictionary(slot => slot.Id);
+        for (var order = 0; order < orderedSlotIds.Count; order++)
+        {
+            slotsById[orderedSlotIds[order]].MoveTo(order);
+        }
+    }
+
+    public bool RemoveSlot(Guid slotId)
+    {
+        ValidateRequiredId(slotId, "weekly-plan.slot.id.required");
+        var slot = slots.SingleOrDefault(item => item.Id == slotId);
+        if (slot is null)
+        {
+            return false;
+        }
+
+        var assignment = entries.SingleOrDefault(entry =>
+            entry.Date == slot.Date && entry.MealTypeId == slot.MealTypeId);
+        if (assignment?.IsCompleted is true)
+        {
+            throw new DomainValidationException(
+                "weekly-plan.slot.completed",
+                "No se puede retirar el hueco de una comida completada.");
+        }
+
+        if (assignment is not null)
+        {
+            throw new DomainValidationException(
+                "weekly-plan.slot.assigned",
+                "Retira la receta asignada antes de eliminar el hueco.");
+        }
+
+        slots.Remove(slot);
+        CompactSlotOrder(slot.Date);
+        return true;
     }
 
     public bool RemoveEntry(DateOnly date, Guid mealTypeId)
@@ -143,12 +219,31 @@ public sealed class WeeklyPlan
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
     }
 
-    private void ValidateDate(DateOnly date)
+    private MealPlanSlot EnsureSlot(DateOnly date, Guid mealTypeId) =>
+        slots.SingleOrDefault(slot =>
+            slot.Date == date && slot.MealTypeId == mealTypeId) ??
+        AddSlot(date, mealTypeId);
+
+    private void CompactSlotOrder(DateOnly date)
+    {
+        var daySlots = slots
+            .Where(slot => slot.Date == date)
+            .OrderBy(slot => slot.Order)
+            .ToArray();
+        for (var order = 0; order < daySlots.Length; order++)
+        {
+            daySlots[order].MoveTo(order);
+        }
+    }
+
+    private void ValidateDate(
+        DateOnly date,
+        string code = "weekly-plan.entry.date.out-of-range")
     {
         if (date < StartDate || date > EndDate)
         {
             throw new DomainValidationException(
-                "weekly-plan.entry.date.out-of-range",
+                code,
                 "La fecha debe pertenecer a la semana.");
         }
     }

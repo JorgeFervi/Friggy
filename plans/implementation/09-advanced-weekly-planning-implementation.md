@@ -5,12 +5,16 @@
 
 Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni reabre comidas completadas.
 
-## 9.1 — Tipos de comida por día
+> **Progreso:** subfase 9.1 completada. La siguiente unidad ejecutable es la subfase 9.2, todavía no iniciada.
+
+## 9.1 — Tipos de comida por día — Completada
 
 1. Escribir rojos para añadir, ordenar y retirar huecos de comida dentro de un día del plan.
 2. Decidir una identidad estable para el hueco, independiente de su posición visual.
 3. Impedir duplicados del mismo tipo en el mismo día.
 4. No permitir retirar un hueco completado; una asignación futura debe retirarse explícitamente antes.
+
+`MealPlanSlot` conserva una identidad independiente de su orden y de la asignación. Durante esta subfase los huecos se mantienen solo en Domain y se ignoran explícitamente en EF Core; la persistencia y la migración pertenecen a 9.2.
 
 ## 9.2 — Persistencia y compatibilidad
 
