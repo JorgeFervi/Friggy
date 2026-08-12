@@ -1,4 +1,5 @@
 using Friggy.Application.Catalogs;
+using Friggy.Application.Inventory.Exceptions;
 using Friggy.Application.Recipes.Exceptions;
 using Friggy.Application.WeeklyPlans.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
@@ -51,6 +52,17 @@ public sealed class ApiExceptionHandler : IExceptionHandler
             {
                 RecipeFailureKind.NotFound => NotFound(recipeFailure.Code),
                 RecipeFailureKind.Conflict => Conflict(recipeFailure.Code),
+                _ => null,
+            };
+        }
+
+        var inventoryFailure = InventoryFailureClassifier.Classify(exception);
+        if (inventoryFailure is not null)
+        {
+            return inventoryFailure.Kind switch
+            {
+                InventoryFailureKind.NotFound => NotFound(inventoryFailure.Code),
+                InventoryFailureKind.Conflict => Conflict(inventoryFailure.Code),
                 _ => null,
             };
         }
