@@ -30,12 +30,31 @@
                     </select>
                     @if (meal.RecipeId.HasValue)
                     {
+                        <label for="@($"{selectId}-servings")">Raciones</label>
+                        <input id="@($"{selectId}-servings")"
+                               type="number"
+                               min="1"
+                               value="@meal.Servings"
+                               disabled="@(IsSaving || meal.IsCompleted)"
+                               @onchange="args => ChangeServingsAsync(day.Date, meal, args)" />
+                        @if (meal.IsCompleted)
+                        {
+                            <span>Completada</span>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    disabled="@IsSaving"
+                                    @onclick="() => OnComplete.InvokeAsync(new(day.Date, meal.MealTypeId, meal.RecipeId, meal.Servings))">
+                                Completar
+                            </button>
+                        }
                         <button type="button"
                                 data-date="@day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
                                 data-meal-type-id="@meal.MealTypeId"
-                                disabled="@IsSaving"
+                                disabled="@(IsSaving || meal.IsCompleted)"
                                 aria-label="Retirar receta de @meal.MealTypeName del @DayLabel(day.Date)"
-                                @onclick="() => OnChanged.InvokeAsync(new(day.Date, meal.MealTypeId, null))">
+                                @onclick="() => OnChanged.InvokeAsync(new(day.Date, meal.MealTypeId, null, meal.Servings))">
                             Retirar
                         </button>
                     }
@@ -60,6 +79,9 @@
     [Parameter]
     public EventCallback<MealPlanCellChange> OnChanged { get; set; }
 
+    [Parameter]
+    public EventCallback<MealPlanCellChange> OnComplete { get; set; }
+
     private async Task SelectRecipeAsync(
         DateOnly date,
         Guid mealTypeId,
@@ -68,7 +90,18 @@
         var recipeId = Guid.TryParse(args.Value?.ToString(), out var parsed)
             ? parsed
             : (Guid?)null;
-        await OnChanged.InvokeAsync(new(date, mealTypeId, recipeId));
+        await OnChanged.InvokeAsync(new(date, mealTypeId, recipeId, 1));
+    }
+
+    private async Task ChangeServingsAsync(
+        DateOnly date,
+        WeeklyPlanMealResponse meal,
+        ChangeEventArgs args)
+    {
+        var servings = int.TryParse(args.Value?.ToString(), out var parsed) && parsed > 0
+            ? parsed
+            : meal.Servings;
+        await OnChanged.InvokeAsync(new(date, meal.MealTypeId, meal.RecipeId, servings));
     }
 
     private static string DayLabel(DateOnly date)

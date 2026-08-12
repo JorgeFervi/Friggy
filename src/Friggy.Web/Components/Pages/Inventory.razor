@@ -1,0 +1,148 @@
+@page "/inventory"
+@implements IDisposable
+@using Friggy.Application.Catalogs.Ingredients.Dtos
+@using Friggy.Application.Catalogs.UnitTypes.Dtos
+@using Friggy.Application.Inventory.Dtos
+@using Friggy.Web.Api
+@using Friggy.Web.Inventory
+@inject IInventoryApiClient InventoryApi
+@inject IIngredientsApiClient IngredientsApi
+@inject IUnitTypesApiClient UnitTypesApi
+
+<PageTitle>Inventario</PageTitle>
+<h1>Inventario</h1>
+
+<EditForm Model="form" OnValidSubmit="CreateAsync" FormName="inventory-lot-form" data-testid="inventory-lot-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div>
+        <label for="inventory-ingredient">Ingrediente</label>
+        <InputSelect id="inventory-ingredient" @bind-Value="form.IngredientId">
+            <option value="">Selecciona un ingrediente</option>
+            @foreach (var ingredient in ingredients.OrderBy(item => item.Name))
+            {
+                <option value="@ingredient.Id">@ingredient.Name</option>
+            }
+        </InputSelect>
+    </div>
+    <div>
+        <label for="inventory-unit">Unidad</label>
+        <InputSelect id="inventory-unit" @bind-Value="form.UnitTypeId">
+            <option value="">Selecciona una unidad</option>
+            @foreach (var unit in units.OrderBy(item => item.Name))
+            {
+                <option value="@unit.Id">@unit.Name (@unit.Symbol)</option>
+            }
+        </InputSelect>
+    </div>
+    <div>
+        <label for="inventory-quantity">Cantidad</label>
+        <InputNumber id="inventory-quantity" @bind-Value="form.Quantity" />
+    </div>
+    <div>
+        <label for="inventory-expiration">Caducidad</label>
+        <InputDate id="inventory-expiration" @bind-Value="form.ExpirationDate" />
+    </div>
+    <button type="submit" disabled="@saving">@(saving ? "Guardando…" : "Añadir lote")</button>
+</EditForm>
+
+<label>
+    <InputCheckbox @bind-Value="includeUnavailable" @bind-Value:after="ReloadAsync" />
+    Mostrar agotados y caducados
+</label>
+
+@if (loading)
+{
+    <p>Cargando inventario…</p>
+}
+else if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+else if (lots.Count == 0)
+{
+    <p>No hay lotes para mostrar.</p>
+}
+else
+{
+    <table>
+        <thead><tr><th>Ingrediente</th><th>Cantidad</th><th>Caducidad</th><th>Estado</th></tr></thead>
+        <tbody>
+        @foreach (var lot in lots)
+        {
+            <tr @key="lot.Id">
+                <td><a href="inventory/@lot.Id">@lot.IngredientName</a></td>
+                <td>@lot.Quantity @lot.UnitSymbol</td>
+                <td>@lot.ExpirationDate.ToString("dd/MM/yyyy")</td>
+                <td>@(lot.IsExpired ? "Caducado" : lot.Quantity == 0 ? "Agotado" : "Disponible")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private InventoryLotFormModel form = new();
+    private IReadOnlyList<InventoryLotResponse> lots = [];
+    private IReadOnlyList<IngredientResponse> ingredients = [];
+    private IReadOnlyList<UnitTypeResponse> units = [];
+    private bool includeUnavailable;
+    private bool loading = true;
+    private bool saving;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var lotsTask = InventoryApi.ListAsync(false, cancellation.Token);
+            var ingredientsTask = IngredientsApi.ListAsync(cancellation.Token);
+            var unitsTask = UnitTypesApi.ListAsync(cancellation.Token);
+            await Task.WhenAll(lotsTask, ingredientsTask, unitsTask);
+            lots = await lotsTask;
+            ingredients = await ingredientsTask;
+            units = await unitsTask;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        saving = true;
+        error = null;
+        try
+        {
+            await InventoryApi.CreateAsync(form.ToRequest(), cancellation.Token);
+            form = new InventoryLotFormModel();
+            await ReloadAsync();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        lots = await InventoryApi.ListAsync(includeUnavailable, cancellation.Token);
+    }
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

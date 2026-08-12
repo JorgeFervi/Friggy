@@ -1,0 +1,138 @@
+@page "/inventory/{Id:guid}"
+@implements IDisposable
+@using Friggy.Application.Inventory.Dtos
+@using Friggy.Web.Api
+@inject IInventoryApiClient InventoryApi
+
+<PageTitle>Detalle del lote</PageTitle>
+
+@if (lot is null)
+{
+    <h1>Detalle del lote</h1>
+    <p role="alert">@(error ?? "Cargando lote…")</p>
+}
+else
+{
+    <h1>@lot.IngredientName</h1>
+    <p>@lot.Quantity @lot.UnitSymbol disponibles. Caduca el @lot.ExpirationDate.ToString("dd/MM/yyyy").</p>
+    <p><a href="inventory">Volver al inventario</a></p>
+    @if (error is not null) { <p role="alert">@error</p> }
+    @if (status is not null) { <p role="status">@status</p> }
+
+    <label for="lot-operation-quantity">Cantidad</label>
+    <InputNumber id="lot-operation-quantity" @bind-Value="operationQuantity" />
+    <button disabled="@saving" @onclick="ConsumeAsync">Consumir</button>
+    <button disabled="@saving" @onclick="DiscardAsync">Descartar</button>
+    <button disabled="@saving" @onclick="AdjustAsync">Ajustar a cantidad real</button>
+
+    <div>
+        <label for="lot-expiration-date">Caducidad</label>
+        <InputDate id="lot-expiration-date" @bind-Value="expirationDate" />
+        <button disabled="@saving" @onclick="CorrectExpirationAsync">Corregir caducidad</button>
+    </div>
+
+    <h2>Historial</h2>
+    <table>
+        <thead><tr><th>Momento</th><th>Tipo</th><th>Cambio</th><th>Resultado</th></tr></thead>
+        <tbody>
+        @foreach (var movement in lot.Movements.OrderByDescending(item => item.OccurredAt))
+        {
+            <tr @key="movement.Id">
+                <td>@movement.OccurredAt.ToLocalTime().ToString("g")</td>
+                <td>@MovementLabel(movement.Type)</td>
+                <td>@movement.Delta</td>
+                <td>@movement.ResultingQuantity</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private InventoryLotResponse? lot;
+    private decimal operationQuantity;
+    private DateOnly expirationDate;
+    private bool saving;
+    private string? error;
+    private string? status;
+
+    [Parameter] public Guid Id { get; set; }
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private Task ConsumeAsync() => RunOperationAsync(async () =>
+    {
+        var result = await InventoryApi.ConsumeAsync(Id, new(operationQuantity), cancellation.Token);
+        status = result.UnappliedQuantity > 0
+            ? $"Se aplicaron {result.AppliedQuantity}; quedaron {result.UnappliedQuantity} sin registrar."
+            : "Consumo registrado.";
+    });
+
+    private Task DiscardAsync() => RunOperationAsync(async () =>
+    {
+        var result = await InventoryApi.DiscardAsync(Id, new(operationQuantity), cancellation.Token);
+        status = result.UnappliedQuantity > 0
+            ? $"Se descartaron {result.AppliedQuantity}; quedaron {result.UnappliedQuantity} sin registrar."
+            : "Descarte registrado.";
+    });
+
+    private Task AdjustAsync() => RunOperationAsync(async () =>
+    {
+        await InventoryApi.AdjustAsync(Id, new(operationQuantity), cancellation.Token);
+        status = "Cantidad ajustada.";
+    });
+
+    private Task CorrectExpirationAsync() => RunOperationAsync(async () =>
+    {
+        await InventoryApi.CorrectExpirationAsync(Id, new(expirationDate), cancellation.Token);
+        status = "Caducidad corregida.";
+    });
+
+    private async Task RunOperationAsync(Func<Task> operation)
+    {
+        saving = true;
+        error = null;
+        status = null;
+        try
+        {
+            await operation();
+            await ReloadAsync();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        try
+        {
+            lot = await InventoryApi.GetAsync(Id, cancellation.Token);
+            expirationDate = lot.ExpirationDate;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        { error = exception.Message; }
+    }
+
+    private static string MovementLabel(InventoryMovementKind kind) => kind switch
+    {
+        InventoryMovementKind.InitialStock => "Alta inicial",
+        InventoryMovementKind.Consumption => "Consumo",
+        InventoryMovementKind.Adjustment => "Ajuste",
+        InventoryMovementKind.Discard => "Descarte",
+        _ => kind.ToString(),
+    };
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}
