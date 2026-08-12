@@ -74,6 +74,36 @@ public sealed class WeeklyPlanRepositoryTests(PostgreSqlDatabaseFixture database
 
     [Fact]
     [Trait("Category", "Integration")]
+    public async Task WeeklyPlanRepository_SkippedEntry_PreservesReasonAndAlternative()
+    {
+        var recipe = Assert.Single(await CreateRecipesAsync("Gazpacho"));
+        var plan = WeeklyPlan.Create("Semana 32", WeekStart, null);
+        plan.Assign(WeekStart, CatalogSeedIds.Lunch, recipe.Id);
+        var skipped = plan.SkipEntry(
+            WeekStart,
+            CatalogSeedIds.Lunch,
+            "Comida fuera de casa",
+            "Bocadillo");
+
+        await SavePlanAsync(plan);
+
+        await using var context = Database.CreateDbContext();
+        var repository = new WeeklyPlanRepository(context);
+        var reloaded = await repository.GetByIdAsync(
+            plan.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(reloaded);
+        var entry = Assert.Single(reloaded.Entries);
+        Assert.Equal(skipped.Id, entry.Id);
+        Assert.Equal(MealPlanEntryStatus.Skipped, entry.Status);
+        Assert.Equal("Comida fuera de casa", entry.SkippedReason);
+        Assert.Equal("Bocadillo", entry.AlternativeDescription);
+        Assert.False(entry.IsCompleted);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
     public async Task WeeklyPlanRepository_ReorderSlotsAndReload_PreservesStableIdsAndOrder()
     {
         var plan = WeeklyPlan.Create("Semana 32", WeekStart, null);

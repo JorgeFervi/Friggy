@@ -56,6 +56,13 @@ public sealed class WeeklyPlanInventoryService(
             return new MealCompletionResponse(entry.Id, true, [], []);
         }
 
+        if (entry.IsSkipped)
+        {
+            throw new InventoryConflictException(
+                "meal-completion.entry.skipped",
+                "No se puede completar una comida omitida.");
+        }
+
         var recipe = await recipes.GetByIdAsync(entry.RecipeId, cancellationToken) ??
             throw new InventoryNotFoundException(
                 "meal-completion.recipe.not-found",
@@ -114,6 +121,11 @@ public sealed class WeeklyPlanInventoryService(
         var requirements = new Dictionary<(Guid, Guid), decimal>();
         foreach (var entry in entries)
         {
+            if (entry.IsSkipped)
+            {
+                continue;
+            }
+
             if (!recipesById.TryGetValue(entry.RecipeId, out var recipe))
             {
                 continue;

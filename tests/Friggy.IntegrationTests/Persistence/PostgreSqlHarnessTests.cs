@@ -36,6 +36,10 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             migration => Assert.EndsWith(
                 "_AddMealPlanSlotSchedule",
                 migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_AddMealPlanEntrySkippedState",
+                migration,
                 StringComparison.Ordinal));
         Assert.StartsWith("friggy_tests_", Database.DatabaseName, StringComparison.Ordinal);
     }
@@ -64,7 +68,7 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             .GetAppliedMigrationsAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(true, tableWasRemoved);
-        Assert.Equal(7, appliedMigrations.Count());
+        Assert.Equal(8, appliedMigrations.Count());
     }
 
     [Fact]
@@ -156,5 +160,51 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             slot => slot.Date == entry.Date && slot.MealTypeId == entry.MealTypeId);
         Assert.Equal(3, entry.Servings);
         Assert.False(entry.IsCompleted);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task AddSkippedStateMigration_ExistingCompletionState_IsPreserved()
+    {
+        const string slotScheduleMigration = "20260812103001_AddMealPlanSlotSchedule";
+        var recipeId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
+        var plannedEntryId = Guid.NewGuid();
+        var completedEntryId = Guid.NewGuid();
+        var date = new DateOnly(2026, 8, 10);
+        var completedAt = new DateTimeOffset(2026, 8, 12, 12, 0, 0, TimeSpan.Zero);
+        await using var context = Database.CreateDbContext();
+        var migrator = context.GetService<IMigrator>();
+        await migrator.MigrateAsync(
+            slotScheduleMigration,
+            TestContext.Current.CancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            INSERT INTO recipes ("Id", name, normalized_name, estimated_time)
+            VALUES ({recipeId}, 'Receta anterior', 'RECETA ANTERIOR', interval '0 minutes');
+            INSERT INTO weekly_plans ("Id", name, normalized_name, start_date, description)
+            VALUES ({planId}, 'Semana anterior', 'SEMANA ANTERIOR', {date}, NULL);
+            INSERT INTO meal_plan_slots
+                ("Id", weekly_plan_id, date, meal_type_id, "order", planned_time)
+            VALUES
+                ({Guid.NewGuid()}, {planId}, {date}, {CatalogSeedIds.Breakfast}, 0, NULL),
+                ({Guid.NewGuid()}, {planId}, {date}, {CatalogSeedIds.Lunch}, 1, NULL);
+            INSERT INTO meal_plan_entries
+                ("Id", weekly_plan_id, date, meal_type_id, recipe_id, servings, completed_at)
+            VALUES
+                ({plannedEntryId}, {planId}, {date}, {CatalogSeedIds.Breakfast}, {recipeId}, 1, NULL),
+                ({completedEntryId}, {planId}, {date}, {CatalogSeedIds.Lunch}, {recipeId}, 1, {completedAt});
+            """,
+            TestContext.Current.CancellationToken);
+
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        var entries = await context.MealPlanEntries
+            .Where(entry => entry.WeeklyPlanId == planId)
+            .ToDictionaryAsync(entry => entry.Id, TestContext.Current.CancellationToken);
+        Assert.Equal(MealPlanEntryStatus.Planned, entries[plannedEntryId].Status);
+        Assert.Equal(MealPlanEntryStatus.Completed, entries[completedEntryId].Status);
+        Assert.Equal(completedAt, entries[completedEntryId].CompletedAt);
+        Assert.All(entries.Values, entry => Assert.False(entry.IsSkipped));
     }
 }

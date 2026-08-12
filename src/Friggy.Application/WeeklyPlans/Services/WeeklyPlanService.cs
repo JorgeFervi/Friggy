@@ -120,6 +120,31 @@ public sealed class WeeklyPlanService(
             slot.GetPreparationStartsAt(estimatedTime));
     }
 
+    public async Task<MealPlanEntryStateResponse> SkipEntryAsync(
+        Guid planId,
+        DateOnly date,
+        Guid mealTypeId,
+        SkipMealPlanEntryRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var plan = await FindAsync(planId, cancellationToken);
+        await EnsureMealTypeExistsAsync(mealTypeId, cancellationToken);
+        var entry = plan.SkipEntry(
+            date,
+            mealTypeId,
+            request.Reason,
+            request.AlternativeDescription);
+        await plans.SaveChangesAsync(cancellationToken);
+        return new MealPlanEntryStateResponse(
+            entry.Id,
+            entry.Status,
+            entry.CompletedAt,
+            entry.SkippedReason,
+            entry.AlternativeDescription);
+    }
+
     private async Task<WeeklyPlan> FindAsync(
         Guid id,
         CancellationToken cancellationToken) =>

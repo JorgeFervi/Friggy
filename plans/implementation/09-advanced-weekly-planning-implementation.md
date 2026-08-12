@@ -5,7 +5,7 @@
 
 Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni reabre comidas completadas.
 
-> **Progreso:** subfase 9.3 implementada por indicación expresa pese al gate pendiente de 9.2. Compilación, formato y suites sin Docker están verdes; la validación PostgreSQL de 9.2 y 9.3 queda pendiente porque el entorno actual no permite acceder al daemon. No iniciar 9.4 hasta ejecutar esas pruebas.
+> **Progreso:** subfase 9.4 implementada por indicación expresa pese al gate PostgreSQL pendiente. Compilación, formato y suites sin Docker están verdes; la validación de las migraciones 9.2–9.4 con PostgreSQL real queda pendiente porque el entorno actual no permite acceder al daemon. No iniciar 9.5 hasta ejecutar esas pruebas.
 
 ## 9.1 — Tipos de comida por día — Completada
 
@@ -36,12 +36,14 @@ No persistir el inicio derivado.
 
 La hora prevista se persiste como `time without time zone`, se recibe y normaliza como `HH:mm` y puede eliminarse. El inicio de preparación es un `DateTime` local sin `Kind` de zona, calculado con la fecha del hueco y `Recipe.EstimatedTime`; permanece nulo sin hora o receta y no se persiste.
 
-## 9.4 — Comida omitida o sustituida
+## 9.4 — Comida omitida o sustituida — Implementada, validación PostgreSQL pendiente
 
 1. Añadir transición desde planificada a omitida con motivo y alternativa descriptiva.
 2. Una comida omitida no consume lotes ni cuenta como completada.
 3. No modificar estados completados existentes.
 4. Si se prepara otra receta registrada, exigir sustituir antes la asignación y usar el flujo normal de completado.
+
+La omisión es una transición irreversible con motivo obligatorio y alternativa descriptiva opcional. Las asignaciones omitidas conservan su receta como historial, no cuentan como completadas, quedan fuera de las necesidades de inventario y se rechazan antes de cargar o consumir lotes. La migración conserva las comidas completadas existentes derivando su nuevo estado desde `completed_at`.
 
 ## 9.5 — API y calendario Blazor
 

@@ -89,6 +89,13 @@ public sealed class WeeklyPlan
                 "No se puede modificar una comida completada.");
         }
 
+        if (existing?.IsSkipped is true)
+        {
+            throw new DomainValidationException(
+                "weekly-plan.entry.skipped",
+                "No se puede modificar una comida omitida.");
+        }
+
         EnsureSlot(date, mealTypeId);
         if (existing is null)
         {
@@ -159,6 +166,13 @@ public sealed class WeeklyPlan
                 "No se puede retirar el hueco de una comida completada.");
         }
 
+        if (assignment?.IsSkipped is true)
+        {
+            throw new DomainValidationException(
+                "weekly-plan.slot.skipped",
+                "No se puede retirar el hueco de una comida omitida.");
+        }
+
         if (assignment is not null)
         {
             throw new DomainValidationException(
@@ -196,6 +210,13 @@ public sealed class WeeklyPlan
                 "No se puede retirar una comida completada.");
         }
 
+        if (existing?.IsSkipped is true)
+        {
+            throw new DomainValidationException(
+                "weekly-plan.entry.skipped",
+                "No se puede retirar una comida omitida.");
+        }
+
         return existing is not null && entries.Remove(existing);
     }
 
@@ -212,6 +233,23 @@ public sealed class WeeklyPlan
                 "weekly-plan.entry.not-assigned",
                 "No hay una receta asignada a la comida.");
         entry.Complete(completedAt);
+        return entry;
+    }
+
+    public MealPlanEntry SkipEntry(
+        DateOnly date,
+        Guid mealTypeId,
+        string? reason,
+        string? alternativeDescription)
+    {
+        ValidateDate(date);
+        ValidateRequiredId(mealTypeId, "weekly-plan.entry.meal-type-id.required");
+        var entry = entries.SingleOrDefault(item =>
+            item.Date == date && item.MealTypeId == mealTypeId) ??
+            throw new DomainValidationException(
+                "weekly-plan.entry.not-assigned",
+                "No hay una receta asignada a la comida.");
+        entry.Skip(reason, alternativeDescription);
         return entry;
     }
 

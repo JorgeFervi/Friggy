@@ -168,6 +168,49 @@ public sealed class WeeklyPlanInventoryServiceTests
         Assert.Equal(0, scenario.UnitOfWork.SaveCount);
     }
 
+    [Fact]
+    public async Task GetRequirements_SkippedMeal_DoesNotRequireIngredients()
+    {
+        var scenario = Scenario.Create(servings: 2);
+        scenario.Plan.SkipEntry(
+            scenario.Plan.StartDate,
+            scenario.MealType.Id,
+            "Comida fuera de casa",
+            null);
+
+        var result = await scenario.Service.GetRequirementsAsync(
+            scenario.Plan.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task CompleteMeal_SkippedMeal_RejectsBeforeInventoryMutation()
+    {
+        var scenario = Scenario.Create(servings: 1);
+        var lot = scenario.AddLot(2m, new DateOnly(2026, 8, 20));
+        scenario.Plan.SkipEntry(
+            scenario.Plan.StartDate,
+            scenario.MealType.Id,
+            "Sin hambre",
+            "Fruta");
+
+        var exception = await Assert.ThrowsAsync<InventoryConflictException>(() =>
+            scenario.Service.CompleteMealAsync(
+                scenario.Plan.Id,
+                scenario.Plan.StartDate,
+                scenario.MealType.Id,
+                new CompleteMealRequest([new(lot.Id, 1m)]),
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("meal-completion.entry.skipped", exception.Code);
+        Assert.Equal(2m, lot.Quantity);
+        Assert.Single(lot.Movements);
+        Assert.True(Assert.Single(scenario.Plan.Entries).IsSkipped);
+        Assert.Equal(0, scenario.UnitOfWork.SaveCount);
+    }
+
     private sealed class Scenario
     {
         private Scenario(int servings)

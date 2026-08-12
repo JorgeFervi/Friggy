@@ -694,6 +694,114 @@ public sealed class WeeklyPlanTests
     }
 
     [Fact]
+    public void SkipEntry_PlannedMeal_StoresNormalizedReasonAndAlternative()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid());
+
+        var entry = plan.SkipEntry(
+            plan.StartDate,
+            mealTypeId,
+            "  Comida fuera de casa  ",
+            "  Bocadillo  ");
+
+        Assert.Equal(MealPlanEntryStatus.Skipped, entry.Status);
+        Assert.True(entry.IsSkipped);
+        Assert.False(entry.IsCompleted);
+        Assert.Null(entry.CompletedAt);
+        Assert.Equal("Comida fuera de casa", entry.SkippedReason);
+        Assert.Equal("Bocadillo", entry.AlternativeDescription);
+    }
+
+    [Fact]
+    public void SkipEntry_BlankReason_ThrowsWithoutMutatingEntry()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid());
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.SkipEntry(plan.StartDate, mealTypeId, " ", "Bocadillo"));
+
+        Assert.Equal("weekly-plan.entry.skipped-reason.required", exception.Code);
+        var entry = Assert.Single(plan.Entries);
+        Assert.Equal(MealPlanEntryStatus.Planned, entry.Status);
+        Assert.Null(entry.SkippedReason);
+        Assert.Null(entry.AlternativeDescription);
+    }
+
+    [Fact]
+    public void SkipEntry_BlankAlternative_StoresNull()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid());
+
+        var entry = plan.SkipEntry(plan.StartDate, mealTypeId, "Sin hambre", " ");
+
+        Assert.Null(entry.AlternativeDescription);
+    }
+
+    [Fact]
+    public void SkipEntry_MissingAssignment_Throws()
+    {
+        var plan = CreatePlan();
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.SkipEntry(plan.StartDate, Guid.NewGuid(), "Sin hambre", null));
+
+        Assert.Equal("weekly-plan.entry.not-assigned", exception.Code);
+    }
+
+    [Fact]
+    public void SkipEntry_CompletedMeal_ThrowsAndPreservesCompletion()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        var completedAt = new DateTimeOffset(2026, 8, 12, 14, 0, 0, TimeSpan.Zero);
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid());
+        plan.CompleteEntry(plan.StartDate, mealTypeId, completedAt);
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.SkipEntry(plan.StartDate, mealTypeId, "Cambio de planes", null));
+
+        Assert.Equal("weekly-plan.entry.completed", exception.Code);
+        var entry = Assert.Single(plan.Entries);
+        Assert.Equal(completedAt, entry.CompletedAt);
+        Assert.False(entry.IsSkipped);
+    }
+
+    [Fact]
+    public void SkippedEntry_IsIrreversibleAndPreservesAssignment()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        var recipeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, mealTypeId, recipeId, 2);
+        var slotId = Assert.Single(plan.Slots).Id;
+        plan.SkipEntry(plan.StartDate, mealTypeId, "Cambio de planes", null);
+
+        var completeException = Assert.Throws<DomainValidationException>(() =>
+            plan.CompleteEntry(plan.StartDate, mealTypeId, DateTimeOffset.UtcNow));
+        var assignException = Assert.Throws<DomainValidationException>(() =>
+            plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid()));
+        var removeException = Assert.Throws<DomainValidationException>(() =>
+            plan.RemoveEntry(plan.StartDate, mealTypeId));
+        var slotException = Assert.Throws<DomainValidationException>(() =>
+            plan.RemoveSlot(slotId));
+
+        Assert.Equal("weekly-plan.entry.skipped", completeException.Code);
+        Assert.Equal("weekly-plan.entry.skipped", assignException.Code);
+        Assert.Equal("weekly-plan.entry.skipped", removeException.Code);
+        Assert.Equal("weekly-plan.slot.skipped", slotException.Code);
+        var entry = Assert.Single(plan.Entries);
+        Assert.Equal(recipeId, entry.RecipeId);
+        Assert.Equal(2, entry.Servings);
+        Assert.True(entry.IsSkipped);
+    }
+
+    [Fact]
     public void UpdateDetails_ValidValues_ChangesTextAndPreservesSchedule()
     {
         var plan = CreatePlan();

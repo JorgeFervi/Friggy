@@ -34,9 +34,17 @@ public sealed class MealPlanEntry
 
     public int Servings { get; private set; }
 
+    public MealPlanEntryStatus Status { get; private set; }
+
     public DateTimeOffset? CompletedAt { get; private set; }
 
-    public bool IsCompleted => CompletedAt.HasValue;
+    public string? SkippedReason { get; private set; }
+
+    public string? AlternativeDescription { get; private set; }
+
+    public bool IsCompleted => Status == MealPlanEntryStatus.Completed;
+
+    public bool IsSkipped => Status == MealPlanEntryStatus.Skipped;
 
     internal static MealPlanEntry Create(
         Guid weeklyPlanId,
@@ -48,6 +56,7 @@ public sealed class MealPlanEntry
 
     internal void Replace(Guid recipeId, int servings)
     {
+        EnsurePlanned("modificar");
         RecipeId = recipeId;
         Servings = servings;
     }
@@ -61,6 +70,53 @@ public sealed class MealPlanEntry
                 "La comida ya está completada.");
         }
 
+        if (IsSkipped)
+        {
+            throw new Catalogs.DomainValidationException(
+                "weekly-plan.entry.skipped",
+                "No se puede completar una comida omitida.");
+        }
+
+        Status = MealPlanEntryStatus.Completed;
         CompletedAt = completedAt;
+    }
+
+    internal void Skip(string? reason, string? alternativeDescription)
+    {
+        EnsurePlanned("omitir");
+        var normalizedReason = reason?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedReason))
+        {
+            throw new Catalogs.DomainValidationException(
+                "weekly-plan.entry.skipped-reason.required",
+                "El motivo de la omisión es obligatorio.");
+        }
+
+        Status = MealPlanEntryStatus.Skipped;
+        SkippedReason = normalizedReason;
+        AlternativeDescription = NormalizeOptionalText(alternativeDescription);
+    }
+
+    private void EnsurePlanned(string action)
+    {
+        if (IsCompleted)
+        {
+            throw new Catalogs.DomainValidationException(
+                "weekly-plan.entry.completed",
+                $"No se puede {action} una comida completada.");
+        }
+
+        if (IsSkipped)
+        {
+            throw new Catalogs.DomainValidationException(
+                "weekly-plan.entry.skipped",
+                $"No se puede {action} una comida omitida.");
+        }
+    }
+
+    private static string? NormalizeOptionalText(string? value)
+    {
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
     }
 }

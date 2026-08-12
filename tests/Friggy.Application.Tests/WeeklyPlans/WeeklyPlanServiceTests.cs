@@ -414,6 +414,50 @@ public sealed class WeeklyPlanServiceTests
         Assert.Null(result.PreparationStartsAt);
     }
 
+    [Fact]
+    public async Task SkipEntry_PlannedMeal_PersistsAndReturnsState()
+    {
+        var scenario = WeeklyPlanScenario.Create();
+        var plan = scenario.AddPlan("Semana 32", new DateOnly(2026, 8, 3));
+        plan.Assign(plan.StartDate, scenario.LunchId, scenario.RecipeId);
+        var service = scenario.CreateService();
+
+        var result = await service.SkipEntryAsync(
+            plan.Id,
+            plan.StartDate,
+            scenario.LunchId,
+            new SkipMealPlanEntryRequest("  Viaje  ", "  Bocadillo  "),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(Assert.Single(plan.Entries).Id, result.EntryId);
+        Assert.Equal(MealPlanEntryStatus.Skipped, result.Status);
+        Assert.Null(result.CompletedAt);
+        Assert.Equal("Viaje", result.SkippedReason);
+        Assert.Equal("Bocadillo", result.AlternativeDescription);
+        Assert.Equal(1, scenario.Plans.SaveCount);
+    }
+
+    [Fact]
+    public async Task SkipEntry_BlankReason_DoesNotSave()
+    {
+        var scenario = WeeklyPlanScenario.Create();
+        var plan = scenario.AddPlan("Semana 32", new DateOnly(2026, 8, 3));
+        plan.Assign(plan.StartDate, scenario.LunchId, scenario.RecipeId);
+        var service = scenario.CreateService();
+
+        var exception = await Assert.ThrowsAsync<DomainValidationException>(() =>
+            service.SkipEntryAsync(
+                plan.Id,
+                plan.StartDate,
+                scenario.LunchId,
+                new SkipMealPlanEntryRequest(" ", null),
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("weekly-plan.entry.skipped-reason.required", exception.Code);
+        Assert.Equal(0, scenario.Plans.SaveCount);
+        Assert.False(Assert.Single(plan.Entries).IsSkipped);
+    }
+
     private sealed class WeeklyPlanScenario
     {
         private WeeklyPlanScenario(
