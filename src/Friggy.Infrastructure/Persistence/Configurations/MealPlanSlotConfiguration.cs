@@ -26,6 +26,9 @@ internal sealed class MealPlanSlotConfiguration
             .HasColumnName("meal_type_id");
         builder.Property(slot => slot.Order)
             .HasColumnName("order");
+        builder.Property(slot => slot.PlannedTime)
+            .HasColumnName("planned_time")
+            .HasColumnType("time without time zone");
         builder.HasAlternateKey(slot => new
         {
             slot.WeeklyPlanId,

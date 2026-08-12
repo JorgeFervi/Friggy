@@ -326,6 +326,94 @@ public sealed class WeeklyPlanServiceTests
         Assert.Null(result.Days[0].Meals[0].RecipeId);
     }
 
+    [Fact]
+    public async Task SetSlotTime_ValidExactFormat_PersistsAndReturnsDerivedLocalStart()
+    {
+        var scenario = WeeklyPlanScenario.Create();
+        var plan = scenario.AddPlan("Semana 32", new DateOnly(2026, 8, 3));
+        var slot = plan.AddSlot(plan.StartDate, scenario.LunchId);
+        plan.Assign(plan.StartDate, scenario.LunchId, scenario.RecipeId);
+        var service = scenario.CreateService();
+
+        var result = await service.SetSlotTimeAsync(
+            plan.Id,
+            slot.Id,
+            new SetMealPlanSlotTimeRequest("14:05"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(slot.Id, result.SlotId);
+        Assert.Equal("14:05", result.PlannedTime);
+        Assert.Equal(
+            new DateTime(2026, 8, 3, 13, 20, 0, DateTimeKind.Unspecified),
+            result.PreparationStartsAt);
+        Assert.Equal(DateTimeKind.Unspecified, result.PreparationStartsAt?.Kind);
+        Assert.Equal(new TimeOnly(14, 5), slot.PlannedTime);
+        Assert.Equal(1, scenario.Plans.SaveCount);
+    }
+
+    [Theory]
+    [InlineData("14:5")]
+    [InlineData("24:00")]
+    [InlineData("14:05:00")]
+    [InlineData("comida")]
+    public async Task SetSlotTime_InvalidFormat_ThrowsAndDoesNotMutate(string plannedTime)
+    {
+        var scenario = WeeklyPlanScenario.Create();
+        var plan = scenario.AddPlan("Semana 32", new DateOnly(2026, 8, 3));
+        var slot = plan.AddSlot(plan.StartDate, scenario.LunchId);
+        var service = scenario.CreateService();
+
+        var exception = await Assert.ThrowsAsync<DomainValidationException>(() =>
+            service.SetSlotTimeAsync(
+                plan.Id,
+                slot.Id,
+                new SetMealPlanSlotTimeRequest(plannedTime),
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("weekly-plan.slot.planned-time.invalid", exception.Code);
+        Assert.Null(slot.PlannedTime);
+        Assert.Equal(0, scenario.Plans.SaveCount);
+    }
+
+    [Fact]
+    public async Task SetSlotTime_BlankValue_ClearsTimeWithoutPreparationStart()
+    {
+        var scenario = WeeklyPlanScenario.Create();
+        var plan = scenario.AddPlan("Semana 32", new DateOnly(2026, 8, 3));
+        var slot = plan.AddSlot(plan.StartDate, scenario.LunchId);
+        plan.SetSlotTime(slot.Id, new TimeOnly(14, 5));
+        var service = scenario.CreateService();
+
+        var result = await service.SetSlotTimeAsync(
+            plan.Id,
+            slot.Id,
+            new SetMealPlanSlotTimeRequest(" "),
+            TestContext.Current.CancellationToken);
+
+        Assert.Null(result.PlannedTime);
+        Assert.Null(result.PreparationStartsAt);
+        Assert.Null(slot.PlannedTime);
+        Assert.Equal(1, scenario.Plans.SaveCount);
+    }
+
+    [Fact]
+    public async Task SetSlotTime_UnassignedSlot_ReturnsNoPreparationStart()
+    {
+        var scenario = WeeklyPlanScenario.Create();
+        var plan = scenario.AddPlan("Semana 32", new DateOnly(2026, 8, 3));
+        var slot = plan.AddSlot(plan.StartDate, scenario.LunchId);
+        var service = scenario.CreateService();
+
+        var result = await service.SetSlotTimeAsync(
+            plan.Id,
+            slot.Id,
+            new SetMealPlanSlotTimeRequest("00:30"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("00:30", result.PlannedTime);
+        Assert.Null(result.PreparationStartsAt);
+    }
+
     private sealed class WeeklyPlanScenario
     {
         private WeeklyPlanScenario(
@@ -360,7 +448,7 @@ public sealed class WeeklyPlanServiceTests
             var lunch = MealType.Create("Comida", 1);
             references.MealTypes.AddRange([dinner, breakfast, lunch]);
             var recipeId = Guid.NewGuid();
-            references.RecipeIds.Add(recipeId);
+            references.RecipeEstimatedTimes.Add(recipeId, TimeSpan.FromMinutes(45));
 
             return new WeeklyPlanScenario(
                 new FakeWeeklyPlanRepository(),
@@ -441,12 +529,23 @@ public sealed class WeeklyPlanServiceTests
     {
         public List<MealType> MealTypes { get; } = [];
 
-        public HashSet<Guid> RecipeIds { get; } = [];
+        public Dictionary<Guid, TimeSpan> RecipeEstimatedTimes { get; } = [];
 
         public Task<bool> RecipeExistsAsync(Guid id, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(RecipeIds.Contains(id));
+            return Task.FromResult(RecipeEstimatedTimes.ContainsKey(id));
+        }
+
+        public Task<TimeSpan?> GetRecipeEstimatedTimeAsync(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(
+                RecipeEstimatedTimes.TryGetValue(id, out var estimatedTime)
+                    ? (TimeSpan?)estimatedTime
+                    : null);
         }
 
         public Task<bool> MealTypeExistsAsync(Guid id, CancellationToken cancellationToken)

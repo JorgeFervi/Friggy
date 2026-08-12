@@ -5,7 +5,7 @@
 
 Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni reabre comidas completadas.
 
-> **Progreso:** subfase 9.2 implementada. Compilación, formato y suites sin Docker están verdes; la validación PostgreSQL de base vacía y migración desde Fase 8 queda pendiente porque el entorno actual no permite acceder al daemon. No iniciar 9.3 hasta ejecutar esas pruebas.
+> **Progreso:** subfase 9.3 implementada por indicación expresa pese al gate pendiente de 9.2. Compilación, formato y suites sin Docker están verdes; la validación PostgreSQL de 9.2 y 9.3 queda pendiente porque el entorno actual no permite acceder al daemon. No iniciar 9.4 hasta ejecutar esas pruebas.
 
 ## 9.1 — Tipos de comida por día — Completada
 
@@ -25,7 +25,7 @@ Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni r
 
 La migración crea los huecos equivalentes a todos los tipos globales en los siete días de cada plan existente antes de activar la FK de las asignaciones. Los planes nuevos conservan el mismo calendario inicial; PostgreSQL protege tipo y orden únicos por día.
 
-## 9.3 — Horario y preparación
+## 9.3 — Horario y preparación — Implementada, validación PostgreSQL pendiente
 
 1. Añadir hora local opcional a cada hueco planificado.
 2. Validar el formato en Domain/Application y transportar sin conversiones de zona horaria en el entorno local monousuario.
@@ -33,6 +33,8 @@ La migración crea los huecos equivalentes a todos los tipos globales en los sie
 4. Probar cruces de medianoche y ausencia de hora o receta.
 
 No persistir el inicio derivado.
+
+La hora prevista se persiste como `time without time zone`, se recibe y normaliza como `HH:mm` y puede eliminarse. El inicio de preparación es un `DateTime` local sin `Kind` de zona, calculado con la fecha del hueco y `Recipe.EstimatedTime`; permanece nulo sin hora o receta y no se persiste.
 
 ## 9.4 — Comida omitida o sustituida
 

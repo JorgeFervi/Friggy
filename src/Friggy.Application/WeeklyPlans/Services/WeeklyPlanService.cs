@@ -1,3 +1,4 @@
+using System.Globalization;
 using Friggy.Application.WeeklyPlans.Dtos;
 using Friggy.Application.WeeklyPlans.Exceptions;
 using Friggy.Application.WeeklyPlans.Interfaces;
@@ -88,6 +89,35 @@ public sealed class WeeklyPlanService(
         }
 
         return await MapAsync(plan, cancellationToken);
+    }
+
+    public async Task<MealPlanSlotScheduleResponse> SetSlotTimeAsync(
+        Guid planId,
+        Guid slotId,
+        SetMealPlanSlotTimeRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var plannedTime = ParsePlannedTime(request.PlannedTime);
+        var plan = await FindAsync(planId, cancellationToken);
+        var slot = plan.Slots.SingleOrDefault(item => item.Id == slotId) ??
+            throw new DomainValidationException(
+                "weekly-plan.slot.not-found",
+                "No se encontró el hueco de comida.");
+        var entry = plan.Entries.SingleOrDefault(item =>
+            item.Date == slot.Date && item.MealTypeId == slot.MealTypeId);
+        var estimatedTime = entry is null
+            ? null
+            : await references.GetRecipeEstimatedTimeAsync(
+                entry.RecipeId,
+                cancellationToken);
+        plan.SetSlotTime(slotId, plannedTime);
+        await plans.SaveChangesAsync(cancellationToken);
+        return new MealPlanSlotScheduleResponse(
+            slot.Id,
+            slot.PlannedTime?.ToString("HH:mm", CultureInfo.InvariantCulture),
+            slot.GetPreparationStartsAt(estimatedTime));
     }
 
     private async Task<WeeklyPlan> FindAsync(
@@ -184,6 +214,28 @@ public sealed class WeeklyPlanService(
                 plan.AddSlot(date, mealType.Id);
             }
         }
+    }
+
+    private static TimeOnly? ParsePlannedTime(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (TimeOnly.TryParseExact(
+            value,
+            "HH:mm",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var plannedTime))
+        {
+            return plannedTime;
+        }
+
+        throw new DomainValidationException(
+            "weekly-plan.slot.planned-time.invalid",
+            "La hora prevista debe usar el formato HH:mm.");
     }
 
     private static WeeklyPlanMealResponse MapMeal(

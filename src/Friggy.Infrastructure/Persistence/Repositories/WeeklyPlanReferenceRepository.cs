@@ -10,6 +10,14 @@ public sealed class WeeklyPlanReferenceRepository(FriggyDbContext context)
     public Task<bool> RecipeExistsAsync(Guid id, CancellationToken cancellationToken) =>
         context.Recipes.AnyAsync(recipe => recipe.Id == id, cancellationToken);
 
+    public Task<TimeSpan?> GetRecipeEstimatedTimeAsync(
+        Guid id,
+        CancellationToken cancellationToken) =>
+        context.Recipes
+            .Where(recipe => recipe.Id == id)
+            .Select(recipe => (TimeSpan?)recipe.EstimatedTime)
+            .SingleOrDefaultAsync(cancellationToken);
+
     public Task<bool> MealTypeExistsAsync(Guid id, CancellationToken cancellationToken) =>
         context.MealTypes.AnyAsync(mealType => mealType.Id == id, cancellationToken);
 

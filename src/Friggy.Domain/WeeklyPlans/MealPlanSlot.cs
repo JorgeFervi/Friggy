@@ -30,6 +30,8 @@ public sealed class MealPlanSlot
 
     public int Order { get; private set; }
 
+    public TimeOnly? PlannedTime { get; private set; }
+
     internal static MealPlanSlot Create(
         Guid weeklyPlanId,
         DateOnly date,
@@ -38,4 +40,26 @@ public sealed class MealPlanSlot
         new(Guid.NewGuid(), weeklyPlanId, date, mealTypeId, order);
 
     internal void MoveTo(int order) => Order = order;
+
+    internal void SetPlannedTime(TimeOnly? plannedTime) => PlannedTime = plannedTime;
+
+    public DateTime? GetPreparationStartsAt(TimeSpan? estimatedTime)
+    {
+        if (estimatedTime < TimeSpan.Zero)
+        {
+            throw new Catalogs.DomainValidationException(
+                "weekly-plan.slot.estimated-time.non-negative",
+                "El tiempo estimado no puede ser negativo.");
+        }
+
+        if (!PlannedTime.HasValue || !estimatedTime.HasValue)
+        {
+            return null;
+        }
+
+        var plannedAt = Date.ToDateTime(
+            PlannedTime.Value,
+            DateTimeKind.Unspecified);
+        return plannedAt.Subtract(estimatedTime.Value);
+    }
 }

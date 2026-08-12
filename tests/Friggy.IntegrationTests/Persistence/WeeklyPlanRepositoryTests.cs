@@ -25,6 +25,7 @@ public sealed class WeeklyPlanRepositoryTests(PostgreSqlDatabaseFixture database
         plan.Assign(dinner.Date, dinner.MealTypeId, recipes[2].Id);
         plan.Assign(breakfast.Date, breakfast.MealTypeId, recipes[0].Id);
         plan.Assign(lunch.Date, lunch.MealTypeId, recipes[1].Id);
+        plan.SetSlotTime(lunch.Id, new TimeOnly(13, 15));
 
         await SavePlanAsync(plan);
 
@@ -46,6 +47,9 @@ public sealed class WeeklyPlanRepositoryTests(PostgreSqlDatabaseFixture database
         Assert.Equal(
             [breakfast.Id, lunch.Id, dinner.Id],
             reloaded.Slots.Select(slot => slot.Id));
+        Assert.Equal(
+            new TimeOnly(13, 15),
+            reloaded.Slots.Single(slot => slot.Id == lunch.Id).PlannedTime);
     }
 
     [Fact]
@@ -237,6 +241,12 @@ public sealed class WeeklyPlanRepositoryTests(PostgreSqlDatabaseFixture database
         var missingRecipeExists = await repository.RecipeExistsAsync(
             Guid.NewGuid(),
             TestContext.Current.CancellationToken);
+        var estimatedTime = await repository.GetRecipeEstimatedTimeAsync(
+            recipe.Id,
+            TestContext.Current.CancellationToken);
+        var missingEstimatedTime = await repository.GetRecipeEstimatedTimeAsync(
+            Guid.NewGuid(),
+            TestContext.Current.CancellationToken);
         var mealTypeExists = await repository.MealTypeExistsAsync(
             CatalogSeedIds.Lunch,
             TestContext.Current.CancellationToken);
@@ -248,6 +258,8 @@ public sealed class WeeklyPlanRepositoryTests(PostgreSqlDatabaseFixture database
 
         Assert.True(recipeExists);
         Assert.False(missingRecipeExists);
+        Assert.Equal(TimeSpan.Zero, estimatedTime);
+        Assert.Null(missingEstimatedTime);
         Assert.True(mealTypeExists);
         Assert.False(missingMealTypeExists);
         Assert.Equal([0, 1, 2], mealTypes.Select(mealType => mealType.Order));

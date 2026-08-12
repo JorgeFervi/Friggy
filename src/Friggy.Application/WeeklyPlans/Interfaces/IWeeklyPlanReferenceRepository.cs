@@ -6,6 +6,8 @@ public interface IWeeklyPlanReferenceRepository
 {
     Task<bool> RecipeExistsAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<TimeSpan?> GetRecipeEstimatedTimeAsync(Guid id, CancellationToken cancellationToken);
+
     Task<bool> MealTypeExistsAsync(Guid id, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<MealType>> ListMealTypesAsync(CancellationToken cancellationToken);

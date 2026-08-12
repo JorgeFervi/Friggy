@@ -543,6 +543,111 @@ public sealed class WeeklyPlanTests
     }
 
     [Fact]
+    public void SetSlotTime_ValidLocalTime_StoresTimeAndPreservesItWhenReordered()
+    {
+        var plan = CreatePlan();
+        var breakfast = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var lunch = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        var plannedTime = new TimeOnly(14, 5);
+
+        var scheduled = plan.SetSlotTime(lunch.Id, plannedTime);
+        plan.ReorderSlots(plan.StartDate, [lunch.Id, breakfast.Id]);
+
+        Assert.Same(lunch, scheduled);
+        Assert.Equal(plannedTime, lunch.PlannedTime);
+        Assert.Equal(lunch.Id, plan.Slots.OrderBy(slot => slot.Order).First().Id);
+    }
+
+    [Fact]
+    public void SetSlotTime_Null_ClearsExistingTime()
+    {
+        var plan = CreatePlan();
+        var slot = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        plan.SetSlotTime(slot.Id, new TimeOnly(14, 5));
+
+        plan.SetSlotTime(slot.Id, null);
+
+        Assert.Null(slot.PlannedTime);
+    }
+
+    [Fact]
+    public void SetSlotTime_MissingSlot_ThrowsAndPreservesSchedule()
+    {
+        var plan = CreatePlan();
+        var slot = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.SetSlotTime(Guid.NewGuid(), new TimeOnly(14, 5)));
+
+        Assert.Equal("weekly-plan.slot.not-found", exception.Code);
+        Assert.Null(slot.PlannedTime);
+    }
+
+    [Fact]
+    public void SetSlotTime_EmptyId_ThrowsAndPreservesSchedule()
+    {
+        var plan = CreatePlan();
+        var slot = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.SetSlotTime(Guid.Empty, new TimeOnly(14, 5)));
+
+        Assert.Equal("weekly-plan.slot.id.required", exception.Code);
+        Assert.Null(slot.PlannedTime);
+    }
+
+    [Fact]
+    public void GetPreparationStartsAt_PlannedRecipe_ReturnsUnspecifiedLocalDateTime()
+    {
+        var plan = CreatePlan();
+        var slot = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        plan.SetSlotTime(slot.Id, new TimeOnly(14, 5));
+
+        var preparationStartsAt = slot.GetPreparationStartsAt(TimeSpan.FromMinutes(45));
+
+        Assert.Equal(new DateTime(2026, 8, 3, 13, 20, 0, DateTimeKind.Unspecified), preparationStartsAt);
+        Assert.Equal(DateTimeKind.Unspecified, preparationStartsAt?.Kind);
+    }
+
+    [Fact]
+    public void GetPreparationStartsAt_CrossesMidnight_ReturnsPreviousLocalDay()
+    {
+        var plan = CreatePlan();
+        var slot = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        plan.SetSlotTime(slot.Id, new TimeOnly(0, 30));
+
+        var preparationStartsAt = slot.GetPreparationStartsAt(TimeSpan.FromHours(1));
+
+        Assert.Equal(new DateTime(2026, 8, 2, 23, 30, 0, DateTimeKind.Unspecified), preparationStartsAt);
+    }
+
+    [Fact]
+    public void GetPreparationStartsAt_MissingTimeOrRecipe_ReturnsNull()
+    {
+        var plan = CreatePlan();
+        var slot = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+
+        Assert.Null(slot.GetPreparationStartsAt(TimeSpan.FromMinutes(30)));
+
+        plan.SetSlotTime(slot.Id, new TimeOnly(14, 5));
+
+        Assert.Null(slot.GetPreparationStartsAt(null));
+    }
+
+    [Fact]
+    public void GetPreparationStartsAt_NegativeEstimatedTime_Throws()
+    {
+        var plan = CreatePlan();
+        var slot = plan.AddSlot(plan.StartDate, Guid.NewGuid());
+        plan.SetSlotTime(slot.Id, new TimeOnly(14, 5));
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            slot.GetPreparationStartsAt(TimeSpan.FromMinutes(-1)));
+
+        Assert.Equal("weekly-plan.slot.estimated-time.non-negative", exception.Code);
+    }
+
+    [Fact]
     public void CompleteEntry_AssignedMeal_StoresCompletionMoment()
     {
         var plan = CreatePlan();

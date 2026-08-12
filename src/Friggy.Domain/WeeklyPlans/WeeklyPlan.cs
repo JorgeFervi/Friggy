@@ -171,6 +171,17 @@ public sealed class WeeklyPlan
         return true;
     }
 
+    public MealPlanSlot SetSlotTime(Guid slotId, TimeOnly? plannedTime)
+    {
+        ValidateRequiredId(slotId, "weekly-plan.slot.id.required");
+        var slot = slots.SingleOrDefault(item => item.Id == slotId) ??
+            throw new DomainValidationException(
+                "weekly-plan.slot.not-found",
+                "No se encontró el hueco de comida.");
+        slot.SetPlannedTime(plannedTime);
+        return slot;
+    }
+
     public bool RemoveEntry(DateOnly date, Guid mealTypeId)
     {
         ValidateDate(date);

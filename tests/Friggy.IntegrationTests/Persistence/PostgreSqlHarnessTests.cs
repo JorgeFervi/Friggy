@@ -32,6 +32,10 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             migration => Assert.EndsWith(
                 "_AddDailyMealPlanSlots",
                 migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_AddMealPlanSlotSchedule",
+                migration,
                 StringComparison.Ordinal));
         Assert.StartsWith("friggy_tests_", Database.DatabaseName, StringComparison.Ordinal);
     }
@@ -60,7 +64,7 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             .GetAppliedMigrationsAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(true, tableWasRemoved);
-        Assert.Equal(6, appliedMigrations.Count());
+        Assert.Equal(7, appliedMigrations.Count());
     }
 
     [Fact]
@@ -141,6 +145,7 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             TestContext.Current.CancellationToken);
 
         Assert.Equal(21, slots.Length);
+        Assert.All(slots, slot => Assert.Null(slot.PlannedTime));
         Assert.All(
             Enumerable.Range(0, 7).Select(date.AddDays),
             day => Assert.Equal(
