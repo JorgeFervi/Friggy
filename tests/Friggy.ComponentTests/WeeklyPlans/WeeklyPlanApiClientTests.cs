@@ -11,6 +11,7 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
     private static readonly Guid PlanId = Guid.Parse("60000000-0000-0000-0000-000000000001");
     private static readonly Guid MealTypeId = Guid.Parse("40000000-0000-0000-0000-000000000001");
     private static readonly Guid RecipeId = Guid.Parse("50000000-0000-0000-0000-000000000001");
+    private static readonly Guid SlotId = Guid.Parse("70000000-0000-0000-0000-000000000001");
     private static readonly DateOnly WeekStart = new(2026, 8, 3);
 
     [Fact]
@@ -26,6 +27,18 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
         Api.RespondWith("application/json", json);
         Api.RespondWith("application/json", json);
         Api.RespondWith("application/json", json);
+        Api.RespondWith("application/json", json);
+        Api.RespondWith("application/json", json);
+        Api.RespondWith("application/json", json);
+        Api.RespondWith("application/json", JsonSerializer.Serialize(
+            new MealPlanSlotScheduleResponse(SlotId, "14:00", new DateTime(2026, 8, 3, 13, 40, 0))));
+        Api.RespondWith("application/json", JsonSerializer.Serialize(
+            new MealPlanEntryStateResponse(
+                Guid.NewGuid(),
+                MealPlanEntryState.Skipped,
+                null,
+                "Viaje",
+                "Bocadillo")));
         Api.RespondWith(HttpStatusCode.NoContent);
         var client = new WeeklyPlanApiClient(ApiClient);
 
@@ -49,6 +62,31 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
             WeekStart,
             MealTypeId,
             TestContext.Current.CancellationToken);
+        var addedSlot = await client.AddSlotAsync(
+            PlanId,
+            WeekStart,
+            new(MealTypeId),
+            TestContext.Current.CancellationToken);
+        var reordered = await client.ReorderSlotsAsync(
+            PlanId,
+            WeekStart,
+            new([SlotId]),
+            TestContext.Current.CancellationToken);
+        var removedSlot = await client.RemoveSlotAsync(
+            PlanId,
+            SlotId,
+            TestContext.Current.CancellationToken);
+        var scheduled = await client.SetSlotTimeAsync(
+            PlanId,
+            SlotId,
+            new("14:00"),
+            TestContext.Current.CancellationToken);
+        var skipped = await client.SkipEntryAsync(
+            PlanId,
+            WeekStart,
+            MealTypeId,
+            new("Viaje", "Bocadillo"),
+            TestContext.Current.CancellationToken);
         await client.DeleteAsync(PlanId, TestContext.Current.CancellationToken);
 
         Assert.Single(listed);
@@ -57,6 +95,11 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
         Assert.Equal(PlanId, updated.Id);
         Assert.Equal(PlanId, assigned.Id);
         Assert.Equal(PlanId, removed.Id);
+        Assert.Equal(PlanId, addedSlot.Id);
+        Assert.Equal(PlanId, reordered.Id);
+        Assert.Equal(PlanId, removedSlot.Id);
+        Assert.Equal("14:00", scheduled.PlannedTime);
+        Assert.Equal("Viaje", skipped.SkippedReason);
         Assert.Equal(
             [
                 (HttpMethod.Get, "api/weekly-plans"),
@@ -65,6 +108,11 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
                 (HttpMethod.Put, $"api/weekly-plans/{PlanId}"),
                 (HttpMethod.Put, $"api/weekly-plans/{PlanId}/days/2026-08-03/meal-types/{MealTypeId}"),
                 (HttpMethod.Delete, $"api/weekly-plans/{PlanId}/days/2026-08-03/meal-types/{MealTypeId}"),
+                (HttpMethod.Post, $"api/weekly-plans/{PlanId}/days/2026-08-03/slots"),
+                (HttpMethod.Put, $"api/weekly-plans/{PlanId}/days/2026-08-03/slots/order"),
+                (HttpMethod.Delete, $"api/weekly-plans/{PlanId}/slots/{SlotId}"),
+                (HttpMethod.Put, $"api/weekly-plans/{PlanId}/slots/{SlotId}/time"),
+                (HttpMethod.Post, $"api/weekly-plans/{PlanId}/days/2026-08-03/meal-types/{MealTypeId}/skip"),
                 (HttpMethod.Delete, $"api/weekly-plans/{PlanId}"),
             ],
             Api.Requests.Select(request => (request.Method, request.Uri?.PathAndQuery.TrimStart('/'))));
@@ -96,6 +144,12 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
             Enumerable.Range(0, 7)
                 .Select(offset => new WeeklyPlanDayResponse(
                     WeekStart.AddDays(offset),
-                    [new WeeklyPlanMealResponse(MealTypeId, "Comida", 1, null)]))
+                    [new WeeklyPlanMealResponse(
+                        MealTypeId,
+                        "Comida",
+                        1,
+                        null,
+                        SlotId: SlotId,
+                        SlotOrder: 0)]))
                 .ToArray());
 }

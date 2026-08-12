@@ -251,6 +251,70 @@ public sealed class WeeklyPlanEndpointTests(PostgreSqlDatabaseFixture database)
 
     [Fact]
     [Trait("Category", "Integration")]
+    public async Task AdvancedPlanningEndpoints_ManageSlotsScheduleAndSkippedState()
+    {
+        await using var factory = new FriggyApiFactory(Database.ConnectionString);
+        using var client = factory.CreateClient();
+        var plan = await CreateWeeklyPlanAsync(client, "Semana avanzada");
+        var ingredient = await CreateIngredientAsync(client, "Tomate");
+        var recipe = await CreateRecipeAsync(client, "Gazpacho", ingredient.Id);
+        var day = plan.Days.Single(item => item.Date == WeekStart);
+        var dinner = day.Meals.Single(meal => meal.MealTypeId == CatalogSeedIds.Dinner);
+
+        using var removeResponse = await client.DeleteAsync(
+            $"/api/weekly-plans/{plan.Id}/slots/{dinner.SlotId}",
+            TestContext.Current.CancellationToken);
+        using var addResponse = await client.PostAsJsonAsync(
+            $"/api/weekly-plans/{plan.Id}/days/{WeekStart:yyyy-MM-dd}/slots",
+            new AddMealPlanSlotRequest(CatalogSeedIds.Dinner),
+            TestContext.Current.CancellationToken);
+        var added = await addResponse.Content.ReadFromJsonAsync<WeeklyPlanResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(added);
+        var addedDay = added.Days.Single(item => item.Date == WeekStart);
+        var orderedIds = addedDay.Meals.OrderByDescending(meal => meal.SlotOrder)
+            .Select(meal => meal.SlotId)
+            .ToArray();
+        using var reorderResponse = await client.PutAsJsonAsync(
+            $"/api/weekly-plans/{plan.Id}/days/{WeekStart:yyyy-MM-dd}/slots/order",
+            new ReorderMealPlanSlotsRequest(orderedIds),
+            TestContext.Current.CancellationToken);
+        var lunch = addedDay.Meals.Single(meal => meal.MealTypeId == CatalogSeedIds.Lunch);
+        using var timeResponse = await client.PutAsJsonAsync(
+            $"/api/weekly-plans/{plan.Id}/slots/{lunch.SlotId}/time",
+            new SetMealPlanSlotTimeRequest("14:00"),
+            TestContext.Current.CancellationToken);
+        using var assignResponse = await client.PutAsJsonAsync(
+            CellPath(plan.Id, WeekStart, CatalogSeedIds.Lunch),
+            new SetMealPlanEntryRequest(recipe.Id),
+            TestContext.Current.CancellationToken);
+        using var skipResponse = await client.PostAsJsonAsync(
+            $"{CellPath(plan.Id, WeekStart, CatalogSeedIds.Lunch)}/skip",
+            new SkipMealPlanEntryRequest("Viaje", "Bocadillo"),
+            TestContext.Current.CancellationToken);
+        var loaded = await client.GetFromJsonAsync<WeeklyPlanResponse>(
+            $"/api/weekly-plans/{plan.Id}",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, removeResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, addResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, reorderResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, timeResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, assignResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, skipResponse.StatusCode);
+        Assert.NotNull(loaded);
+        var loadedDay = loaded.Days.Single(item => item.Date == WeekStart);
+        Assert.Equal(orderedIds, loadedDay.Meals.Select(meal => meal.SlotId));
+        var loadedLunch = loadedDay.Meals.Single(meal => meal.MealTypeId == CatalogSeedIds.Lunch);
+        Assert.Equal("14:00", loadedLunch.PlannedTime);
+        Assert.Equal(new DateTime(2026, 8, 3, 13, 40, 0), loadedLunch.PreparationStartsAt);
+        Assert.Equal(MealPlanEntryState.Skipped, loadedLunch.Status);
+        Assert.Equal("Viaje", loadedLunch.SkippedReason);
+        Assert.Equal("Bocadillo", loadedLunch.AlternativeDescription);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
     public async Task OpenApi_WeeklyPlanPaths_DescribeCrudAndCellOperations()
     {
         await using var factory = new FriggyApiFactory(Database.ConnectionString);
@@ -271,6 +335,16 @@ public sealed class WeeklyPlanEndpointTests(PostgreSqlDatabaseFixture database)
         var resource = paths.GetProperty("/api/weekly-plans/{id}");
         var cell = paths.GetProperty(
             "/api/weekly-plans/{planId}/days/{date}/meal-types/{mealTypeId}");
+        var slots = paths.GetProperty(
+            "/api/weekly-plans/{planId}/days/{date}/slots");
+        var slotOrder = paths.GetProperty(
+            "/api/weekly-plans/{planId}/days/{date}/slots/order");
+        var slot = paths.GetProperty(
+            "/api/weekly-plans/{planId}/slots/{slotId}");
+        var slotTime = paths.GetProperty(
+            "/api/weekly-plans/{planId}/slots/{slotId}/time");
+        var skipped = paths.GetProperty(
+            "/api/weekly-plans/{planId}/days/{date}/meal-types/{mealTypeId}/skip");
         Assert.True(collection.TryGetProperty("get", out _));
         Assert.True(collection.TryGetProperty("post", out _));
         Assert.True(resource.TryGetProperty("get", out _));
@@ -278,6 +352,11 @@ public sealed class WeeklyPlanEndpointTests(PostgreSqlDatabaseFixture database)
         Assert.True(resource.TryGetProperty("delete", out _));
         Assert.Contains("yyyy-MM-dd", cell.GetProperty("put").GetProperty("description").GetString());
         Assert.Contains("yyyy-MM-dd", cell.GetProperty("delete").GetProperty("description").GetString());
+        Assert.True(slots.TryGetProperty("post", out _));
+        Assert.True(slotOrder.TryGetProperty("put", out _));
+        Assert.True(slot.TryGetProperty("delete", out _));
+        Assert.True(slotTime.TryGetProperty("put", out _));
+        Assert.True(skipped.TryGetProperty("post", out _));
     }
 
     private static async Task<WeeklyPlanResponse> CreateWeeklyPlanAsync(

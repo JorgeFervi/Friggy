@@ -120,6 +120,50 @@ public sealed class WeeklyPlanService(
             slot.GetPreparationStartsAt(estimatedTime));
     }
 
+    public async Task<WeeklyPlanResponse> AddSlotAsync(
+        Guid planId,
+        DateOnly date,
+        AddMealPlanSlotRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var plan = await FindAsync(planId, cancellationToken);
+        await EnsureMealTypeExistsAsync(request.MealTypeId, cancellationToken);
+        plan.AddSlot(date, request.MealTypeId);
+        await plans.SaveChangesAsync(cancellationToken);
+        return await MapAsync(plan, cancellationToken);
+    }
+
+    public async Task<WeeklyPlanResponse> ReorderSlotsAsync(
+        Guid planId,
+        DateOnly date,
+        ReorderMealPlanSlotsRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(request.SlotIds);
+
+        var plan = await FindAsync(planId, cancellationToken);
+        plan.ReorderSlots(date, request.SlotIds);
+        await plans.SaveChangesAsync(cancellationToken);
+        return await MapAsync(plan, cancellationToken);
+    }
+
+    public async Task<WeeklyPlanResponse> RemoveSlotAsync(
+        Guid planId,
+        Guid slotId,
+        CancellationToken cancellationToken)
+    {
+        var plan = await FindAsync(planId, cancellationToken);
+        if (plan.RemoveSlot(slotId))
+        {
+            await plans.SaveChangesAsync(cancellationToken);
+        }
+
+        return await MapAsync(plan, cancellationToken);
+    }
+
     public async Task<MealPlanEntryStateResponse> SkipEntryAsync(
         Guid planId,
         DateOnly date,
@@ -139,7 +183,7 @@ public sealed class WeeklyPlanService(
         await plans.SaveChangesAsync(cancellationToken);
         return new MealPlanEntryStateResponse(
             entry.Id,
-            entry.Status,
+            MapState(entry.Status),
             entry.CompletedAt,
             entry.SkippedReason,
             entry.AlternativeDescription);
@@ -204,14 +248,29 @@ public sealed class WeeklyPlanService(
             .OrderBy(mealType => mealType.Order)
             .ThenBy(mealType => mealType.Name.Value, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
+        var mealTypesById = mealTypes.ToDictionary(mealType => mealType.Id);
         var entries = plan.Entries.ToDictionary(
             entry => (entry.Date, entry.MealTypeId));
+        var estimatedTimes = new Dictionary<Guid, TimeSpan?>();
+        foreach (var recipeId in plan.Entries.Select(entry => entry.RecipeId).Distinct())
+        {
+            estimatedTimes[recipeId] = await references.GetRecipeEstimatedTimeAsync(
+                recipeId,
+                cancellationToken);
+        }
+
         var days = plan.Dates
             .OrderBy(date => date)
             .Select(date => new WeeklyPlanDayResponse(
                 date,
-                mealTypes
-                    .Select(mealType => MapMeal(date, mealType, entries))
+                plan.Slots
+                    .Where(slot => slot.Date == date)
+                    .OrderBy(slot => slot.Order)
+                    .Select(slot => MapMeal(
+                        slot,
+                        mealTypesById[slot.MealTypeId],
+                        entries,
+                        estimatedTimes))
                     .ToArray()))
             .ToArray();
 
@@ -264,13 +323,15 @@ public sealed class WeeklyPlanService(
     }
 
     private static WeeklyPlanMealResponse MapMeal(
-        DateOnly date,
+        MealPlanSlot slot,
         MealType mealType,
-        Dictionary<(DateOnly Date, Guid MealTypeId), MealPlanEntry> entries)
+        Dictionary<(DateOnly Date, Guid MealTypeId), MealPlanEntry> entries,
+        Dictionary<Guid, TimeSpan?> estimatedTimes)
     {
-        var hasEntry = entries.TryGetValue((date, mealType.Id), out var entry);
+        var hasEntry = entries.TryGetValue((slot.Date, mealType.Id), out var entry);
         var recipeId = hasEntry ? entry!.RecipeId : (Guid?)null;
         var servings = hasEntry ? entry!.Servings : 1;
+        var estimatedTime = hasEntry ? estimatedTimes.GetValueOrDefault(entry!.RecipeId) : null;
 
         return new WeeklyPlanMealResponse(
             mealType.Id,
@@ -279,6 +340,21 @@ public sealed class WeeklyPlanService(
             recipeId,
             servings,
             entry?.IsCompleted ?? false,
-            entry?.CompletedAt);
+            entry?.CompletedAt,
+            slot.Id,
+            slot.Order,
+            slot.PlannedTime?.ToString("HH:mm", CultureInfo.InvariantCulture),
+            slot.GetPreparationStartsAt(estimatedTime),
+            entry is null ? MealPlanEntryState.Planned : MapState(entry.Status),
+            entry?.SkippedReason,
+            entry?.AlternativeDescription);
     }
+
+    private static MealPlanEntryState MapState(MealPlanEntryStatus status) => status switch
+    {
+        MealPlanEntryStatus.Planned => MealPlanEntryState.Planned,
+        MealPlanEntryStatus.Completed => MealPlanEntryState.Completed,
+        MealPlanEntryStatus.Skipped => MealPlanEntryState.Skipped,
+        _ => throw new ArgumentOutOfRangeException(nameof(status), status, null),
+    };
 }

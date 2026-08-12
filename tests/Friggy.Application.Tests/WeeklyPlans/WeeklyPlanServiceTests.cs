@@ -95,11 +95,15 @@ public sealed class WeeklyPlanServiceTests
     }
 
     [Fact]
-    public async Task Get_ExistingPlan_ReturnsSevenDaysAndOrderedMealTypes()
+    public async Task Get_ExistingPlan_ReturnsOnlyConfiguredSlotsWithScheduleAndState()
     {
         var scenario = WeeklyPlanScenario.Create();
         var plan = scenario.AddPlan("Semana 32", new DateOnly(2026, 8, 3));
-        plan.Assign(plan.StartDate.AddDays(2), scenario.LunchId, scenario.RecipeId);
+        var date = plan.StartDate.AddDays(2);
+        plan.Assign(date, scenario.LunchId, scenario.RecipeId);
+        var slot = Assert.Single(plan.Slots);
+        plan.SetSlotTime(slot.Id, new TimeOnly(14, 0));
+        plan.SkipEntry(date, scenario.LunchId, "Viaje", "Bocadillo");
         var service = scenario.CreateService();
 
         var result = await service.GetAsync(
@@ -107,12 +111,16 @@ public sealed class WeeklyPlanServiceTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal(7, result.Days.Count);
-        Assert.All(result.Days, day =>
-            Assert.Equal([0, 1, 2], day.Meals.Select(meal => meal.MealTypeOrder)));
-        var assignedDay = result.Days.Single(day => day.Date == plan.StartDate.AddDays(2));
-        Assert.Equal(
-            scenario.RecipeId,
-            assignedDay.Meals.Single(meal => meal.MealTypeId == scenario.LunchId).RecipeId);
+        Assert.All(result.Days.Where(day => day.Date != date), day => Assert.Empty(day.Meals));
+        var meal = Assert.Single(result.Days.Single(day => day.Date == date).Meals);
+        Assert.Equal(slot.Id, meal.SlotId);
+        Assert.Equal(0, meal.SlotOrder);
+        Assert.Equal(scenario.RecipeId, meal.RecipeId);
+        Assert.Equal("14:00", meal.PlannedTime);
+        Assert.Equal(new DateTime(2026, 8, 5, 13, 15, 0), meal.PreparationStartsAt);
+        Assert.Equal(MealPlanEntryState.Skipped, meal.Status);
+        Assert.Equal("Viaje", meal.SkippedReason);
+        Assert.Equal("Bocadillo", meal.AlternativeDescription);
     }
 
     [Fact]
@@ -323,7 +331,7 @@ public sealed class WeeklyPlanServiceTests
 
         Assert.Empty(plan.Entries);
         Assert.Equal(0, scenario.Plans.SaveCount);
-        Assert.Null(result.Days[0].Meals[0].RecipeId);
+        Assert.Empty(result.Days[0].Meals);
     }
 
     [Fact]
@@ -349,6 +357,43 @@ public sealed class WeeklyPlanServiceTests
         Assert.Equal(DateTimeKind.Unspecified, result.PreparationStartsAt?.Kind);
         Assert.Equal(new TimeOnly(14, 5), slot.PlannedTime);
         Assert.Equal(1, scenario.Plans.SaveCount);
+    }
+
+    [Fact]
+    public async Task SlotOperations_AddReorderAndRemove_ReturnConfiguredDayOnly()
+    {
+        var scenario = WeeklyPlanScenario.Create();
+        var plan = scenario.AddPlan("Semana 32", new DateOnly(2026, 8, 3));
+        var service = scenario.CreateService();
+
+        var withBreakfast = await service.AddSlotAsync(
+            plan.Id,
+            plan.StartDate,
+            new AddMealPlanSlotRequest(scenario.BreakfastId),
+            TestContext.Current.CancellationToken);
+        var breakfast = Assert.Single(withBreakfast.Days[0].Meals);
+        var withLunch = await service.AddSlotAsync(
+            plan.Id,
+            plan.StartDate,
+            new AddMealPlanSlotRequest(scenario.LunchId),
+            TestContext.Current.CancellationToken);
+        var lunch = withLunch.Days[0].Meals.Single(meal => meal.MealTypeId == scenario.LunchId);
+        var reordered = await service.ReorderSlotsAsync(
+            plan.Id,
+            plan.StartDate,
+            new ReorderMealPlanSlotsRequest([lunch.SlotId, breakfast.SlotId]),
+            TestContext.Current.CancellationToken);
+        var removed = await service.RemoveSlotAsync(
+            plan.Id,
+            breakfast.SlotId,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            [scenario.LunchId, scenario.BreakfastId],
+            reordered.Days[0].Meals.Select(meal => meal.MealTypeId));
+        Assert.Equal(lunch.SlotId, Assert.Single(removed.Days[0].Meals).SlotId);
+        Assert.All(removed.Days.Skip(1), day => Assert.Empty(day.Meals));
+        Assert.Equal(4, scenario.Plans.SaveCount);
     }
 
     [Theory]
@@ -430,7 +475,7 @@ public sealed class WeeklyPlanServiceTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal(Assert.Single(plan.Entries).Id, result.EntryId);
-        Assert.Equal(MealPlanEntryStatus.Skipped, result.Status);
+        Assert.Equal(MealPlanEntryState.Skipped, result.Status);
         Assert.Null(result.CompletedAt);
         Assert.Equal("Viaje", result.SkippedReason);
         Assert.Equal("Bocadillo", result.AlternativeDescription);

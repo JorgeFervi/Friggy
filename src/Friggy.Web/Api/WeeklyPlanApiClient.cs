@@ -77,6 +77,63 @@ public sealed class WeeklyPlanApiClient(HttpClient httpClient) : IWeeklyPlansApi
         return await ReadPlanAsync(response, cancellationToken);
     }
 
+    public Task<WeeklyPlanResponse> AddSlotAsync(
+        Guid planId,
+        DateOnly mealDate,
+        AddMealPlanSlotRequest request,
+        CancellationToken cancellationToken) =>
+        SendAsync(
+            HttpMethod.Post,
+            DaySlotsUri(planId, mealDate),
+            request,
+            cancellationToken);
+
+    public Task<WeeklyPlanResponse> ReorderSlotsAsync(
+        Guid planId,
+        DateOnly mealDate,
+        ReorderMealPlanSlotsRequest request,
+        CancellationToken cancellationToken) =>
+        SendAsync(
+            HttpMethod.Put,
+            $"{DaySlotsUri(planId, mealDate)}/order",
+            request,
+            cancellationToken);
+
+    public async Task<WeeklyPlanResponse> RemoveSlotAsync(
+        Guid planId,
+        Guid slotId,
+        CancellationToken cancellationToken)
+    {
+        using var response = await httpClient.DeleteAsync(
+            $"api/weekly-plans/{planId}/slots/{slotId}",
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await ReadPlanAsync(response, cancellationToken);
+    }
+
+    public async Task<MealPlanSlotScheduleResponse> SetSlotTimeAsync(
+        Guid planId,
+        Guid slotId,
+        SetMealPlanSlotTimeRequest request,
+        CancellationToken cancellationToken) =>
+        await SendAndReadAsync<MealPlanSlotScheduleResponse>(
+            HttpMethod.Put,
+            $"api/weekly-plans/{planId}/slots/{slotId}/time",
+            request,
+            cancellationToken);
+
+    public async Task<MealPlanEntryStateResponse> SkipEntryAsync(
+        Guid planId,
+        DateOnly mealDate,
+        Guid mealTypeId,
+        SkipMealPlanEntryRequest request,
+        CancellationToken cancellationToken) =>
+        await SendAndReadAsync<MealPlanEntryStateResponse>(
+            HttpMethod.Post,
+            $"{CellUri(planId, mealDate, mealTypeId)}/skip",
+            request,
+            cancellationToken);
+
     private async Task<WeeklyPlanResponse> SendAsync(
         HttpMethod method,
         string uri,
@@ -92,9 +149,29 @@ public sealed class WeeklyPlanApiClient(HttpClient httpClient) : IWeeklyPlansApi
         return await ReadPlanAsync(response, cancellationToken);
     }
 
+    private async Task<T> SendAndReadAsync<T>(
+        HttpMethod method,
+        string uri,
+        object body,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(method, uri)
+        {
+            Content = JsonContent.Create(body),
+        };
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<T>(cancellationToken) ??
+            throw new ApiProblemException("La API devolvió una respuesta vacía.");
+    }
+
     private static string CellUri(Guid planId, DateOnly date, Guid mealTypeId) =>
         $"api/weekly-plans/{planId}/days/" +
         $"{date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}/meal-types/{mealTypeId}";
+
+    private static string DaySlotsUri(Guid planId, DateOnly date) =>
+        $"api/weekly-plans/{planId}/days/" +
+        $"{date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}/slots";
 
     private static async Task<WeeklyPlanResponse> ReadPlanAsync(
         HttpResponseMessage response,

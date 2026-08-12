@@ -54,6 +54,40 @@ public static class WeeklyPlanEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        group.MapPost("/{planId:guid}/days/{date}/slots", AddSlotAsync)
+            .WithName("AddMealPlanSlot")
+            .WithDescription("Añade un hueco al final del día. La fecha debe usar el formato yyyy-MM-dd.")
+            .Produces<WeeklyPlanResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPut("/{planId:guid}/days/{date}/slots/order", ReorderSlotsAsync)
+            .WithName("ReorderMealPlanSlots")
+            .WithDescription("Reordena todos los huecos del día. La fecha debe usar el formato yyyy-MM-dd.")
+            .Produces<WeeklyPlanResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapDelete("/{planId:guid}/slots/{slotId:guid}", RemoveSlotAsync)
+            .WithName("RemoveMealPlanSlot")
+            .Produces<WeeklyPlanResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPut("/{planId:guid}/slots/{slotId:guid}/time", SetSlotTimeAsync)
+            .WithName("SetMealPlanSlotTime")
+            .Produces<MealPlanSlotScheduleResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{planId:guid}/days/{date}/meal-types/{mealTypeId:guid}/skip", SkipEntryAsync)
+            .WithName("SkipMealPlanEntry")
+            .WithDescription("Omite una asignación planificada. La fecha debe usar el formato yyyy-MM-dd.")
+            .Produces<MealPlanEntryStateResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         return group;
     }
 
@@ -132,6 +166,76 @@ public static class WeeklyPlanEndpoints
                 planId,
                 parsedDate,
                 mealTypeId,
+                cancellationToken));
+    }
+
+    private static async Task<Results<Ok<WeeklyPlanResponse>, ProblemHttpResult>> AddSlotAsync(
+        Guid planId,
+        string date,
+        AddMealPlanSlotRequest request,
+        WeeklyPlanService service,
+        CancellationToken cancellationToken)
+    {
+        if (!TryParseDate(date, out var parsedDate))
+        {
+            return InvalidDate(date);
+        }
+
+        return TypedResults.Ok(
+            await service.AddSlotAsync(planId, parsedDate, request, cancellationToken));
+    }
+
+    private static async Task<Results<Ok<WeeklyPlanResponse>, ProblemHttpResult>> ReorderSlotsAsync(
+        Guid planId,
+        string date,
+        ReorderMealPlanSlotsRequest request,
+        WeeklyPlanService service,
+        CancellationToken cancellationToken)
+    {
+        if (!TryParseDate(date, out var parsedDate))
+        {
+            return InvalidDate(date);
+        }
+
+        return TypedResults.Ok(
+            await service.ReorderSlotsAsync(planId, parsedDate, request, cancellationToken));
+    }
+
+    private static async Task<Ok<WeeklyPlanResponse>> RemoveSlotAsync(
+        Guid planId,
+        Guid slotId,
+        WeeklyPlanService service,
+        CancellationToken cancellationToken) =>
+        TypedResults.Ok(await service.RemoveSlotAsync(planId, slotId, cancellationToken));
+
+    private static async Task<Ok<MealPlanSlotScheduleResponse>> SetSlotTimeAsync(
+        Guid planId,
+        Guid slotId,
+        SetMealPlanSlotTimeRequest request,
+        WeeklyPlanService service,
+        CancellationToken cancellationToken) =>
+        TypedResults.Ok(
+            await service.SetSlotTimeAsync(planId, slotId, request, cancellationToken));
+
+    private static async Task<Results<Ok<MealPlanEntryStateResponse>, ProblemHttpResult>> SkipEntryAsync(
+        Guid planId,
+        string date,
+        Guid mealTypeId,
+        SkipMealPlanEntryRequest request,
+        WeeklyPlanService service,
+        CancellationToken cancellationToken)
+    {
+        if (!TryParseDate(date, out var parsedDate))
+        {
+            return InvalidDate(date);
+        }
+
+        return TypedResults.Ok(
+            await service.SkipEntryAsync(
+                planId,
+                parsedDate,
+                mealTypeId,
+                request,
                 cancellationToken));
     }
 

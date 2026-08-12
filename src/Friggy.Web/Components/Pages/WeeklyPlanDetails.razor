@@ -1,6 +1,7 @@
 @page "/weekly-plans/{Id:guid}"
 @implements IDisposable
 @using Friggy.Application.Recipes.Dtos
+@using Friggy.Application.Catalogs.MealTypes.Dtos
 @using Friggy.Application.WeeklyPlans.Dtos
 @using Friggy.Application.Inventory.Dtos
 @using Friggy.Web.Api
@@ -8,6 +9,7 @@
 @using Friggy.Web.WeeklyPlans
 @inject IWeeklyPlansApiClient WeeklyPlansApi
 @inject IRecipesApiClient RecipesApi
+@inject IMealTypesApiClient MealTypesApi
 @inject IWeeklyPlanInventoryApiClient InventoryApi
 @inject IInventoryApiClient LotsApi
 
@@ -67,9 +69,15 @@ else
 
     <WeeklyPlanCalendar Model="plan"
                         Recipes="recipes"
+                        MealTypes="mealTypes"
                         IsSaving="saving"
                         OnChanged="ChangeEntryAsync"
-                        OnComplete="CompleteMealAsync" />
+                        OnComplete="CompleteMealAsync"
+                        OnSlotAdded="AddSlotAsync"
+                        OnSlotRemoved="RemoveSlotAsync"
+                        OnSlotsReordered="ReorderSlotsAsync"
+                        OnSlotTimeChanged="SetSlotTimeAsync"
+                        OnEntrySkipped="SkipEntryAsync" />
 
     <h2>Necesidades de inventario</h2>
     @if (requirements.Count == 0)
@@ -127,6 +135,7 @@ else
     private WeeklyPlanResponse? plan;
     private WeeklyPlanFormModel editModel = new();
     private IReadOnlyList<RecipeListItemResponse> recipes = [];
+    private IReadOnlyList<MealTypeResponse> mealTypes = [];
     private IReadOnlyList<InventoryRequirementResponse> requirements = [];
     private IReadOnlyList<InventoryLotResponse> completionLots = [];
     private readonly Dictionary<Guid, decimal> completionQuantities = [];
@@ -145,10 +154,12 @@ else
         {
             var planTask = WeeklyPlansApi.GetAsync(Id, cancellation.Token);
             var recipesTask = RecipesApi.ListAsync(cancellation.Token);
+            var mealTypesTask = MealTypesApi.ListAsync(cancellation.Token);
             var requirementsTask = InventoryApi.GetRequirementsAsync(Id, cancellation.Token);
-            await Task.WhenAll(planTask, recipesTask, requirementsTask);
+            await Task.WhenAll(planTask, recipesTask, mealTypesTask, requirementsTask);
             plan = await planTask;
             recipes = await recipesTask;
+            mealTypes = await mealTypesTask;
             requirements = await requirementsTask;
             editModel = WeeklyPlanFormModel.FromResponse(plan);
         }
@@ -210,6 +221,84 @@ else
             status = change.RecipeId.HasValue
                 ? "Asignación guardada."
                 : "Asignación retirada.";
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task AddSlotAsync(AddMealPlanSlotChange change) =>
+        await ChangePlanAsync(
+            () => WeeklyPlansApi.AddSlotAsync(
+                Id,
+                change.Date,
+                new(change.MealTypeId),
+                cancellation.Token),
+            "Hueco añadido.");
+
+    private async Task RemoveSlotAsync(Guid slotId) =>
+        await ChangePlanAsync(
+            () => WeeklyPlansApi.RemoveSlotAsync(Id, slotId, cancellation.Token),
+            "Hueco eliminado.");
+
+    private async Task ReorderSlotsAsync(ReorderMealPlanSlotsChange change) =>
+        await ChangePlanAsync(
+            () => WeeklyPlansApi.ReorderSlotsAsync(
+                Id,
+                change.Date,
+                new(change.SlotIds),
+                cancellation.Token),
+            "Orden actualizado.");
+
+    private async Task SetSlotTimeAsync(SetMealPlanSlotTimeChange change)
+    {
+        await ChangePlanAsync(
+            async () =>
+            {
+                await WeeklyPlansApi.SetSlotTimeAsync(
+                    Id,
+                    change.SlotId,
+                    new(change.PlannedTime),
+                    cancellation.Token);
+                return await WeeklyPlansApi.GetAsync(Id, cancellation.Token);
+            },
+            "Hora prevista guardada.");
+    }
+
+    private async Task SkipEntryAsync(SkipMealPlanEntryChange change)
+    {
+        await ChangePlanAsync(
+            async () =>
+            {
+                await WeeklyPlansApi.SkipEntryAsync(
+                    Id,
+                    change.Date,
+                    change.MealTypeId,
+                    new(change.Reason, change.AlternativeDescription),
+                    cancellation.Token);
+                requirements = await InventoryApi.GetRequirementsAsync(Id, cancellation.Token);
+                return await WeeklyPlansApi.GetAsync(Id, cancellation.Token);
+            },
+            "Comida omitida.");
+    }
+
+    private async Task ChangePlanAsync(
+        Func<Task<WeeklyPlanResponse>> operation,
+        string successMessage)
+    {
+        saving = true;
+        error = null;
+        status = null;
+        try
+        {
+            plan = await operation();
+            status = successMessage;
         }
         catch (Exception exception) when (
             exception is HttpRequestException or ApiProblemException)

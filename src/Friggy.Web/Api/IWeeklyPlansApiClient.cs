@@ -20,4 +20,29 @@ public interface IWeeklyPlansApiClient
         DateOnly mealDate,
         Guid mealTypeId,
         CancellationToken cancellationToken);
+    Task<WeeklyPlanResponse> AddSlotAsync(
+        Guid planId,
+        DateOnly mealDate,
+        AddMealPlanSlotRequest request,
+        CancellationToken cancellationToken);
+    Task<WeeklyPlanResponse> ReorderSlotsAsync(
+        Guid planId,
+        DateOnly mealDate,
+        ReorderMealPlanSlotsRequest request,
+        CancellationToken cancellationToken);
+    Task<WeeklyPlanResponse> RemoveSlotAsync(
+        Guid planId,
+        Guid slotId,
+        CancellationToken cancellationToken);
+    Task<MealPlanSlotScheduleResponse> SetSlotTimeAsync(
+        Guid planId,
+        Guid slotId,
+        SetMealPlanSlotTimeRequest request,
+        CancellationToken cancellationToken);
+    Task<MealPlanEntryStateResponse> SkipEntryAsync(
+        Guid planId,
+        DateOnly mealDate,
+        Guid mealTypeId,
+        SkipMealPlanEntryRequest request,
+        CancellationToken cancellationToken);
 }

@@ -5,7 +5,7 @@
 
 Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni reabre comidas completadas.
 
-> **Progreso:** subfase 9.4 implementada por indicación expresa pese al gate PostgreSQL pendiente. Compilación, formato y suites sin Docker están verdes; la validación de las migraciones 9.2–9.4 con PostgreSQL real queda pendiente porque el entorno actual no permite acceder al daemon. No iniciar 9.5 hasta ejecutar esas pruebas.
+> **Progreso:** subfase 9.5 implementada por indicación expresa pese al gate PostgreSQL pendiente. Compilación, formato y suites sin Docker están verdes; la validación integrada de las subfases 9.2–9.5 queda pendiente porque el entorno actual no permite acceder al daemon. No iniciar 9.6 hasta ejecutar esas pruebas.
 
 ## 9.1 — Tipos de comida por día — Completada
 
@@ -45,12 +45,14 @@ La hora prevista se persiste como `time without time zone`, se recibe y normaliz
 
 La omisión es una transición irreversible con motivo obligatorio y alternativa descriptiva opcional. Las asignaciones omitidas conservan su receta como historial, no cuentan como completadas, quedan fuera de las necesidades de inventario y se rechazan antes de cargar o consumir lotes. La migración conserva las comidas completadas existentes derivando su nuevo estado desde `completed_at`.
 
-## 9.5 — API y calendario Blazor
+## 9.5 — API y calendario Blazor — Implementada, validación PostgreSQL pendiente
 
 1. Ampliar contratos para administrar huecos, hora y estado omitido.
 2. Mostrar solo tipos elegidos para cada día y permitir su edición accesible.
 3. Presentar hora prevista e inicio de preparación junto a la receta.
 4. Probar errores recuperables y conservación del formulario con bUnit.
+
+La API permite añadir, retirar y reordenar huecos, actualizar su hora y omitir asignaciones. La respuesta semanal contiene únicamente los huecos elegidos para cada día, con identidad, orden, horario, inicio derivado y estado. El calendario Blazor ofrece controles accesibles para esas operaciones, conserva el borrador de omisión ante errores y mantiene separada la finalización con inventario.
 
 ## 9.6 — Gate
 

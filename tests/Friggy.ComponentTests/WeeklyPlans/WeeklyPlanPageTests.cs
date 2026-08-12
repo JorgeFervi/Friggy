@@ -1,4 +1,5 @@
 using Bunit;
+using Friggy.Application.Catalogs.MealTypes.Dtos;
 using Friggy.Application.Inventory.Dtos;
 using Friggy.Application.Recipes.Dtos;
 using Friggy.Application.WeeklyPlans.Dtos;
@@ -280,6 +281,104 @@ public sealed class WeeklyPlanPageTests : ComponentTest
         });
     }
 
+    [Fact]
+    [Trait("Category", "Component")]
+    public void WeeklyPlanDetails_SlotControls_AddReorderAndRemoveWithoutChangingOtherDays()
+    {
+        var initial = EmptyPlan();
+        var firstDay = initial.Days[0] with { Meals = initial.Days[0].Meals.Take(2).ToArray() };
+        var api = new StubWeeklyPlansApiClient
+        {
+            Plan = initial with { Days = [firstDay, .. initial.Days.Skip(1)] },
+        };
+        RegisterApis(api);
+        var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
+            parameters.Add(page => page.Id, PlanId));
+        var firstSection = component.WaitForElements("section[data-testid='weekly-plan-day']")[0];
+
+        firstSection.QuerySelector("select[data-testid='add-meal-slot']")!.Change(DinnerId.ToString());
+        component.WaitForAssertion(() =>
+            Assert.Equal(3, component.FindAll("section[data-testid='weekly-plan-day']")[0]
+                .QuerySelectorAll("[data-testid='meal-slot']").Length));
+
+        component.Find("button[aria-label='Bajar Desayuno']").Click();
+        component.WaitForAssertion(() =>
+            Assert.Equal(
+                ["Comida", "Desayuno", "Cena"],
+                component.FindAll("section[data-testid='weekly-plan-day']")[0]
+                    .QuerySelectorAll("[data-testid='meal-slot'] strong")
+                    .Select(element => element.TextContent)));
+
+        component.Find("button[aria-label='Eliminar hueco Cena']").Click();
+        component.WaitForAssertion(() =>
+            Assert.Equal(2, component.FindAll("section[data-testid='weekly-plan-day']")[0]
+                .QuerySelectorAll("[data-testid='meal-slot']").Length));
+        Assert.Equal(3, component.FindAll("section[data-testid='weekly-plan-day']")[1]
+            .QuerySelectorAll("[data-testid='meal-slot']").Length);
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void WeeklyPlanDetails_SkipFailure_ShowsRecoverableErrorAndPreservesDraft()
+    {
+        var assigned = ReplaceRecipe(EmptyPlan(), WeekStart, LunchId, FirstRecipeId);
+        var api = new StubWeeklyPlansApiClient
+        {
+            Plan = assigned,
+            OperationException = new ApiProblemException("El motivo es obligatorio."),
+        };
+        RegisterApis(api);
+        var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
+            parameters.Add(page => page.Id, PlanId));
+        var prefix = $"meal-{WeekStart:yyyyMMdd}-{LunchId:N}";
+        var reason = component.WaitForElement($"#{prefix}-skip-reason");
+        var alternative = component.Find($"#{prefix}-alternative");
+
+        reason.Input("Cambio de planes");
+        alternative.Input("Bocadillo");
+        component.FindAll("button").Single(button => button.TextContent.Trim() == "Omitir").Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Contains("El motivo es obligatorio", component.Find("[role='alert']").TextContent);
+            Assert.Equal("Cambio de planes", component.Find($"#{prefix}-skip-reason").GetAttribute("value"));
+            Assert.Equal("Bocadillo", component.Find($"#{prefix}-alternative").GetAttribute("value"));
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void WeeklyPlanDetails_Schedule_ShowsPreparationStartAndSavesLocalTime()
+    {
+        var initial = EmptyPlan();
+        var scheduled = initial with
+        {
+            Days = initial.Days.Select(day => day.Date != WeekStart
+                ? day
+                : day with
+                {
+                    Meals = day.Meals.Select(meal => meal.MealTypeId != LunchId
+                        ? meal
+                        : meal with
+                        {
+                            PlannedTime = "14:00",
+                            PreparationStartsAt = new DateTime(2026, 8, 3, 13, 15, 0),
+                        }).ToArray(),
+                }).ToArray(),
+        };
+        var api = new StubWeeklyPlansApiClient { Plan = scheduled };
+        RegisterApis(api);
+        var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
+            parameters.Add(page => page.Id, PlanId));
+        var prefix = $"meal-{WeekStart:yyyyMMdd}-{LunchId:N}";
+
+        Assert.Contains("Empezar preparación: 03/08/2026 13:15", component.Markup);
+        component.Find($"#{prefix}-time").Change("14:30");
+
+        component.WaitForAssertion(() =>
+            Assert.Equal("Hora prevista guardada.", component.Find("[role='status']").TextContent));
+    }
+
     private void RegisterApis(
         StubWeeklyPlansApiClient weeklyPlans,
         StubRecipesApiClient? recipes = null,
@@ -288,6 +387,7 @@ public sealed class WeeklyPlanPageTests : ComponentTest
     {
         Services.AddSingleton<IWeeklyPlansApiClient>(weeklyPlans);
         Services.AddSingleton<IRecipesApiClient>(recipes ?? new StubRecipesApiClient());
+        Services.AddSingleton<IMealTypesApiClient>(new StubMealTypesApiClient());
         Services.AddSingleton<IWeeklyPlanInventoryApiClient>(
             weeklyPlanInventory ?? new StubWeeklyPlanInventoryApiClient());
         Services.AddSingleton<IInventoryApiClient>(inventory ?? new StubInventoryApiClient());
@@ -307,9 +407,9 @@ public sealed class WeeklyPlanPageTests : ComponentTest
                 .Select(offset => new WeeklyPlanDayResponse(
                     WeekStart.AddDays(offset),
                     [
-                        new(BreakfastId, "Desayuno", 0, null),
-                        new(LunchId, "Comida", 1, null),
-                        new(DinnerId, "Cena", 2, null),
+                        new(BreakfastId, "Desayuno", 0, null, SlotId: Guid.NewGuid(), SlotOrder: 0),
+                        new(LunchId, "Comida", 1, null, SlotId: Guid.NewGuid(), SlotOrder: 1),
+                        new(DinnerId, "Cena", 2, null, SlotId: Guid.NewGuid(), SlotOrder: 2),
                     ]))
                 .ToArray());
 
@@ -428,6 +528,162 @@ public sealed class WeeklyPlanPageTests : ComponentTest
                 null);
             return Task.FromResult(Plan);
         }
+
+        public Task<WeeklyPlanResponse> AddSlotAsync(
+            Guid planId,
+            DateOnly mealDate,
+            AddMealPlanSlotRequest request,
+            CancellationToken cancellationToken)
+        {
+            ThrowIfConfigured();
+            var current = Plan ?? throw new InvalidOperationException("Falta configurar el plan semanal.");
+            Plan = current with
+            {
+                Days = current.Days.Select(day => day.Date != mealDate
+                    ? day
+                    : day with
+                    {
+                        Meals = [.. day.Meals, new(
+                            request.MealTypeId,
+                            MealTypeName(request.MealTypeId),
+                            day.Meals.Count,
+                            null,
+                            SlotId: Guid.NewGuid(),
+                            SlotOrder: day.Meals.Count)],
+                    }).ToArray(),
+            };
+            return Task.FromResult(Plan);
+        }
+
+        public Task<WeeklyPlanResponse> ReorderSlotsAsync(
+            Guid planId,
+            DateOnly mealDate,
+            ReorderMealPlanSlotsRequest request,
+            CancellationToken cancellationToken)
+        {
+            ThrowIfConfigured();
+            var current = Plan ?? throw new InvalidOperationException("Falta configurar el plan semanal.");
+            Plan = current with
+            {
+                Days = current.Days.Select(day => day.Date != mealDate
+                    ? day
+                    : day with
+                    {
+                        Meals = request.SlotIds.Select((id, order) =>
+                            day.Meals.Single(meal => meal.SlotId == id) with { SlotOrder = order }).ToArray(),
+                    }).ToArray(),
+            };
+            return Task.FromResult(Plan);
+        }
+
+        public Task<WeeklyPlanResponse> RemoveSlotAsync(
+            Guid planId,
+            Guid slotId,
+            CancellationToken cancellationToken)
+        {
+            ThrowIfConfigured();
+            var current = Plan ?? throw new InvalidOperationException("Falta configurar el plan semanal.");
+            Plan = current with
+            {
+                Days = current.Days.Select(day => day with
+                {
+                    Meals = day.Meals.Where(meal => meal.SlotId != slotId).ToArray(),
+                }).ToArray(),
+            };
+            return Task.FromResult(Plan);
+        }
+
+        public Task<MealPlanSlotScheduleResponse> SetSlotTimeAsync(
+            Guid planId,
+            Guid slotId,
+            SetMealPlanSlotTimeRequest request,
+            CancellationToken cancellationToken)
+        {
+            ThrowIfConfigured();
+            var current = Plan ?? throw new InvalidOperationException("Falta configurar el plan semanal.");
+            Plan = current with
+            {
+                Days = current.Days.Select(day => day with
+                {
+                    Meals = day.Meals.Select(meal => meal.SlotId == slotId
+                        ? meal with { PlannedTime = request.PlannedTime }
+                        : meal).ToArray(),
+                }).ToArray(),
+            };
+            return Task.FromResult(new MealPlanSlotScheduleResponse(slotId, request.PlannedTime, null));
+        }
+
+        public Task<MealPlanEntryStateResponse> SkipEntryAsync(
+            Guid planId,
+            DateOnly mealDate,
+            Guid mealTypeId,
+            SkipMealPlanEntryRequest request,
+            CancellationToken cancellationToken)
+        {
+            ThrowIfConfigured();
+            var current = Plan ?? throw new InvalidOperationException("Falta configurar el plan semanal.");
+            MealPlanEntryStateResponse? result = null;
+            Plan = current with
+            {
+                Days = current.Days.Select(day => day.Date != mealDate
+                    ? day
+                    : day with
+                    {
+                        Meals = day.Meals.Select(meal => meal.MealTypeId != mealTypeId
+                            ? meal
+                            : SetSkipped(meal, request, out result)).ToArray(),
+                    }).ToArray(),
+            };
+            return Task.FromResult(result ?? throw new InvalidOperationException("Falta la asignación."));
+        }
+
+        private void ThrowIfConfigured()
+        {
+            if (OperationException is not null)
+            {
+                throw OperationException;
+            }
+        }
+
+        private static WeeklyPlanMealResponse SetSkipped(
+            WeeklyPlanMealResponse meal,
+            SkipMealPlanEntryRequest request,
+            out MealPlanEntryStateResponse result)
+        {
+            result = new(
+                Guid.NewGuid(),
+                MealPlanEntryState.Skipped,
+                null,
+                request.Reason,
+                request.AlternativeDescription);
+            return meal with
+            {
+                Status = MealPlanEntryState.Skipped,
+                SkippedReason = request.Reason,
+                AlternativeDescription = request.AlternativeDescription,
+            };
+        }
+
+        private static string MealTypeName(Guid id) => id == BreakfastId
+            ? "Desayuno"
+            : id == LunchId
+                ? "Comida"
+                : id == DinnerId
+                    ? "Cena"
+                    : "Tipo de comida";
+    }
+
+    private sealed class StubMealTypesApiClient : IMealTypesApiClient
+    {
+        public Task<IReadOnlyList<MealTypeResponse>> ListAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<MealTypeResponse>>(
+                [new(BreakfastId, "Desayuno", 0), new(LunchId, "Comida", 1), new(DinnerId, "Cena", 2)]);
+        public Task<MealTypeResponse> CreateAsync(CreateMealTypeRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<MealTypeResponse> UpdateAsync(Guid id, UpdateMealTypeRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task DeleteAsync(Guid id, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class StubRecipesApiClient : IRecipesApiClient
