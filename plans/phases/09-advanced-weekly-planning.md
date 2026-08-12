@@ -1,8 +1,8 @@
 # Fase 9 — Planificación semanal avanzada
 
-- **Estado:** Futura
+- **Estado:** Planificada y habilitada
 - **Estimación:** 3–5 días
-- **Dependencias:** [Fase 8](08-inventory-and-meal-completion.md)
+- **Dependencias:** [Fase 8 completada](../completed/phases/08-inventory-and-meal-completion.md)
 - **Guía ejecutable:** [Implementación de la fase 9](../implementation/09-advanced-weekly-planning-implementation.md)
 
 ## Resultado esperado

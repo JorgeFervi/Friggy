@@ -72,7 +72,7 @@ El primer incremento incorporará el inventario como una capacidad nueva dentro 
 
 - La validación manual previa se considera cerrada expresamente por el propietario del producto y no quedan defectos bloqueantes abiertos.
 - Los límites de la primera entrega permanecen sin lista de la compra, conversiones, ubicaciones, IA, autenticación ni despliegue público.
-- Los contratos, la migración y los escenarios de integración con PostgreSQL están identificados en el [plan de la Fase 8](../phases/08-inventory-and-meal-completion.md) y su [guía ejecutable](../implementation/08-inventory-and-meal-completion-implementation.md).
+- Los contratos, la migración y los escenarios de integración con PostgreSQL están identificados en el [plan completado de la Fase 8](../completed/phases/08-inventory-and-meal-completion.md) y su [guía ejecutada](../completed/implementation/08-inventory-and-meal-completion-implementation.md).
 - `scripts/quality-gate.ps1` está en verde sobre el commit de partida.
 
 La implementación deberá seguir TDD y mantener `Domain <- Application <- Infrastructure <- Api`. `Friggy.Web` consumirá los nuevos contratos exclusivamente por HTTP.

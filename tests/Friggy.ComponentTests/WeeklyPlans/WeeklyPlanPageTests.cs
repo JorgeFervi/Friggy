@@ -1,4 +1,5 @@
 using Bunit;
+using Friggy.Application.Inventory.Dtos;
 using Friggy.Application.Recipes.Dtos;
 using Friggy.Application.WeeklyPlans.Dtos;
 using Friggy.ComponentTests.Testing;
@@ -198,6 +199,66 @@ public sealed class WeeklyPlanPageTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void WeeklyPlanDetails_CompleteMeal_ShowsOnlyCompatibleLotsAndReportsRemainder()
+    {
+        var assignedPlan = ReplaceRecipe(EmptyPlan(), WeekStart, LunchId, FirstRecipeId);
+        var plans = new StubWeeklyPlansApiClient { Plan = assignedPlan };
+        var recipes = new StubRecipesApiClient();
+        var inventory = new StubInventoryApiClient();
+        var completion = new StubWeeklyPlanInventoryApiClient
+        {
+            Completion = new MealCompletionResponse(
+                Guid.NewGuid(),
+                false,
+                [],
+                [new(Guid.NewGuid(), "Tomate", Guid.NewGuid(), "Gramo", "g", 0.5m)]),
+        };
+        inventory.Items.Add(new InventoryLotResponse(
+            Guid.NewGuid(),
+            recipes.IngredientId,
+            "Tomate",
+            recipes.UnitTypeId,
+            "Gramo",
+            "g",
+            1m,
+            new DateOnly(2026, 8, 20),
+            false,
+            []));
+        inventory.Items.Add(new InventoryLotResponse(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Cebolla",
+            recipes.UnitTypeId,
+            "Gramo",
+            "g",
+            1m,
+            new DateOnly(2026, 8, 20),
+            false,
+            []));
+        RegisterApis(plans, recipes, completion, inventory);
+        var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
+            parameters.Add(page => page.Id, PlanId));
+        component.WaitForElement("button");
+
+        component.FindAll("button").Single(button => button.TextContent.Trim() == "Completar").Click();
+        component.WaitForAssertion(() =>
+        {
+            Assert.Contains("Tomate", component.Markup, StringComparison.Ordinal);
+            Assert.DoesNotContain("Cebolla", component.Markup, StringComparison.Ordinal);
+        });
+        component.FindAll("button")
+            .Single(button => button.TextContent.Trim() == "Confirmar finalización")
+            .Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Contains("Queda por cubrir", component.Find("[role='status']").TextContent);
+            Assert.Contains("g de Tomate", component.Find("[role='status']").TextContent);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void WeeklyPlanDetails_EditDetails_UpdatesHeaderAndPreservesCalendar()
     {
         var api = new StubWeeklyPlansApiClient { Plan = EmptyPlan() };
@@ -219,10 +280,17 @@ public sealed class WeeklyPlanPageTests : ComponentTest
         });
     }
 
-    private void RegisterApis(StubWeeklyPlansApiClient weeklyPlans)
+    private void RegisterApis(
+        StubWeeklyPlansApiClient weeklyPlans,
+        StubRecipesApiClient? recipes = null,
+        StubWeeklyPlanInventoryApiClient? weeklyPlanInventory = null,
+        StubInventoryApiClient? inventory = null)
     {
         Services.AddSingleton<IWeeklyPlansApiClient>(weeklyPlans);
-        Services.AddSingleton<IRecipesApiClient>(new StubRecipesApiClient());
+        Services.AddSingleton<IRecipesApiClient>(recipes ?? new StubRecipesApiClient());
+        Services.AddSingleton<IWeeklyPlanInventoryApiClient>(
+            weeklyPlanInventory ?? new StubWeeklyPlanInventoryApiClient());
+        Services.AddSingleton<IInventoryApiClient>(inventory ?? new StubInventoryApiClient());
     }
 
     private static string CellSelector(DateOnly date, Guid mealTypeId) =>
@@ -364,6 +432,9 @@ public sealed class WeeklyPlanPageTests : ComponentTest
 
     private sealed class StubRecipesApiClient : IRecipesApiClient
     {
+        public Guid IngredientId { get; } = Guid.NewGuid();
+        public Guid UnitTypeId { get; } = Guid.NewGuid();
+
         public Task<IReadOnlyList<RecipeListItemResponse>> ListAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<RecipeListItemResponse>>(
                 [
@@ -372,12 +443,61 @@ public sealed class WeeklyPlanPageTests : ComponentTest
                 ]);
 
         public Task<RecipeResponse> GetAsync(Guid id, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+            Task.FromResult(new RecipeResponse(
+                id,
+                "Gazpacho",
+                20,
+                [new(Guid.NewGuid(), IngredientId, UnitTypeId, 1m, 0)],
+                [],
+                [],
+                [LunchId]));
         public Task<RecipeResponse> CreateAsync(CreateRecipeRequest request, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
         public Task<RecipeResponse> UpdateAsync(Guid id, UpdateRecipeRequest request, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class StubWeeklyPlanInventoryApiClient : IWeeklyPlanInventoryApiClient
+    {
+        public MealCompletionResponse Completion { get; init; } =
+            new(Guid.NewGuid(), false, [], []);
+
+        public Task<IReadOnlyList<InventoryRequirementResponse>> GetRequirementsAsync(
+            Guid planId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<InventoryRequirementResponse>>([]);
+
+        public Task<MealCompletionResponse> CompleteMealAsync(
+            Guid planId,
+            DateOnly mealDate,
+            Guid mealTypeId,
+            CompleteMealRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Completion);
+    }
+
+    private sealed class StubInventoryApiClient : IInventoryApiClient
+    {
+        public List<InventoryLotResponse> Items { get; } = [];
+
+        public Task<IReadOnlyList<InventoryLotResponse>> ListAsync(
+            bool includeUnavailable,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<InventoryLotResponse>>(Items);
+
+        public Task<InventoryLotResponse> GetAsync(Guid id, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<InventoryLotResponse> CreateAsync(CreateInventoryLotRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<InventoryLotResponse> CorrectExpirationAsync(Guid id, CorrectInventoryExpirationRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<InventoryOperationResponse> ConsumeAsync(Guid id, InventoryQuantityRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<InventoryOperationResponse> DiscardAsync(Guid id, InventoryQuantityRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<InventoryLotResponse> AdjustAsync(Guid id, AdjustInventoryLotRequest request, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }
 }

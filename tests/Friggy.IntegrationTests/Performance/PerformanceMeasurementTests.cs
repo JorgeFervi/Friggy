@@ -1,7 +1,9 @@
 using System.Data.Common;
 using System.Diagnostics;
 using System.Text.Json;
+using Friggy.Application.Inventory.Services;
 using Friggy.Domain.Catalogs;
+using Friggy.Domain.Inventory;
 using Friggy.Domain.Recipes;
 using Friggy.Domain.WeeklyPlans;
 using Friggy.Infrastructure.Persistence;
@@ -123,11 +125,67 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             Assert.All(weeklyPlanSummaryMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 
+        var inventoryInterceptor = new SqlCaptureInterceptor();
+        await using (var inventoryContext = CreateMeasuredContext(inventoryInterceptor))
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var lots = await new InventoryLotService(
+                    new InventoryLotRepository(inventoryContext),
+                    new InventoryReferenceRepository(inventoryContext),
+                    new FixedTimeProvider())
+                .ListAsync(false, TestContext.Current.CancellationToken);
+            stopwatch.Stop();
+
+            var inventoryMeasurement = new ScenarioMeasurement(
+                "inventory.list.available",
+                stopwatch.Elapsed.TotalMilliseconds,
+                lots.Count,
+                lots.Sum(lot => lot.Movements.Count),
+                inventoryInterceptor.Commands.Count,
+                inventoryInterceptor.Commands);
+            measurements.Add(inventoryMeasurement);
+
+            Assert.Equal(scenario.InventoryLotCount, inventoryMeasurement.RootRows);
+            Assert.Equal(scenario.InventoryLotCount, inventoryMeasurement.RelatedRows);
+            Assert.Equal(3, inventoryMeasurement.CommandCount);
+            Assert.All(inventoryMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var requirementsInterceptor = new SqlCaptureInterceptor();
+        await using (var requirementsContext = CreateMeasuredContext(requirementsInterceptor))
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var requirements = await new WeeklyPlanInventoryService(
+                    new WeeklyPlanRepository(requirementsContext),
+                    new RecipeRepository(requirementsContext),
+                    new InventoryLotRepository(requirementsContext),
+                    new InventoryReferenceRepository(requirementsContext),
+                    new InventoryUnitOfWork(requirementsContext),
+                    new FixedTimeProvider())
+                .GetRequirementsAsync(
+                    scenario.WeeklyPlanId,
+                    TestContext.Current.CancellationToken);
+            stopwatch.Stop();
+
+            var requirementsMeasurement = new ScenarioMeasurement(
+                "weekly-plans.inventory-requirements",
+                stopwatch.Elapsed.TotalMilliseconds,
+                requirements.Count,
+                0,
+                requirementsInterceptor.Commands.Count,
+                requirementsInterceptor.Commands);
+            measurements.Add(requirementsMeasurement);
+
+            Assert.Equal(3, requirementsMeasurement.RootRows);
+            Assert.Equal(9, requirementsMeasurement.CommandCount);
+            Assert.All(requirementsMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
+        }
+
         var reportPath = Path.Combine(
             FindRepositoryRoot(),
             "TestResults",
             "performance",
-            "6.5",
+            "8",
             "read-models.json");
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(
@@ -141,6 +199,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
                         scenario.RecipeCount,
                         scenario.WeeklyPlanCount,
                         scenario.EntriesPerPlan,
+                        scenario.InventoryLotCount,
                     },
                     measurements,
                 },
@@ -220,18 +279,30 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             plans.Add(plan);
         }
 
+        var lots = Enumerable.Range(0, 30)
+            .Select(index => InventoryLot.Create(
+                ingredients[index % ingredients.Length].Id,
+                CatalogSeedIds.Gram,
+                10m,
+                new DateOnly(2026, 8, 20).AddDays(index % 5),
+                new DateTimeOffset(2026, 8, 12, 8, 0, 0, TimeSpan.Zero)))
+            .ToArray();
+
         await using var context = Database.CreateDbContext();
         context.AddRange(ingredients);
         context.AddRange(tags);
         context.AddRange(mealTypes);
         context.AddRange(recipes);
         context.AddRange(plans);
+        context.AddRange(lots);
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         return new MeasurementScenario(
             recipes.Count,
             plans.Count,
-            entriesPerPlan);
+            entriesPerPlan,
+            lots.Length,
+            plans[0].Id);
     }
 
     private FriggyDbContext CreateMeasuredContext(SqlCaptureInterceptor interceptor)
@@ -288,7 +359,19 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
     private sealed record MeasurementScenario(
         int RecipeCount,
         int WeeklyPlanCount,
-        int EntriesPerPlan);
+        int EntriesPerPlan,
+        int InventoryLotCount,
+        Guid WeeklyPlanId);
+
+    private sealed class FixedTimeProvider : TimeProvider
+    {
+        private static readonly DateTimeOffset Current =
+            new(2026, 8, 12, 12, 0, 0, TimeSpan.Zero);
+
+        public override DateTimeOffset GetUtcNow() => Current;
+
+        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
+    }
 
     private sealed record ScenarioMeasurement(
         string Scenario,

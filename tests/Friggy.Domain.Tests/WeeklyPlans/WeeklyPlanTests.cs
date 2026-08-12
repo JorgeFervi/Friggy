@@ -162,6 +162,47 @@ public sealed class WeeklyPlanTests
     }
 
     [Fact]
+    public void Assign_NewSlot_DefaultsToOneServing()
+    {
+        var plan = CreatePlan();
+
+        plan.Assign(plan.StartDate, Guid.NewGuid(), Guid.NewGuid());
+
+        Assert.Equal(1, Assert.Single(plan.Entries).Servings);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Assign_NonPositiveServings_ThrowsAndPreservesSchedule(int servings)
+    {
+        var plan = CreatePlan();
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.Assign(plan.StartDate, Guid.NewGuid(), Guid.NewGuid(), servings));
+
+        Assert.Equal("weekly-plan.entry.servings.positive", exception.Code);
+        Assert.Empty(plan.Entries);
+    }
+
+    [Fact]
+    public void Assign_ExistingSlot_UpdatesRecipeAndServings()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid(), 2);
+        var entryId = Assert.Single(plan.Entries).Id;
+        var replacementRecipeId = Guid.NewGuid();
+
+        plan.Assign(plan.StartDate, mealTypeId, replacementRecipeId, 4);
+
+        var entry = Assert.Single(plan.Entries);
+        Assert.Equal(entryId, entry.Id);
+        Assert.Equal(replacementRecipeId, entry.RecipeId);
+        Assert.Equal(4, entry.Servings);
+    }
+
+    [Fact]
     public void Remove_ExistingSlot_RemovesOnlySelectedEntry()
     {
         var plan = CreatePlan();
@@ -231,6 +272,52 @@ public sealed class WeeklyPlanTests
         Assert.Throws<NotSupportedException>(() =>
             ((IList<MealPlanEntry>)plan.Entries).Clear());
         Assert.Single(plan.Entries);
+    }
+
+    [Fact]
+    public void CompleteEntry_AssignedMeal_StoresCompletionMoment()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid(), 2);
+        var completedAt = new DateTimeOffset(2026, 8, 12, 14, 0, 0, TimeSpan.Zero);
+
+        var entry = plan.CompleteEntry(plan.StartDate, mealTypeId, completedAt);
+
+        Assert.True(entry.IsCompleted);
+        Assert.Equal(completedAt, entry.CompletedAt);
+    }
+
+    [Fact]
+    public void CompleteEntry_AlreadyCompleted_ThrowsAndPreservesOriginalMoment()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid());
+        var completedAt = new DateTimeOffset(2026, 8, 12, 14, 0, 0, TimeSpan.Zero);
+        plan.CompleteEntry(plan.StartDate, mealTypeId, completedAt);
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.CompleteEntry(plan.StartDate, mealTypeId, completedAt.AddHours(1)));
+
+        Assert.Equal("weekly-plan.entry.already-completed", exception.Code);
+        Assert.Equal(completedAt, Assert.Single(plan.Entries).CompletedAt);
+    }
+
+    [Fact]
+    public void Assign_CompletedSlot_ThrowsAndPreservesEntry()
+    {
+        var plan = CreatePlan();
+        var mealTypeId = Guid.NewGuid();
+        var recipeId = Guid.NewGuid();
+        plan.Assign(plan.StartDate, mealTypeId, recipeId);
+        plan.CompleteEntry(plan.StartDate, mealTypeId, DateTimeOffset.UtcNow);
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            plan.Assign(plan.StartDate, mealTypeId, Guid.NewGuid(), 2));
+
+        Assert.Equal("weekly-plan.entry.completed", exception.Code);
+        Assert.Equal(recipeId, Assert.Single(plan.Entries).RecipeId);
     }
 
     [Fact]

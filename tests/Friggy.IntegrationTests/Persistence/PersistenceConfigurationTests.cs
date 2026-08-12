@@ -1,3 +1,4 @@
+using Friggy.Application.Inventory.Interfaces;
 using Friggy.Application.Recipes.Interfaces;
 using Friggy.Application.WeeklyPlans.Interfaces;
 using Friggy.Infrastructure;
@@ -61,6 +62,16 @@ public sealed class PersistenceConfigurationTests
             service => service.ServiceType == typeof(IWeeklyPlanReferenceRepository) &&
                 service.ImplementationType == typeof(WeeklyPlanReferenceRepository) &&
                 service.Lifetime == ServiceLifetime.Scoped);
+        Assert.Contains(
+            services,
+            service => service.ServiceType == typeof(IInventoryLotRepository) &&
+                service.ImplementationType == typeof(InventoryLotRepository) &&
+                service.Lifetime == ServiceLifetime.Scoped);
+        Assert.Contains(
+            services,
+            service => service.ServiceType == typeof(IInventoryUnitOfWork) &&
+                service.ImplementationType == typeof(InventoryUnitOfWork) &&
+                service.Lifetime == ServiceLifetime.Scoped);
 
         using var provider = services.BuildServiceProvider();
         using var firstScope = provider.CreateScope();
@@ -87,7 +98,11 @@ public sealed class PersistenceConfigurationTests
             migration => Assert.EndsWith("_InitialInfrastructure", migration, StringComparison.Ordinal),
             migration => Assert.EndsWith("_AddCatalogs", migration, StringComparison.Ordinal),
             migration => Assert.EndsWith("_AddRecipes", migration, StringComparison.Ordinal),
-            migration => Assert.EndsWith("_AddWeeklyPlans", migration, StringComparison.Ordinal));
+            migration => Assert.EndsWith("_AddWeeklyPlans", migration, StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_AddInventoryAndMealCompletion",
+                migration,
+                StringComparison.Ordinal));
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", context.Database.ProviderName);
     }
 

@@ -35,6 +35,11 @@ public sealed class MainLayoutTests : ComponentTest
             },
             link =>
             {
+                Assert.Equal("Inventario", link.TextContent.Trim());
+                Assert.Equal("/inventory", link.GetAttribute("href"));
+            },
+            link =>
+            {
                 Assert.Equal("Catálogos", link.TextContent.Trim());
                 Assert.Equal("/#catalogs", link.GetAttribute("href"));
             });

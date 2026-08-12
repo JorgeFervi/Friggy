@@ -22,12 +22,12 @@ Los documentos se organizan por estado:
 | 5 | [Integración completa](completed/phases/05-full-integration.md) | [Guía](completed/implementation/05-full-integration-implementation.md) |
 | 6 | [Estabilización y piloto](completed/phases/06-stabilization-and-pilot.md) | [Guía](completed/implementation/06-stabilization-and-pilot-implementation.md) |
 | 7 | [Correcciones del MVP y navegación](completed/phases/07-mvp-corrections-and-navigation.md) | [Guía](completed/implementation/07-mvp-corrections-and-navigation-implementation.md) |
+| 8 | [Inventario y finalización de comidas](completed/phases/08-inventory-and-meal-completion.md) | [Guía](completed/implementation/08-inventory-and-meal-completion-implementation.md) |
 
 ## Fases planificadas
 
 | Fase | Plan | Implementación | Dependencia clave |
 |---|---|---|---|
-| 8 | [Inventario y finalización de comidas](phases/08-inventory-and-meal-completion.md) | [Guía](implementation/08-inventory-and-meal-completion-implementation.md) | Fase 7 y [decisiones](discovery/07-inventory-decisions.md) |
 | 9 | [Planificación semanal avanzada](phases/09-advanced-weekly-planning.md) | [Guía](implementation/09-advanced-weekly-planning-implementation.md) | Fase 8 |
 | 10 | [Ingredientes asociados a pasos](phases/10-recipe-step-ingredients.md) | [Guía](implementation/10-recipe-step-ingredients-implementation.md) | Fase 9 |
 | 11 | [Panel principal y analítica](phases/11-dashboard-and-analytics.md) | [Guía](implementation/11-dashboard-and-analytics-implementation.md) | Fases 8–10 |
@@ -43,4 +43,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 7 están completadas y las decisiones funcionales de inventario han sido confirmadas. La siguiente unidad ejecutable es la Fase 8 — Inventario y finalización de comidas.
+Las fases 1 a 8 están completadas. La siguiente unidad ejecutable es la Fase 9 — Planificación semanal avanzada.

@@ -1,10 +1,12 @@
 # Implementación ejecutable — Fase 8
 
 - **Fase relacionada:** [Fase 8 — Inventario y finalización de comidas](../phases/08-inventory-and-meal-completion.md)
-- **Decisiones vinculantes:** [Inventario doméstico](../discovery/07-inventory-decisions.md)
+- **Decisiones vinculantes:** [Inventario doméstico](../../discovery/07-inventory-decisions.md)
 - **Skills aplicables:** `architecture`, `modern-csharp`, `xunit`, `entity-framework-core`, `minimal-apis`, `blazor`, `run-tests`
 
 Inventario se incorpora como capacidad dentro de los proyectos actuales. `InventoryLot` es la raíz que protege su cantidad y movimientos; no se crea un repositorio independiente por movimiento.
+
+> **Progreso:** fase completada. Las subfases 8.1 a 8.8 están verdes; la siguiente unidad ejecutable es la Fase 9.
 
 ## Matriz de riesgos
 
@@ -17,7 +19,7 @@ Inventario se incorpora como capacidad dentro de los proyectos actuales. `Invent
 | Conversiones accidentales | agrupación exacta por ingrediente y unidad |
 | Pérdida de referencias | FK restrict para ingrediente y unidad |
 
-## 8.1 — Raciones en la planificación
+## 8.1 — Raciones en la planificación — Completada
 
 1. Escribir rojos de Domain para raciones enteras mayores que cero y valor inicial uno.
 2. Ampliar contratos de asignación y respuesta sin cambiar la identidad de la celda.
@@ -26,7 +28,7 @@ Inventario se incorpora como capacidad dentro de los proyectos actuales. `Invent
 
 Ejecutar Domain, Application, Integration y Component antes de continuar.
 
-## 8.2 — Lote y movimientos en Domain
+## 8.2 — Lote y movimientos en Domain — Completada
 
 1. Definir lotes con ingrediente, unidad, cantidad actual y `DateOnly` de caducidad.
 2. Empezar por rojos para alta positiva, consumo, ajuste por cantidad real y descarte.
@@ -36,7 +38,7 @@ Ejecutar Domain, Application, Integration y Component antes de continuar.
 
 La alta crea el lote y su movimiento inicial en una misma construcción válida.
 
-## 8.3 — Application y fakes
+## 8.3 — Application y fakes — Completada
 
 1. Definir DTO de lote, detalle, movimiento y solicitudes de operación.
 2. Introducir un puerto por agregado para cargar y guardar lotes completos.
@@ -46,7 +48,7 @@ La alta crea el lote y su movimiento inicial en una misma construcción válida.
 
 Application devuelve cantidades aplicadas y no registradas para consumos o descartes parciales.
 
-## 8.4 — PostgreSQL y migración
+## 8.4 — PostgreSQL y migración — Completada
 
 1. Crear tablas de lotes y movimientos con precisión coherente con las cantidades de receta.
 2. Añadir FK restrict, cantidad no negativa, movimiento no nulo e índices de consulta por ingrediente, unidad y caducidad.
@@ -56,7 +58,7 @@ Application devuelve cantidades aplicadas y no registradas para consumos o desca
 
 La estrategia de concurrencia debe ser explícita y devolver conflicto recuperable.
 
-## 8.5 — API e interfaz de inventario
+## 8.5 — API e interfaz de inventario — Completada
 
 1. Exponer rutas agrupadas para listar, obtener, crear y operar sobre lotes.
 2. Publicar `ProblemDetails` estable para validación, no encontrado, referencia y concurrencia.
@@ -64,7 +66,7 @@ La estrategia de concurrencia debe ser explícita y devolver conflicto recuperab
 4. Ordenar disponible por caducidad ascendente y ocultar agotados por defecto.
 5. Probar estados vacío, loading, error, operación parcial y confirmaciones con bUnit.
 
-## 8.6 — Carencias del plan seleccionado
+## 8.6 — Carencias del plan seleccionado — Completada
 
 1. Escribir tests de Application para agrupar líneas repetidas y multiplicar por raciones.
 2. Consultar únicamente lotes no caducados y con cantidad positiva.
@@ -75,7 +77,7 @@ La estrategia de concurrencia debe ser explícita y devolver conflicto recuperab
 
 No implementar lista de la compra ni conversiones.
 
-## 8.7 — Completar una comida
+## 8.7 — Completar una comida — Completada
 
 1. Añadir estado de completada a `MealPlanEntry` y rojos contra doble finalización.
 2. Preparar la solicitud con asignaciones explícitas de lote y cantidad por necesidad.
@@ -86,10 +88,12 @@ No implementar lista de la compra ni conversiones.
 
 Probar reintento, selección de varios lotes, falta parcial, concurrencia y cancelación.
 
-## 8.8 — Recorrido vertical y gate
+## 8.8 — Recorrido vertical y gate — Completada
 
 1. E2E: crear inventario, planificar raciones, consultar carencias, completar seleccionando lotes y verificar historial.
 2. Reiniciar API/Web y comprobar persistencia de lote, movimientos y estado completado.
 3. Ejecutar medición focalizada de las consultas de disponible y carencias.
 4. Ejecutar `scripts/quality-gate.ps1`.
 5. Actualizar documentación y habilitar Fase 9 solo con cero defectos bloqueantes.
+
+La medición reproducible usa 30 lotes, 12 recetas y 8 planes semanales. El disponible se obtiene en 3 consultas y las carencias en 9; filas, duración, comandos y SQL quedan en `TestResults/performance/8/read-models.json`. El recorrido E2E confirma la persistencia tras reiniciar servicios y el quality gate completo termina sin defectos bloqueantes.

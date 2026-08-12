@@ -1,8 +1,8 @@
 # Fase 8 — Inventario y finalización de comidas
 
-- **Estado:** Planificada
+- **Estado:** Completada — 12 de agosto de 2026
 - **Estimación:** 5–8 días
-- **Dependencias:** [Fase 7 completada](../completed/phases/07-mvp-corrections-and-navigation.md) y [decisiones de inventario](../discovery/07-inventory-decisions.md)
+- **Dependencias:** [Fase 7 completada](07-mvp-corrections-and-navigation.md) y [decisiones de inventario](../../discovery/07-inventory-decisions.md)
 - **Guía ejecutable:** [Implementación de la fase 8](../implementation/08-inventory-and-meal-completion-implementation.md)
 
 ## Resultado esperado
@@ -53,4 +53,12 @@ Registrar inventario por lotes con caducidad e historial, calcular las carencias
 
 ## Handoff
 
-Habilitar [Fase 9 — Planificación semanal avanzada](09-advanced-weekly-planning.md) con raciones, finalización e historial disponibles.
+La [Fase 9 — Planificación semanal avanzada](../../phases/09-advanced-weekly-planning.md) queda habilitada con raciones, finalización e historial disponibles.
+
+## Evidencia de cierre
+
+- Las cinco suites están verdes, sin pruebas omitidas.
+- La migración se verifica desde una base vacía y desde el esquema de la Fase 7 conservando entradas con una ración.
+- La concurrencia impide doble finalización y revierte el consumo del segundo intento sin estados parciales.
+- El recorrido Playwright crea inventario, planifica dos raciones, completa la comida y verifica lote e historial tras reiniciar API/Web.
+- La medición focalizada queda registrada en `TestResults/performance/8/read-models.json`.

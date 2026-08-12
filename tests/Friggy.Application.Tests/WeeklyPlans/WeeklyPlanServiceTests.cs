@@ -183,15 +183,19 @@ public sealed class WeeklyPlanServiceTests
             plan.Id,
             plan.StartDate.AddDays(1),
             scenario.BreakfastId,
-            new SetMealPlanEntryRequest(scenario.RecipeId),
+            new SetMealPlanEntryRequest(scenario.RecipeId, 3),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(scenario.RecipeId, Assert.Single(plan.Entries).RecipeId);
+        Assert.Equal(3, Assert.Single(plan.Entries).Servings);
         Assert.Equal(1, scenario.Plans.SaveCount);
         var assignedDay = result.Days.Single(day => day.Date == plan.StartDate.AddDays(1));
         Assert.Equal(
             scenario.RecipeId,
             assignedDay.Meals.Single(meal => meal.MealTypeId == scenario.BreakfastId).RecipeId);
+        Assert.Equal(
+            3,
+            assignedDay.Meals.Single(meal => meal.MealTypeId == scenario.BreakfastId).Servings);
     }
 
     [Fact]

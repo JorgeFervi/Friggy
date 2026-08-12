@@ -26,4 +26,4 @@ La configuración local se proporcionará mediante variables de entorno y un arc
 
 ## Validación del piloto
 
-El piloto técnico local del 10 de agosto de 2026 verificó dos ejecuciones idempotentes de `scripts/setup.ps1`, la disponibilidad de PostgreSQL mediante health check y la persistencia del recorrido Web → HTTP → API tras reiniciar servicios. El detalle queda en [plans/pilot/20260810-local-technical-pilot.md](../../plans/pilot/20260810-local-technical-pilot.md).
+El piloto técnico local del 10 de agosto de 2026 verificó dos ejecuciones idempotentes de `scripts/setup.ps1`, la disponibilidad de PostgreSQL mediante health check y la persistencia del recorrido Web → HTTP → API tras reiniciar servicios. El detalle queda en el [cierre ejecutable de la Fase 6](../../plans/completed/implementation/06-stabilization-and-pilot-implementation.md#67--piloto-y-cierre--completada).

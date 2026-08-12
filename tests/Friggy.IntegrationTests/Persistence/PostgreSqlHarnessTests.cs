@@ -1,5 +1,8 @@
+using Friggy.Domain.Catalogs;
 using Friggy.IntegrationTests.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Friggy.IntegrationTests.Persistence;
 
@@ -20,7 +23,11 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             migration => Assert.EndsWith("_InitialInfrastructure", migration, StringComparison.Ordinal),
             migration => Assert.EndsWith("_AddCatalogs", migration, StringComparison.Ordinal),
             migration => Assert.EndsWith("_AddRecipes", migration, StringComparison.Ordinal),
-            migration => Assert.EndsWith("_AddWeeklyPlans", migration, StringComparison.Ordinal));
+            migration => Assert.EndsWith("_AddWeeklyPlans", migration, StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_AddInventoryAndMealCompletion",
+                migration,
+                StringComparison.Ordinal));
         Assert.StartsWith("friggy_tests_", Database.DatabaseName, StringComparison.Ordinal);
     }
 
@@ -48,6 +55,46 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             .GetAppliedMigrationsAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(true, tableWasRemoved);
-        Assert.Equal(4, appliedMigrations.Count());
+        Assert.Equal(5, appliedMigrations.Count());
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task AddInventoryMigration_PhaseSevenData_DefaultsServingsAndPreservesEntry()
+    {
+        const string phaseSevenMigration = "20260809201541_AddWeeklyPlans";
+        var recipeId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
+        var entryId = Guid.NewGuid();
+        var date = new DateOnly(2026, 8, 10);
+        await using var context = Database.CreateDbContext();
+        var migrator = context.GetService<IMigrator>();
+        await migrator.MigrateAsync(
+            phaseSevenMigration,
+            TestContext.Current.CancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            INSERT INTO recipes ("Id", name, normalized_name, estimated_time)
+            VALUES ({recipeId}, 'Receta anterior', 'RECETA ANTERIOR', interval '0 minutes');
+            INSERT INTO weekly_plans ("Id", name, normalized_name, start_date, description)
+            VALUES ({planId}, 'Semana anterior', 'SEMANA ANTERIOR', {date}, NULL);
+            INSERT INTO meal_plan_entries ("Id", weekly_plan_id, date, meal_type_id, recipe_id)
+            VALUES ({entryId}, {planId}, {date}, {CatalogSeedIds.Lunch}, {recipeId});
+            """,
+            TestContext.Current.CancellationToken);
+
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        var entry = await context.MealPlanEntries.SingleAsync(
+            item => item.Id == entryId,
+            TestContext.Current.CancellationToken);
+        Assert.Equal(1, entry.Servings);
+        Assert.False(entry.IsCompleted);
+        Assert.Contains(
+            await context.Database.GetAppliedMigrationsAsync(
+                TestContext.Current.CancellationToken),
+            migration => migration.EndsWith(
+                "_AddInventoryAndMealCompletion",
+                StringComparison.Ordinal));
     }
 }

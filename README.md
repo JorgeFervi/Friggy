@@ -34,7 +34,7 @@ Friggy.Web ──HTTP──> Friggy.Api ──> Application ──> Infrastructu
 
 El recorrido completo de creación de una receta está explicado en [docs/development/recipe-creation-walkthrough.md](docs/development/recipe-creation-walkthrough.md).
 
-El piloto técnico local está registrado en [plans/pilot/20260810-local-technical-pilot.md](plans/pilot/20260810-local-technical-pilot.md). El [guion del piloto humano](plans/pilot/guided-human-pilot.md) queda preparado para la siguiente sesión con una persona ajena al código.
+El piloto técnico local y el guion aplicado están registrados en el [cierre ejecutable de la Fase 6](plans/completed/implementation/06-stabilization-and-pilot-implementation.md#67--piloto-y-cierre--completada).
 
 ## Entorno verificado
 

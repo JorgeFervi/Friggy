@@ -45,7 +45,7 @@ No cambia el esquema, las entidades de Domain ni las rutas HTTP existentes.
 
 ## Handoff
 
-La [Fase 8 — Inventario y finalización de comidas](../../phases/08-inventory-and-meal-completion.md) queda habilitada sobre una base funcional y navegable.
+La [Fase 8 — Inventario y finalización de comidas](08-inventory-and-meal-completion.md) quedó habilitada y completada sobre una base funcional y navegable.
 
 ## Cierre
 
