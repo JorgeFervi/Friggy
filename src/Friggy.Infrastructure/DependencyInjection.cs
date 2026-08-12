@@ -2,6 +2,7 @@ using Friggy.Application.Catalogs.Ingredients.Interfaces;
 using Friggy.Application.Catalogs.MealTypes.Interfaces;
 using Friggy.Application.Catalogs.RecipeTags.Interfaces;
 using Friggy.Application.Catalogs.UnitTypes.Interfaces;
+using Friggy.Application.Inventory.Interfaces;
 using Friggy.Application.Recipes.Interfaces;
 using Friggy.Application.WeeklyPlans.Interfaces;
 using Friggy.Infrastructure.Persistence;
@@ -41,6 +42,9 @@ public static class DependencyInjection
         services.AddScoped<IRecipeCatalogRepository, RecipeCatalogRepository>();
         services.AddScoped<IWeeklyPlanRepository, WeeklyPlanRepository>();
         services.AddScoped<IWeeklyPlanReferenceRepository, WeeklyPlanReferenceRepository>();
+        services.AddScoped<IInventoryLotRepository, InventoryLotRepository>();
+        services.AddScoped<IInventoryReferenceRepository, InventoryReferenceRepository>();
+        services.AddScoped<IInventoryUnitOfWork, InventoryUnitOfWork>();
 
         return services;
     }

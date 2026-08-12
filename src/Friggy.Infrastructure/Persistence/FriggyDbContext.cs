@@ -1,4 +1,5 @@
 using Friggy.Domain.Catalogs;
+using Friggy.Domain.Inventory;
 using Friggy.Domain.Recipes;
 using Friggy.Domain.WeeklyPlans;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,10 @@ public sealed class FriggyDbContext(DbContextOptions<FriggyDbContext> options)
     public DbSet<WeeklyPlan> WeeklyPlans => Set<WeeklyPlan>();
 
     public DbSet<MealPlanEntry> MealPlanEntries => Set<MealPlanEntry>();
+
+    public DbSet<InventoryLot> InventoryLots => Set<InventoryLot>();
+
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

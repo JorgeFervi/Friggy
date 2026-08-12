@@ -11,7 +11,11 @@ internal sealed class MealPlanEntryConfiguration
 {
     public void Configure(EntityTypeBuilder<MealPlanEntry> builder)
     {
-        builder.ToTable("meal_plan_entries");
+        builder.ToTable(
+            "meal_plan_entries",
+            table => table.HasCheckConstraint(
+                "ck_meal_plan_entries_servings_positive",
+                "servings > 0"));
         builder.HasKey(entry => entry.Id);
         builder.Property(entry => entry.Id).ValueGeneratedNever();
         builder.Property(entry => entry.WeeklyPlanId).HasColumnName("weekly_plan_id");
@@ -20,6 +24,13 @@ internal sealed class MealPlanEntryConfiguration
             .HasColumnType("date");
         builder.Property(entry => entry.MealTypeId).HasColumnName("meal_type_id");
         builder.Property(entry => entry.RecipeId).HasColumnName("recipe_id");
+        builder.Property(entry => entry.Servings)
+            .HasColumnName("servings")
+            .HasDefaultValue(1);
+        builder.Property(entry => entry.CompletedAt)
+            .HasColumnName("completed_at")
+            .IsConcurrencyToken();
+        builder.Ignore(entry => entry.IsCompleted);
         builder.HasIndex(entry => new
         {
             entry.WeeklyPlanId,
