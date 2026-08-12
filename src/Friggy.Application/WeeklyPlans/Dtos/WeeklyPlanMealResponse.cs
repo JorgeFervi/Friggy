@@ -4,4 +4,7 @@ public sealed record WeeklyPlanMealResponse(
     Guid MealTypeId,
     string MealTypeName,
     int MealTypeOrder,
-    Guid? RecipeId);
+    Guid? RecipeId,
+    int Servings = 1,
+    bool IsCompleted = false,
+    DateTimeOffset? CompletedAt = null);

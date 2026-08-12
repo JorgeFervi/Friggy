@@ -2,6 +2,7 @@ using Friggy.Application.Catalogs.Ingredients.Services;
 using Friggy.Application.Catalogs.MealTypes.Services;
 using Friggy.Application.Catalogs.RecipeTags.Services;
 using Friggy.Application.Catalogs.UnitTypes.Services;
+using Friggy.Application.Inventory.Services;
 using Friggy.Application.Recipes.Services;
 using Friggy.Application.WeeklyPlans.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,9 @@ public static class DependencyInjection
         services.AddScoped<MealTypeService>();
         services.AddScoped<RecipeService>();
         services.AddScoped<WeeklyPlanService>();
+        services.AddScoped<InventoryLotService>();
+        services.AddScoped<WeeklyPlanInventoryService>();
+        services.AddSingleton(TimeProvider.System);
 
         return services;
     }

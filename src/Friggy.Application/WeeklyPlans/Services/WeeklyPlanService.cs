@@ -68,7 +68,7 @@ public sealed class WeeklyPlanService(
 
         var plan = await FindAsync(planId, cancellationToken);
         await EnsureReferencesExistAsync(request.RecipeId, mealTypeId, cancellationToken);
-        plan.Assign(date, mealTypeId, request.RecipeId);
+        plan.Assign(date, mealTypeId, request.RecipeId, request.Servings);
         await plans.SaveChangesAsync(cancellationToken);
         return await MapAsync(plan, cancellationToken);
     }
@@ -173,14 +173,17 @@ public sealed class WeeklyPlanService(
         MealType mealType,
         Dictionary<(DateOnly Date, Guid MealTypeId), MealPlanEntry> entries)
     {
-        var recipeId = entries.TryGetValue((date, mealType.Id), out var entry)
-            ? entry.RecipeId
-            : (Guid?)null;
+        var hasEntry = entries.TryGetValue((date, mealType.Id), out var entry);
+        var recipeId = hasEntry ? entry!.RecipeId : (Guid?)null;
+        var servings = hasEntry ? entry!.Servings : 1;
 
         return new WeeklyPlanMealResponse(
             mealType.Id,
             mealType.Name.Value,
             mealType.Order,
-            recipeId);
+            recipeId,
+            servings,
+            entry?.IsCompleted ?? false,
+            entry?.CompletedAt);
     }
 }
