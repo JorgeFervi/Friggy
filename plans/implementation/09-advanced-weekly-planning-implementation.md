@@ -5,7 +5,7 @@
 
 Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni reabre comidas completadas.
 
-> **Progreso:** subfase 9.1 completada. La siguiente unidad ejecutable es la subfase 9.2, todavía no iniciada.
+> **Progreso:** subfase 9.2 implementada. Compilación, formato y suites sin Docker están verdes; la validación PostgreSQL de base vacía y migración desde Fase 8 queda pendiente porque el entorno actual no permite acceder al daemon. No iniciar 9.3 hasta ejecutar esas pruebas.
 
 ## 9.1 — Tipos de comida por día — Completada
 
@@ -14,14 +14,16 @@ Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni r
 3. Impedir duplicados del mismo tipo en el mismo día.
 4. No permitir retirar un hueco completado; una asignación futura debe retirarse explícitamente antes.
 
-`MealPlanSlot` conserva una identidad independiente de su orden y de la asignación. Durante esta subfase los huecos se mantienen solo en Domain y se ignoran explícitamente en EF Core; la persistencia y la migración pertenecen a 9.2.
+`MealPlanSlot` conserva una identidad independiente de su orden y de la asignación. Durante 9.1 los huecos se mantuvieron solo en Domain y se ignoraron explícitamente en EF Core hasta completar su persistencia en 9.2.
 
-## 9.2 — Persistencia y compatibilidad
+## 9.2 — Persistencia y compatibilidad — Implementada, validación PostgreSQL pendiente
 
 1. Migrar el calendario actual creando huecos equivalentes a sus tipos globales existentes.
 2. Conservar asignaciones, raciones y estados de la Fase 8.
 3. Añadir índices y restricciones con PostgreSQL real.
 4. Probar lectura del esquema anterior y round-trip completo.
+
+La migración crea los huecos equivalentes a todos los tipos globales en los siete días de cada plan existente antes de activar la FK de las asignaciones. Los planes nuevos conservan el mismo calendario inicial; PostgreSQL protege tipo y orden únicos por día.
 
 ## 9.3 — Horario y preparación
 

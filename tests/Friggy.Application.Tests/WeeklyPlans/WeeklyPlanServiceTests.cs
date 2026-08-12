@@ -26,6 +26,16 @@ public sealed class WeeklyPlanServiceTests
         Assert.Equal("Semana 32", result.Name);
         Assert.Equal("Vacaciones", result.Description);
         Assert.Equal(1, scenario.Plans.SaveCount);
+        var stored = Assert.Single(scenario.Plans.Items);
+        Assert.Equal(21, stored.Slots.Count);
+        Assert.All(
+            stored.Dates,
+            date => Assert.Equal(
+                [0, 1, 2],
+                stored.Slots
+                    .Where(slot => slot.Date == date)
+                    .OrderBy(slot => slot.Order)
+                    .Select(slot => slot.Order)));
         Assert.Equal(
             Enumerable.Range(0, 7).Select(result.StartDate.AddDays),
             result.Days.Select(day => day.Date));

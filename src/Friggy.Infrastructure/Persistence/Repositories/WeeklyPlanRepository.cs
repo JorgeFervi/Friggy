@@ -59,7 +59,11 @@ public sealed class WeeklyPlanRepository(FriggyDbContext context) : IWeeklyPlanR
 
     private IQueryable<WeeklyPlan> CompleteQuery() =>
         context.WeeklyPlans
+            .Include(plan => plan.Slots
+                .OrderBy(slot => slot.Date)
+                .ThenBy(slot => slot.Order))
             .Include(plan => plan.Entries
                 .OrderBy(entry => entry.Date)
-                .ThenBy(entry => entry.MealTypeId));
+                .ThenBy(entry => entry.MealTypeId))
+            .AsSplitQuery();
 }

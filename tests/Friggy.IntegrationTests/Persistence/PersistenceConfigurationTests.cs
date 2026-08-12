@@ -102,6 +102,10 @@ public sealed class PersistenceConfigurationTests
             migration => Assert.EndsWith(
                 "_AddInventoryAndMealCompletion",
                 migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_AddDailyMealPlanSlots",
+                migration,
                 StringComparison.Ordinal));
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", context.Database.ProviderName);
     }

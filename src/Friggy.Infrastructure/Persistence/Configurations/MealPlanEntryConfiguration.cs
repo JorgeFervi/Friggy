@@ -50,5 +50,21 @@ internal sealed class MealPlanEntryConfiguration
             .WithMany()
             .HasForeignKey(entry => entry.MealTypeId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<MealPlanSlot>()
+            .WithOne()
+            .HasPrincipalKey<MealPlanSlot>(slot => new
+            {
+                slot.WeeklyPlanId,
+                slot.Date,
+                slot.MealTypeId,
+            })
+            .HasForeignKey<MealPlanEntry>(entry => new
+            {
+                entry.WeeklyPlanId,
+                entry.Date,
+                entry.MealTypeId,
+            })
+            .OnDelete(DeleteBehavior.NoAction)
+            .HasConstraintName("FK_meal_plan_entries_meal_plan_slots");
     }
 }

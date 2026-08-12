@@ -20,8 +20,9 @@ internal sealed class WeeklyPlanConfiguration : IEntityTypeConfiguration<WeeklyP
             .HasColumnName("description");
         builder.Ignore(plan => plan.EndDate);
         builder.Ignore(plan => plan.Dates);
-        builder.Ignore(plan => plan.Slots);
         builder.Navigation(plan => plan.Entries)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(plan => plan.Slots)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

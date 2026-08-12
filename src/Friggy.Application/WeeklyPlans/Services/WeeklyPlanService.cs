@@ -30,6 +30,7 @@ public sealed class WeeklyPlanService(
 
         var plan = WeeklyPlan.Create(request.Name, request.StartDate, request.Description);
         await EnsureUniqueNameAsync(plan.Name.Normalized, null, cancellationToken);
+        await AddDefaultSlotsAsync(plan, cancellationToken);
         await plans.AddAsync(plan, cancellationToken);
         await plans.SaveChangesAsync(cancellationToken);
         return await MapAsync(plan, cancellationToken);
@@ -166,6 +167,23 @@ public sealed class WeeklyPlanService(
             plan.EndDate,
             plan.Description,
             days);
+    }
+
+    private async Task AddDefaultSlotsAsync(
+        WeeklyPlan plan,
+        CancellationToken cancellationToken)
+    {
+        var mealTypes = (await references.ListMealTypesAsync(cancellationToken))
+            .OrderBy(mealType => mealType.Order)
+            .ThenBy(mealType => mealType.Name.Value, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
+        foreach (var date in plan.Dates)
+        {
+            foreach (var mealType in mealTypes)
+            {
+                plan.AddSlot(date, mealType.Id);
+            }
+        }
     }
 
     private static WeeklyPlanMealResponse MapMeal(

@@ -23,6 +23,8 @@ public sealed class FriggyDbContext(DbContextOptions<FriggyDbContext> options)
 
     public DbSet<MealPlanEntry> MealPlanEntries => Set<MealPlanEntry>();
 
+    public DbSet<MealPlanSlot> MealPlanSlots => Set<MealPlanSlot>();
+
     public DbSet<InventoryLot> InventoryLots => Set<InventoryLot>();
 
     public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
