@@ -2,7 +2,7 @@
 
 - **Estado:** Futura
 - **Estimación:** 2–4 días
-- **Dependencias:** [Fase 9](09-advanced-weekly-planning.md)
+- **Dependencias:** [Fase 9 completada](../completed/phases/09-advanced-weekly-planning.md)
 - **Guía ejecutable:** [Implementación de la fase 10](../implementation/10-recipe-step-ingredients-implementation.md)
 
 ## Resultado esperado

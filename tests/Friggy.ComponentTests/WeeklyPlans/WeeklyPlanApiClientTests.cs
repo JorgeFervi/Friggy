@@ -149,7 +149,15 @@ public sealed class WeeklyPlanApiClientTests : ComponentTest
                         "Comida",
                         1,
                         null,
+                        Servings: 1,
+                        IsCompleted: false,
+                        CompletedAt: null,
                         SlotId: SlotId,
-                        SlotOrder: 0)]))
+                        SlotOrder: 0,
+                        PlannedTime: null,
+                        PreparationStartsAt: null,
+                        Status: MealPlanEntryState.Planned,
+                        SkippedReason: null,
+                        AlternativeDescription: null)]))
                 .ToArray());
 }

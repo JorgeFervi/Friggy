@@ -407,9 +407,9 @@ public sealed class WeeklyPlanPageTests : ComponentTest
                 .Select(offset => new WeeklyPlanDayResponse(
                     WeekStart.AddDays(offset),
                     [
-                        new(BreakfastId, "Desayuno", 0, null, SlotId: Guid.NewGuid(), SlotOrder: 0),
-                        new(LunchId, "Comida", 1, null, SlotId: Guid.NewGuid(), SlotOrder: 1),
-                        new(DinnerId, "Cena", 2, null, SlotId: Guid.NewGuid(), SlotOrder: 2),
+                        CreateMeal(BreakfastId, "Desayuno", 0),
+                        CreateMeal(LunchId, "Comida", 1),
+                        CreateMeal(DinnerId, "Cena", 2),
                     ]))
                 .ToArray());
 
@@ -433,6 +433,26 @@ public sealed class WeeklyPlanPageTests : ComponentTest
                     })
                 .ToArray(),
         };
+
+    private static WeeklyPlanMealResponse CreateMeal(
+        Guid mealTypeId,
+        string mealTypeName,
+        int order) =>
+        new(
+            mealTypeId,
+            mealTypeName,
+            order,
+            null,
+            1,
+            false,
+            null,
+            Guid.NewGuid(),
+            order,
+            null,
+            null,
+            MealPlanEntryState.Planned,
+            null,
+            null);
 
     private sealed class StubWeeklyPlansApiClient : IWeeklyPlansApiClient
     {
@@ -548,8 +568,16 @@ public sealed class WeeklyPlanPageTests : ComponentTest
                             MealTypeName(request.MealTypeId),
                             day.Meals.Count,
                             null,
+                            Servings: 1,
+                            IsCompleted: false,
+                            CompletedAt: null,
                             SlotId: Guid.NewGuid(),
-                            SlotOrder: day.Meals.Count)],
+                            SlotOrder: day.Meals.Count,
+                            PlannedTime: null,
+                            PreparationStartsAt: null,
+                            Status: MealPlanEntryState.Planned,
+                            SkippedReason: null,
+                            AlternativeDescription: null)],
                     }).ToArray(),
             };
             return Task.FromResult(Plan);

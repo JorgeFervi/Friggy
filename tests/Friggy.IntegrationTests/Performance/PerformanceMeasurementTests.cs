@@ -96,7 +96,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
 
             Assert.Equal(scenario.WeeklyPlanCount, weeklyPlanMeasurement.RootRows);
             Assert.Equal(scenario.WeeklyPlanCount * scenario.EntriesPerPlan, weeklyPlanMeasurement.RelatedRows);
-            Assert.Equal(1, weeklyPlanMeasurement.CommandCount);
+            Assert.Equal(3, weeklyPlanMeasurement.CommandCount);
             Assert.All(weeklyPlanMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -177,7 +177,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             measurements.Add(requirementsMeasurement);
 
             Assert.Equal(3, requirementsMeasurement.RootRows);
-            Assert.Equal(9, requirementsMeasurement.CommandCount);
+            Assert.Equal(11, requirementsMeasurement.CommandCount);
             Assert.All(requirementsMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 

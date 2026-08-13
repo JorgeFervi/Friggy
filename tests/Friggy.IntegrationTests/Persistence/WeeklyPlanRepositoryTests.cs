@@ -110,13 +110,23 @@ public sealed class WeeklyPlanRepositoryTests(PostgreSqlDatabaseFixture database
         var breakfast = plan.AddSlot(WeekStart, CatalogSeedIds.Breakfast);
         var lunch = plan.AddSlot(WeekStart, CatalogSeedIds.Lunch);
         var dinner = plan.AddSlot(WeekStart, CatalogSeedIds.Dinner);
-        plan.ReorderSlots(WeekStart, [dinner.Id, breakfast.Id, lunch.Id]);
-
         await SavePlanAsync(plan);
 
-        await using var context = Database.CreateDbContext();
-        var repository = new WeeklyPlanRepository(context);
-        var reloaded = await repository.GetByIdAsync(
+        await using (var context = Database.CreateDbContext())
+        {
+            var repository = new WeeklyPlanRepository(context);
+            var tracked = await repository.GetByIdAsync(
+                plan.Id,
+                TestContext.Current.CancellationToken);
+            Assert.NotNull(tracked);
+
+            tracked.ReorderSlots(WeekStart, [dinner.Id, breakfast.Id, lunch.Id]);
+            await repository.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await using var verificationContext = Database.CreateDbContext();
+        var verificationRepository = new WeeklyPlanRepository(verificationContext);
+        var reloaded = await verificationRepository.GetByIdAsync(
             plan.Id,
             TestContext.Current.CancellationToken);
 
@@ -124,6 +134,39 @@ public sealed class WeeklyPlanRepositoryTests(PostgreSqlDatabaseFixture database
         Assert.Equal(
             [(dinner.Id, 0), (breakfast.Id, 1), (lunch.Id, 2)],
             reloaded.Slots.Select(slot => (slot.Id, slot.Order)));
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task WeeklyPlanRepository_RemoveFirstSlotAndReload_CompactsPersistedOrder()
+    {
+        var plan = WeeklyPlan.Create("Semana 32", WeekStart, null);
+        var breakfast = plan.AddSlot(WeekStart, CatalogSeedIds.Breakfast);
+        var lunch = plan.AddSlot(WeekStart, CatalogSeedIds.Lunch);
+        var dinner = plan.AddSlot(WeekStart, CatalogSeedIds.Dinner);
+        await SavePlanAsync(plan);
+
+        await using (var context = Database.CreateDbContext())
+        {
+            var repository = new WeeklyPlanRepository(context);
+            var tracked = await repository.GetByIdAsync(
+                plan.Id,
+                TestContext.Current.CancellationToken);
+            Assert.NotNull(tracked);
+
+            Assert.True(tracked.RemoveSlot(breakfast.Id));
+            await repository.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await using var verificationContext = Database.CreateDbContext();
+        var verificationRepository = new WeeklyPlanRepository(verificationContext);
+        var reloaded = await verificationRepository.GetByIdAsync(
+            plan.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal([lunch.Id, dinner.Id], reloaded.Slots.Select(slot => slot.Id));
+        Assert.Equal([0, 1], reloaded.Slots.Select(slot => slot.Order));
     }
 
     [Fact]

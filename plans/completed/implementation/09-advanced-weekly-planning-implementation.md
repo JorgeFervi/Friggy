@@ -5,7 +5,7 @@
 
 Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni reabre comidas completadas.
 
-> **Progreso:** subfase 9.6 preparada, pero el gate no está completado. Compilación, formato y suites sin Docker están verdes; las pruebas PostgreSQL/E2E no pueden iniciar porque el entorno deniega el acceso a `docker_engine`, y la restauración y auditoría del script oficial no pueden leer la configuración global de NuGet. La Fase 9 permanece abierta hasta ejecutar el gate completo en un entorno con esos accesos.
+> **Progreso:** fase completada. Las subfases 9.1 a 9.6 están verdes; la siguiente unidad ejecutable es **10.1 — Invariantes en Domain**.
 
 ## 9.1 — Tipos de comida por día — Completada
 
@@ -16,7 +16,7 @@ Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni r
 
 `MealPlanSlot` conserva una identidad independiente de su orden y de la asignación. Durante 9.1 los huecos se mantuvieron solo en Domain y se ignoraron explícitamente en EF Core hasta completar su persistencia en 9.2.
 
-## 9.2 — Persistencia y compatibilidad — Implementada, validación PostgreSQL pendiente
+## 9.2 — Persistencia y compatibilidad — Completada
 
 1. Migrar el calendario actual creando huecos equivalentes a sus tipos globales existentes.
 2. Conservar asignaciones, raciones y estados de la Fase 8.
@@ -25,7 +25,7 @@ Esta fase amplía el agregado semanal. No cambia movimientos ya registrados ni r
 
 La migración crea los huecos equivalentes a todos los tipos globales en los siete días de cada plan existente antes de activar la FK de las asignaciones. Los planes nuevos conservan el mismo calendario inicial; PostgreSQL protege tipo y orden únicos por día.
 
-## 9.3 — Horario y preparación — Implementada, validación PostgreSQL pendiente
+## 9.3 — Horario y preparación — Completada
 
 1. Añadir hora local opcional a cada hueco planificado.
 2. Validar el formato en Domain/Application y transportar sin conversiones de zona horaria en el entorno local monousuario.
@@ -36,7 +36,7 @@ No persistir el inicio derivado.
 
 La hora prevista se persiste como `time without time zone`, se recibe y normaliza como `HH:mm` y puede eliminarse. El inicio de preparación es un `DateTime` local sin `Kind` de zona, calculado con la fecha del hueco y `Recipe.EstimatedTime`; permanece nulo sin hora o receta y no se persiste.
 
-## 9.4 — Comida omitida o sustituida — Implementada, validación PostgreSQL pendiente
+## 9.4 — Comida omitida o sustituida — Completada
 
 1. Añadir transición desde planificada a omitida con motivo y alternativa descriptiva.
 2. Una comida omitida no consume lotes ni cuenta como completada.
@@ -45,7 +45,7 @@ La hora prevista se persiste como `time without time zone`, se recibe y normaliz
 
 La omisión es una transición irreversible con motivo obligatorio y alternativa descriptiva opcional. Las asignaciones omitidas conservan su receta como historial, no cuentan como completadas, quedan fuera de las necesidades de inventario y se rechazan antes de cargar o consumir lotes. La migración conserva las comidas completadas existentes derivando su nuevo estado desde `completed_at`.
 
-## 9.5 — API y calendario Blazor — Implementada, validación PostgreSQL pendiente
+## 9.5 — API y calendario Blazor — Completada
 
 1. Ampliar contratos para administrar huecos, hora y estado omitido.
 2. Mostrar solo tipos elegidos para cada día y permitir su edición accesible.
@@ -54,7 +54,7 @@ La omisión es una transición irreversible con motivo obligatorio y alternativa
 
 La API permite añadir, retirar y reordenar huecos, actualizar su hora y omitir asignaciones. La respuesta semanal contiene únicamente los huecos elegidos para cada día, con identidad, orden, horario, inicio derivado y estado. El calendario Blazor ofrece controles accesibles para esas operaciones, conserva el borrador de omisión ante errores y mantiene separada la finalización con inventario.
 
-## 9.6 — Gate — Preparado, ejecución bloqueada por el entorno
+## 9.6 — Gate — Completada
 
 1. Integration: migración, restricciones y transiciones.
 2. E2E: configurar días diferentes, asignar horas, omitir una comida y completar otra.
@@ -63,4 +63,6 @@ La API permite añadir, retirar y reordenar huecos, actualizar su hora y omitir 
 
 Se añadieron una prueba integrada del recorrido omitida/completada —incluida la comprobación de que solo la completada consume inventario— y un recorrido E2E que configura días diferentes, asigna horas, omite una comida y completa otra. También se adaptaron los E2E existentes a las etiquetas accesibles del calendario avanzado.
 
-El gate oficial se intentó ejecutar con una política de PowerShell limitada al proceso. Quedó bloqueado en `dotnet restore` por acceso denegado a la configuración global de NuGet. Los intentos directos de las nuevas pruebas quedaron bloqueados al construir sus fixtures porque Testcontainers no puede acceder a `npipe://./pipe/docker_engine`. No se ha cerrado ni movido la fase a completadas.
+Se fijó centralmente `SSH.NET` 2026.0.0 para sustituir la dependencia transitiva vulnerable que resolvía Testcontainers. Integration y E2E restauran la versión segura y la auditoría final de NuGet no detecta vulnerabilidades.
+
+El gate oficial se ejecutó con una política de PowerShell limitada al proceso. `scripts/quality-gate.ps1` completó restore, build Release con 0 warnings, formato sin cambios, PostgreSQL real y Playwright. Resultado: 333/333 pruebas (107 Domain, 64 Application, 72 Integration, 73 Component y 17 E2E), 0 fallos y 0 omitidas. El recorrido avanzado verificó días y horarios diferentes, comida omitida, comida completada y que solo la completada consume inventario.

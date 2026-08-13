@@ -54,8 +54,60 @@ public sealed class WeeklyPlanRepository(FriggyDbContext context) : IWeeklyPlanR
 
     public void Remove(WeeklyPlan plan) => context.WeeklyPlans.Remove(plan);
 
-    public async Task SaveChangesAsync(CancellationToken cancellationToken) =>
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        var reorderedSlots = context.ChangeTracker
+            .Entries<MealPlanSlot>()
+            .Where(entry =>
+                entry.State == EntityState.Modified &&
+                entry.Property(slot => slot.Order).IsModified)
+            .ToArray();
+        if (reorderedSlots.Length == 0)
+        {
+            await context.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        var deletedSlots = context.ChangeTracker
+            .Entries<MealPlanSlot>()
+            .Where(entry => entry.State == EntityState.Deleted)
+            .ToArray();
+        var slotsRequiringTemporaryOrder = reorderedSlots
+            .Concat(deletedSlots)
+            .ToArray();
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        for (var index = 0; index < slotsRequiringTemporaryOrder.Length; index++)
+        {
+            var slotId = slotsRequiringTemporaryOrder[index].Entity.Id;
+            var temporaryOrder = int.MaxValue - index;
+            await context.Database.ExecuteSqlInterpolatedAsync(
+                $"""
+                UPDATE meal_plan_slots
+                SET "order" = {temporaryOrder}
+                WHERE "Id" = {slotId}
+                """,
+                cancellationToken);
+        }
+
+        foreach (var entry in reorderedSlots)
+        {
+            var orderProperty = entry.Property(slot => slot.Order);
+            var finalOrder = orderProperty.CurrentValue;
+            await context.Database.ExecuteSqlInterpolatedAsync(
+                $"""
+                UPDATE meal_plan_slots
+                SET "order" = {finalOrder}
+                WHERE "Id" = {entry.Entity.Id}
+                """,
+                cancellationToken);
+            orderProperty.OriginalValue = finalOrder;
+            orderProperty.IsModified = false;
+        }
+
         await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
 
     private IQueryable<WeeklyPlan> CompleteQuery() =>
         context.WeeklyPlans

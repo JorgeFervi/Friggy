@@ -23,12 +23,12 @@ Los documentos se organizan por estado:
 | 6 | [Estabilización y piloto](completed/phases/06-stabilization-and-pilot.md) | [Guía](completed/implementation/06-stabilization-and-pilot-implementation.md) |
 | 7 | [Correcciones del MVP y navegación](completed/phases/07-mvp-corrections-and-navigation.md) | [Guía](completed/implementation/07-mvp-corrections-and-navigation-implementation.md) |
 | 8 | [Inventario y finalización de comidas](completed/phases/08-inventory-and-meal-completion.md) | [Guía](completed/implementation/08-inventory-and-meal-completion-implementation.md) |
+| 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | [Guía](completed/implementation/09-advanced-weekly-planning-implementation.md) |
 
 ## Fases planificadas
 
 | Fase | Plan | Implementación | Dependencia clave |
 |---|---|---|---|
-| 9 | [Planificación semanal avanzada](phases/09-advanced-weekly-planning.md) | [Guía](implementation/09-advanced-weekly-planning-implementation.md) | Fase 8 |
 | 10 | [Ingredientes asociados a pasos](phases/10-recipe-step-ingredients.md) | [Guía](implementation/10-recipe-step-ingredients-implementation.md) | Fase 9 |
 | 11 | [Panel principal y analítica](phases/11-dashboard-and-analytics.md) | [Guía](implementation/11-dashboard-and-analytics-implementation.md) | Fases 8–10 |
 
@@ -43,4 +43,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 8 están completadas. La siguiente unidad ejecutable es la Fase 9 — Planificación semanal avanzada.
+Las fases 1 a 9 están completadas. La siguiente unidad ejecutable es **10.1 — Invariantes en Domain**.

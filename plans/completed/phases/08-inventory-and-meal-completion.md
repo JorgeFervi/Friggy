@@ -53,7 +53,7 @@ Registrar inventario por lotes con caducidad e historial, calcular las carencias
 
 ## Handoff
 
-La [Fase 9 — Planificación semanal avanzada](../../phases/09-advanced-weekly-planning.md) queda habilitada con raciones, finalización e historial disponibles.
+La [Fase 9 — Planificación semanal avanzada](09-advanced-weekly-planning.md) quedó habilitada con raciones, finalización e historial disponibles y ya está completada.
 
 ## Evidencia de cierre
 

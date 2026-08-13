@@ -2,7 +2,7 @@
 
 - **Estado:** Futura
 - **Estimación:** 4–6 días
-- **Dependencias:** [Fase 8 completada](../completed/phases/08-inventory-and-meal-completion.md), [Fase 9](09-advanced-weekly-planning.md) y [Fase 10](10-recipe-step-ingredients.md)
+- **Dependencias:** [Fase 8 completada](../completed/phases/08-inventory-and-meal-completion.md), [Fase 9 completada](../completed/phases/09-advanced-weekly-planning.md) y [Fase 10](10-recipe-step-ingredients.md)
 - **Guía ejecutable:** [Implementación de la fase 11](../implementation/11-dashboard-and-analytics-implementation.md)
 
 ## Resultado esperado

@@ -65,6 +65,8 @@ public sealed class WeeklyPlanJourneyTests(FullStackFixture fixture) : FriggyPag
             await Page.GetByLabel("Caducidad", new() { Exact = true }).FillAsync("2030-01-20");
             await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir lote", Exact = true })
                 .ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Cell, new() { Name = ingredientName, Exact = true }))
+                .ToBeVisibleAsync();
 
             await NavigateToInteractivePageAsync("/weekly-plans");
             await Page.GetByLabel("Nombre", new() { Exact = true }).FillAsync(planName);

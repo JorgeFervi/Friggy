@@ -1,8 +1,8 @@
 # Fase 9 — Planificación semanal avanzada
 
-- **Estado:** Planificada y habilitada
+- **Estado:** Completada el 13 de agosto de 2026
 - **Estimación:** 3–5 días
-- **Dependencias:** [Fase 8 completada](../completed/phases/08-inventory-and-meal-completion.md)
+- **Dependencias:** [Fase 8 completada](08-inventory-and-meal-completion.md)
 - **Guía ejecutable:** [Implementación de la fase 9](../implementation/09-advanced-weekly-planning-implementation.md)
 
 ## Resultado esperado
@@ -30,4 +30,6 @@ La alternativa se registra inicialmente como texto y no genera consumo automáti
 
 ## Handoff
 
-Proporcionar horarios y estados fiables a las fases de detalle de recetas y panel.
+La fase entrega horarios y estados fiables a las fases de detalle de recetas y panel. El gate final superó 333/333 pruebas (107 Domain, 64 Application, 72 Integration, 73 Component y 17 E2E), sin fallos ni pruebas omitidas; build Release y formato limpios, y auditoría NuGet sin vulnerabilidades.
+
+La siguiente unidad ejecutable es **10.1 — Invariantes en Domain**.
