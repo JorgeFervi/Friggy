@@ -5,7 +5,7 @@
 
 La asociación referencia `RecipeIngredient`, no el catálogo `Ingredient`, para distinguir líneas repetidas con unidades o cantidades diferentes.
 
-> **Progreso:** 10.1–10.3 completadas. La siguiente unidad ejecutable es **10.4 — API**.
+> **Progreso:** 10.1–10.4 completadas. La siguiente unidad ejecutable es **10.5 — Formulario y detalle**.
 
 ## 10.1 — Invariantes en Domain — Completada
 
@@ -36,11 +36,13 @@ Las solicitudes aceptan una identidad opcional por línea y asociaciones opciona
 
 La migración `AddRecipeStepIngredients` crea una tabla de unión vacía con unicidad por paso y línea, y FKs compuestas que impiden enlazar elementos de recetas diferentes. Las cascadas solo parten de `RecipeStep` y `RecipeIngredient`; el repositorio carga las asociaciones mediante una consulta separada constante y conserva `AsNoTrackingWithIdentityResolution` en listados. Se verificaron bases vacías, upgrade desde Fase 9, round-trip, referencias cruzadas, borrado de extremos y ausencia de N+1. La suite Integration quedó verde con 75/75 pruebas y el snapshot no tiene cambios pendientes.
 
-## 10.4 — API
+## 10.4 — API — Completada
 
 1. Mantener las rutas de recetas y ampliar sus DTO.
 2. Comprobar que create/update/get hacen round-trip de asociaciones ordenadas.
 3. Devolver validación estable para IDs que no pertenecen a la receta.
+
+Las rutas de recetas conservan sus verbos y ubicaciones, mientras OpenAPI publica la identidad opcional de cada línea y `recipeIngredientIds` en pasos de entrada y salida. Las pruebas HTTP cubren create/get/update con asociaciones ordenadas y el error estable `recipe-ingredient.not-found` con estado 400 sin persistencia parcial. Durante la regresión se detectó el intercambio de posiciones retenidas: la migración `DeferRecipeIngredientOrderUniqueness` mantiene la unicidad `(recipe_id, order)` como restricción PostgreSQL diferible, permitiendo reordenaciones atómicas y rechazando duplicados al confirmar. Quedaron verdes 7/7 pruebas de endpoints de recetas, 10/10 pruebas focalizadas de persistencia de recetas y 78/78 en la suite Integration completa.
 
 ## 10.5 — Formulario y detalle
 

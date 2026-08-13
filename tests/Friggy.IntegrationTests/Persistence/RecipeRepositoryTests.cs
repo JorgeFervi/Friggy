@@ -47,9 +47,14 @@ public sealed class RecipeRepositoryTests(PostgreSqlDatabaseFixture database)
         Assert.Equal(
             [reloaded.Ingredients[0].Id],
             reloaded.Steps[0].RecipeIngredientIds);
+        var expectedSecondStepIngredientIds = new[]
+        {
+            reloaded.Ingredients[0].Id,
+            reloaded.Ingredients[1].Id,
+        };
         Assert.Equal(
-            [reloaded.Ingredients[0].Id, reloaded.Ingredients[1].Id],
-            reloaded.Steps[1].RecipeIngredientIds);
+            expectedSecondStepIngredientIds.Order(),
+            reloaded.Steps[1].RecipeIngredientIds.Order());
         Assert.Equal(catalogs.Tag.Id, Assert.Single(reloaded.TagIds));
         Assert.Equal(CatalogSeedIds.Lunch, Assert.Single(reloaded.MealTypeIds));
     }
@@ -106,6 +111,80 @@ public sealed class RecipeRepositoryTests(PostgreSqlDatabaseFixture database)
         Assert.Equal(CatalogSeedIds.Dinner, Assert.Single(reloaded.MealTypeIds));
         Assert.DoesNotContain(reloaded.Ingredients, item => oldIngredientIds.Contains(item.Id));
         Assert.DoesNotContain(reloaded.Steps, item => oldStepIds.Contains(item.Id));
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task RecipeRepository_ReplaceAndReload_AllowsRetainedIngredientsToSwapOrder()
+    {
+        var catalogs = await CreateCatalogsAsync();
+        var recipe = CreateCompleteRecipe(catalogs, "Gazpacho");
+        await SaveRecipeAsync(recipe);
+        var firstIngredient = recipe.Ingredients.Single(item => item.Order == 0);
+        var secondIngredient = recipe.Ingredients.Single(item => item.Order == 1);
+
+        await using (var context = Database.CreateDbContext())
+        {
+            var repository = new RecipeRepository(context);
+            var tracked = await repository.GetByIdAsync(
+                recipe.Id,
+                TestContext.Current.CancellationToken);
+            Assert.NotNull(tracked);
+            var replacement = Recipe.Create("Gazpacho", TimeSpan.FromMinutes(20));
+            replacement.AddIngredient(
+                firstIngredient.IngredientId,
+                firstIngredient.UnitTypeId,
+                firstIngredient.Quantity,
+                1,
+                firstIngredient.Id);
+            replacement.AddIngredient(
+                secondIngredient.IngredientId,
+                secondIngredient.UnitTypeId,
+                secondIngredient.Quantity,
+                0,
+                secondIngredient.Id);
+            replacement.AddStep("Triturar", TimeSpan.FromMinutes(5), 0);
+            replacement.EnsureComplete();
+
+            tracked.ReplaceWith(replacement);
+            await repository.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await using var verificationContext = Database.CreateDbContext();
+        var verificationRepository = new RecipeRepository(verificationContext);
+        var reloaded = await verificationRepository.GetByIdAsync(
+            recipe.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal(
+            [secondIngredient.Id, firstIngredient.Id],
+            reloaded.Ingredients.Select(item => item.Id));
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task RecipeIngredient_DuplicateOrder_IsRejectedAtTransactionCommit()
+    {
+        var catalogs = await CreateCatalogsAsync();
+        var recipe = CreateCompleteRecipe(catalogs, "Gazpacho");
+        await SaveRecipeAsync(recipe);
+
+        await using var context = Database.CreateDbContext();
+        await using var transaction = await context.Database.BeginTransactionAsync(
+            TestContext.Current.CancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            UPDATE recipe_ingredients
+            SET "order" = 0
+            WHERE recipe_id = {recipe.Id}
+            """,
+            TestContext.Current.CancellationToken);
+
+        var exception = await Assert.ThrowsAsync<PostgresException>(() =>
+            transaction.CommitAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(PostgresErrorCodes.UniqueViolation, exception.SqlState);
     }
 
     [Fact]

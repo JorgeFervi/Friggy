@@ -31,7 +31,6 @@ internal sealed class RecipeIngredientConfiguration
             .HasColumnName("quantity")
             .HasPrecision(12, 3);
         builder.Property(item => item.Order).HasColumnName("order");
-        builder.HasIndex(item => new { item.RecipeId, item.Order }).IsUnique();
         builder.HasOne<Recipe>()
             .WithMany(recipe => recipe.Ingredients)
             .HasForeignKey(item => item.RecipeId)

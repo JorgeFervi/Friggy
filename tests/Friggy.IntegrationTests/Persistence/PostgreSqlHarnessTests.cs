@@ -44,6 +44,10 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             migration => Assert.EndsWith(
                 "_AddRecipeStepIngredients",
                 migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_DeferRecipeIngredientOrderUniqueness",
+                migration,
                 StringComparison.Ordinal));
         Assert.StartsWith("friggy_tests_", Database.DatabaseName, StringComparison.Ordinal);
     }
@@ -72,7 +76,7 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             .GetAppliedMigrationsAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(true, tableWasRemoved);
-        Assert.Equal(9, appliedMigrations.Count());
+        Assert.Equal(10, appliedMigrations.Count());
     }
 
     [Fact]

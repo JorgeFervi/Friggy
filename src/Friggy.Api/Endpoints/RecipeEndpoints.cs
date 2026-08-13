@@ -16,11 +16,17 @@ public static class RecipeEndpoints
 
         group.MapGet("/{id:guid}", GetAsync)
             .WithName("GetRecipe")
+            .WithSummary("Obtener una receta con sus asociaciones entre pasos e ingredientes")
+            .WithDescription(
+                "Los identificadores asociados a cada paso siguen el orden de los ingredientes de la receta.")
             .Produces<RecipeResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/", CreateAsync)
             .WithName("CreateRecipe")
+            .WithSummary("Crear una receta con asociaciones entre pasos e ingredientes")
+            .WithDescription(
+                "Cada paso puede referenciar por su identificador las líneas de ingrediente incluidas en la solicitud.")
             .Produces<RecipeResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -28,6 +34,9 @@ public static class RecipeEndpoints
 
         group.MapPut("/{id:guid}", UpdateAsync)
             .WithName("UpdateRecipe")
+            .WithSummary("Actualizar una receta y sus asociaciones entre pasos e ingredientes")
+            .WithDescription(
+                "Conserva los identificadores de línea enviados y reemplaza sus asociaciones de forma atómica.")
             .Produces<RecipeResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)

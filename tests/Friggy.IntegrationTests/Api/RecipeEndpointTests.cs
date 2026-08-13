@@ -20,11 +20,39 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
         await using var factory = new FriggyApiFactory(Database.ConnectionString);
         using var client = factory.CreateClient();
         var ingredient = await CreateIngredientAsync(client, "Tomate");
-        var createRequest = CreateRequest(
+        var firstLineId = Guid.NewGuid();
+        var secondLineId = Guid.NewGuid();
+        var createRequest = new CreateRecipeRequest(
             "Gazpacho",
-            ingredient.Id,
-            quantity: 1.250m,
-            stepDescription: "Triturar");
+            20,
+            [
+                new RecipeIngredientRequest(
+                    ingredient.Id,
+                    CatalogSeedIds.Unit,
+                    2m,
+                    1,
+                    secondLineId),
+                new RecipeIngredientRequest(
+                    ingredient.Id,
+                    CatalogSeedIds.Gram,
+                    1.250m,
+                    0,
+                    firstLineId),
+            ],
+            [
+                new RecipeStepRequest(
+                    "Servir",
+                    null,
+                    1,
+                    [secondLineId, firstLineId]),
+                new RecipeStepRequest(
+                    "Triturar",
+                    5,
+                    0,
+                    [firstLineId]),
+            ],
+            [],
+            [CatalogSeedIds.Lunch]);
 
         using var createResponse = await client.PostAsJsonAsync(
             "/api/recipes",
@@ -37,8 +65,11 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
         Assert.NotNull(created);
         Assert.Equal("Gazpacho", created.Name);
         Assert.Equal($"/api/recipes/{created.Id}", createResponse.Headers.Location?.OriginalString);
-        Assert.Equal(1.250m, Assert.Single(created.Ingredients).Quantity);
-        Assert.Equal("Triturar", Assert.Single(created.Steps).Description);
+        Assert.Equal([firstLineId, secondLineId], created.Ingredients.Select(item => item.Id));
+        Assert.Equal([firstLineId], created.Steps[0].RecipeIngredientIds);
+        Assert.Equal(
+            [firstLineId, secondLineId],
+            created.Steps[1].RecipeIngredientIds);
 
         var loaded = await client.GetFromJsonAsync<RecipeResponse>(
             $"/api/recipes/{created.Id}",
@@ -48,8 +79,27 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
             new UpdateRecipeRequest(
                 "Salmorejo",
                 25,
-                [new RecipeIngredientRequest(ingredient.Id, CatalogSeedIds.Gram, 2m, 0)],
-                [new RecipeStepRequest("Emulsionar", 5, 0)],
+                [
+                    new RecipeIngredientRequest(
+                        ingredient.Id,
+                        CatalogSeedIds.Gram,
+                        1.5m,
+                        1,
+                        firstLineId),
+                    new RecipeIngredientRequest(
+                        ingredient.Id,
+                        CatalogSeedIds.Unit,
+                        3m,
+                        0,
+                        secondLineId),
+                ],
+                [
+                    new RecipeStepRequest(
+                        "Emulsionar",
+                        5,
+                        0,
+                        [firstLineId, secondLineId]),
+                ],
                 [],
                 [CatalogSeedIds.Dinner]),
             TestContext.Current.CancellationToken);
@@ -66,11 +116,18 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
             TestContext.Current.CancellationToken);
 
         Assert.Equal("Gazpacho", loaded?.Name);
+        Assert.Equal([firstLineId], loaded?.Steps[0].RecipeIngredientIds);
+        Assert.Equal(
+            [firstLineId, secondLineId],
+            loaded?.Steps[1].RecipeIngredientIds);
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
         Assert.NotNull(updated);
         Assert.Equal("Salmorejo", updated.Name);
-        Assert.Equal(2m, Assert.Single(updated.Ingredients).Quantity);
+        Assert.Equal([secondLineId, firstLineId], updated.Ingredients.Select(item => item.Id));
         Assert.Equal("Emulsionar", Assert.Single(updated.Steps).Description);
+        Assert.Equal(
+            [secondLineId, firstLineId],
+            updated.Steps[0].RecipeIngredientIds);
         Assert.Equal(CatalogSeedIds.Dinner, Assert.Single(updated.MealTypeIds));
         Assert.Contains(listed ?? [], item => item.Id == created.Id && item.Name == "Salmorejo");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
@@ -116,6 +173,51 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.NotNull(problem);
         Assert.Equal("recipe.ingredient.not-found", problem.Extensions["code"]?.ToString());
+        Assert.Empty(recipes ?? []);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task PostRecipe_UnknownIngredientLineInStep_ReturnsStableBadRequestWithoutPersistingRecipe()
+    {
+        await using var factory = new FriggyApiFactory(Database.ConnectionString);
+        using var client = factory.CreateClient();
+        var ingredient = await CreateIngredientAsync(client, "Tomate");
+        var lineId = Guid.NewGuid();
+        var request = new CreateRecipeRequest(
+            "Inválida",
+            20,
+            [
+                new RecipeIngredientRequest(
+                    ingredient.Id,
+                    CatalogSeedIds.Gram,
+                    1m,
+                    0,
+                    lineId),
+            ],
+            [
+                new RecipeStepRequest(
+                    "Preparar",
+                    null,
+                    0,
+                    [Guid.NewGuid()]),
+            ],
+            [],
+            []);
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/recipes",
+            request,
+            TestContext.Current.CancellationToken);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(
+            TestContext.Current.CancellationToken);
+        var recipes = await client.GetFromJsonAsync<RecipeListItemResponse[]>(
+            "/api/recipes",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal("recipe-ingredient.not-found", problem.Extensions["code"]?.ToString());
         Assert.Empty(recipes ?? []);
     }
 
@@ -216,6 +318,12 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
         var paths = document.RootElement.GetProperty("paths");
         var collection = paths.GetProperty("/api/recipes");
         var resource = paths.GetProperty("/api/recipes/{id}");
+        var schemas = document.RootElement
+            .GetProperty("components")
+            .GetProperty("schemas");
+        var ingredientRequestSchema = FindSchema(schemas, "RecipeIngredientRequest");
+        var stepRequestSchema = FindSchema(schemas, "RecipeStepRequest");
+        var stepResponseSchema = FindSchema(schemas, "RecipeStepResponse");
         Assert.True(collection.TryGetProperty("get", out _));
         Assert.True(collection.TryGetProperty("post", out _));
         Assert.True(resource.TryGetProperty("get", out _));
@@ -226,6 +334,22 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
                 .GetProperty("delete")
                 .GetProperty("responses")
                 .TryGetProperty("409", out _));
+        Assert.Equal(
+            "Crear una receta con asociaciones entre pasos e ingredientes",
+            collection.GetProperty("post").GetProperty("summary").GetString());
+        Assert.Equal(
+            "Actualizar una receta y sus asociaciones entre pasos e ingredientes",
+            resource.GetProperty("put").GetProperty("summary").GetString());
+        Assert.True(
+            ingredientRequestSchema.GetProperty("properties").TryGetProperty("id", out _));
+        Assert.True(
+            stepRequestSchema
+                .GetProperty("properties")
+                .TryGetProperty("recipeIngredientIds", out _));
+        Assert.True(
+            stepResponseSchema
+                .GetProperty("properties")
+                .TryGetProperty("recipeIngredientIds", out _));
     }
 
     private static async Task<IngredientResponse> CreateIngredientAsync(
@@ -241,6 +365,12 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
                 TestContext.Current.CancellationToken) ??
             throw new InvalidOperationException("La API no devolvió el ingrediente creado.");
     }
+
+    private static JsonElement FindSchema(JsonElement schemas, string suffix) =>
+        schemas
+            .EnumerateObject()
+            .Single(item => item.Name.EndsWith(suffix, StringComparison.Ordinal))
+            .Value;
 
     private static CreateRecipeRequest CreateRequest(
         string name,
