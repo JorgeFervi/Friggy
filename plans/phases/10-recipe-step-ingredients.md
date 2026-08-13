@@ -1,9 +1,11 @@
 # Fase 10 — Ingredientes asociados a pasos
 
-- **Estado:** Futura
+- **Estado:** En curso — subfase 10.1 completada
 - **Estimación:** 2–4 días
 - **Dependencias:** [Fase 9 completada](../completed/phases/09-advanced-weekly-planning.md)
 - **Guía ejecutable:** [Implementación de la fase 10](../implementation/10-recipe-step-ingredients-implementation.md)
+
+La capa Domain ya permite asociar y retirar líneas de ingrediente, rechaza duplicados y referencias ajenas a la receta, y limpia los vínculos al eliminar sus extremos. La siguiente unidad es **10.2 — Contratos y actualización de receta**.
 
 ## Resultado esperado
 

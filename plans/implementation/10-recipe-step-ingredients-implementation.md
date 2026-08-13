@@ -5,7 +5,9 @@
 
 La asociación referencia `RecipeIngredient`, no el catálogo `Ingredient`, para distinguir líneas repetidas con unidades o cantidades diferentes.
 
-## 10.1 — Invariantes en Domain
+> **Progreso:** 10.1 completada. La siguiente unidad ejecutable es **10.2 — Contratos y actualización de receta**.
+
+## 10.1 — Invariantes en Domain — Completada
 
 1. Escribir rojos para asociar y retirar una línea de ingrediente de un paso.
 2. Impedir duplicados y referencias a otra receta.
@@ -13,6 +15,8 @@ La asociación referencia `RecipeIngredient`, no el catálogo `Ingredient`, para
 4. Definir eliminación consistente al retirar un paso o una línea.
 
 No repartir ni duplicar cantidades en los pasos.
+
+`Recipe` administra las asociaciones mediante la identidad de `RecipeStep` y `RecipeIngredient`, rechazando elementos ajenos al agregado y duplicados. Los pasos pueden permanecer sin asociaciones; retirar una línea o un paso limpia sus vínculos, y la cantidad continúa perteneciendo exclusivamente a la línea de ingrediente. La suite Domain quedó verde con 115/115 pruebas y la regresión focalizada de persistencia de recetas con PostgreSQL superó 6/6 pruebas.
 
 ## 10.2 — Contratos y actualización de receta
 

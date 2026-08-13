@@ -4,6 +4,8 @@ namespace Friggy.Domain.Recipes;
 
 public sealed class RecipeStep
 {
+    private readonly List<RecipeStepIngredientLink> ingredientLinks = [];
+
     private RecipeStep()
     {
         Description = string.Empty;
@@ -32,6 +34,9 @@ public sealed class RecipeStep
     public TimeSpan? EstimatedTime { get; private set; }
 
     public int Order { get; private set; }
+
+    public IReadOnlyList<Guid> RecipeIngredientIds =>
+        ingredientLinks.Select(item => item.RecipeIngredientId).ToArray();
 
     internal static RecipeStep Create(
         Guid recipeId,
@@ -75,4 +80,27 @@ public sealed class RecipeStep
             estimatedTime,
             order);
     }
+
+    internal void AssignIngredient(RecipeIngredient ingredient)
+    {
+        ArgumentNullException.ThrowIfNull(ingredient);
+
+        if (ingredientLinks.Any(item => item.RecipeIngredientId == ingredient.Id))
+        {
+            throw new RecipeConflictException(
+                "recipe-step.ingredient.duplicate",
+                "La línea de ingrediente ya está asociada al paso.");
+        }
+
+        ingredientLinks.Add(RecipeStepIngredientLink.Create(this, ingredient));
+    }
+
+    internal bool RemoveIngredient(Guid recipeIngredientId)
+    {
+        var link = ingredientLinks.SingleOrDefault(item =>
+            item.RecipeIngredientId == recipeIngredientId);
+        return link is not null && ingredientLinks.Remove(link);
+    }
+
+    internal void ClearIngredientAssociations() => ingredientLinks.Clear();
 }

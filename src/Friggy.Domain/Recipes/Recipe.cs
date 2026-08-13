@@ -74,7 +74,17 @@ public sealed class Recipe
     public bool RemoveIngredient(Guid recipeIngredientId)
     {
         var ingredient = ingredients.SingleOrDefault(item => item.Id == recipeIngredientId);
-        return ingredient is not null && ingredients.Remove(ingredient);
+        if (ingredient is null)
+        {
+            return false;
+        }
+
+        foreach (var step in steps)
+        {
+            step.RemoveIngredient(recipeIngredientId);
+        }
+
+        return ingredients.Remove(ingredient);
     }
 
     public void AddStep(string? description, TimeSpan? estimatedTime, int order)
@@ -94,7 +104,27 @@ public sealed class Recipe
     public bool RemoveStep(Guid recipeStepId)
     {
         var step = steps.SingleOrDefault(item => item.Id == recipeStepId);
-        return step is not null && steps.Remove(step);
+        if (step is null)
+        {
+            return false;
+        }
+
+        step.ClearIngredientAssociations();
+        return steps.Remove(step);
+    }
+
+    public void AssignIngredientToStep(Guid recipeStepId, Guid recipeIngredientId)
+    {
+        var step = GetStep(recipeStepId);
+        var ingredient = GetIngredient(recipeIngredientId);
+        step.AssignIngredient(ingredient);
+    }
+
+    public bool RemoveIngredientFromStep(Guid recipeStepId, Guid recipeIngredientId)
+    {
+        var step = GetStep(recipeStepId);
+        _ = GetIngredient(recipeIngredientId);
+        return step.RemoveIngredient(recipeIngredientId);
     }
 
     public void AddTag(Guid recipeTagId)
@@ -204,6 +234,24 @@ public sealed class Recipe
                 "recipe.estimated-time.non-negative",
                 "El tiempo estimado no puede ser negativo.");
         }
+    }
+
+    private RecipeIngredient GetIngredient(Guid recipeIngredientId)
+    {
+        ValidateRequiredId(recipeIngredientId, "recipe-ingredient.id.required");
+        return ingredients.SingleOrDefault(item => item.Id == recipeIngredientId) ??
+            throw new DomainValidationException(
+                "recipe-ingredient.not-found",
+                "No se encontró la línea de ingrediente en la receta.");
+    }
+
+    private RecipeStep GetStep(Guid recipeStepId)
+    {
+        ValidateRequiredId(recipeStepId, "recipe-step.id.required");
+        return steps.SingleOrDefault(item => item.Id == recipeStepId) ??
+            throw new DomainValidationException(
+                "recipe-step.not-found",
+                "No se encontró el paso en la receta.");
     }
 
     private static void ValidateRequiredId(Guid id, string code)

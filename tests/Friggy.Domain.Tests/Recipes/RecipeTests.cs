@@ -123,6 +123,108 @@ public sealed class RecipeTests
     }
 
     [Fact]
+    public void AssignIngredientToStep_IngredientLineFromRecipe_AssociatesItWithoutChangingQuantity()
+    {
+        var recipe = CreateRecipe();
+        recipe.AddIngredient(Guid.NewGuid(), Guid.NewGuid(), 1.5m, 0);
+        recipe.AddStep("Triturar", null, 0);
+        var ingredient = Assert.Single(recipe.Ingredients);
+        var step = Assert.Single(recipe.Steps);
+
+        recipe.AssignIngredientToStep(step.Id, ingredient.Id);
+
+        Assert.Equal([ingredient.Id], step.RecipeIngredientIds);
+        Assert.Equal(1.5m, ingredient.Quantity);
+    }
+
+    [Fact]
+    public void AssignIngredientToStep_DuplicateAssociation_ThrowsAndPreservesExistingAssociation()
+    {
+        var recipe = CompleteRecipe("Gazpacho");
+        var ingredientId = recipe.Ingredients[0].Id;
+        var step = recipe.Steps[0];
+        recipe.AssignIngredientToStep(step.Id, ingredientId);
+
+        var exception = Assert.Throws<RecipeConflictException>(() =>
+            recipe.AssignIngredientToStep(step.Id, ingredientId));
+
+        Assert.Equal("recipe-step.ingredient.duplicate", exception.Code);
+        Assert.Equal([ingredientId], step.RecipeIngredientIds);
+    }
+
+    [Fact]
+    public void AssignIngredientToStep_IngredientFromAnotherRecipe_ThrowsAndDoesNotMutate()
+    {
+        var recipe = CompleteRecipe("Gazpacho");
+        var anotherRecipe = CompleteRecipe("Salmorejo");
+        var step = recipe.Steps[0];
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            recipe.AssignIngredientToStep(step.Id, anotherRecipe.Ingredients[0].Id));
+
+        Assert.Equal("recipe-ingredient.not-found", exception.Code);
+        Assert.Empty(step.RecipeIngredientIds);
+    }
+
+    [Fact]
+    public void AssignIngredientToStep_StepFromAnotherRecipe_ThrowsAndDoesNotMutate()
+    {
+        var recipe = CompleteRecipe("Gazpacho");
+        var anotherRecipe = CompleteRecipe("Salmorejo");
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            recipe.AssignIngredientToStep(anotherRecipe.Steps[0].Id, recipe.Ingredients[0].Id));
+
+        Assert.Equal("recipe-step.not-found", exception.Code);
+        Assert.Empty(anotherRecipe.Steps[0].RecipeIngredientIds);
+    }
+
+    [Fact]
+    public void RemoveIngredientFromStep_ExistingAssociation_RemovesIt()
+    {
+        var recipe = CompleteRecipe("Gazpacho");
+        var ingredientId = recipe.Ingredients[0].Id;
+        var step = recipe.Steps[0];
+        recipe.AssignIngredientToStep(step.Id, ingredientId);
+
+        var removed = recipe.RemoveIngredientFromStep(step.Id, ingredientId);
+
+        Assert.True(removed);
+        Assert.Empty(step.RecipeIngredientIds);
+    }
+
+    [Fact]
+    public void RemoveIngredient_AssociatedLine_RemovesItsAssociationsFromEveryStep()
+    {
+        var recipe = CompleteRecipe("Gazpacho");
+        recipe.AddStep("Servir", null, 1);
+        var ingredientId = recipe.Ingredients[0].Id;
+        foreach (var step in recipe.Steps)
+        {
+            recipe.AssignIngredientToStep(step.Id, ingredientId);
+        }
+
+        var removed = recipe.RemoveIngredient(ingredientId);
+
+        Assert.True(removed);
+        Assert.All(recipe.Steps, step => Assert.Empty(step.RecipeIngredientIds));
+    }
+
+    [Fact]
+    public void RemoveStep_AssociatedStep_RemovesItsIngredientAssociations()
+    {
+        var recipe = CompleteRecipe("Gazpacho");
+        var step = recipe.Steps[0];
+        recipe.AssignIngredientToStep(step.Id, recipe.Ingredients[0].Id);
+
+        var removed = recipe.RemoveStep(step.Id);
+
+        Assert.True(removed);
+        Assert.Empty(recipe.Steps);
+        Assert.Empty(step.RecipeIngredientIds);
+    }
+
+    [Fact]
     public void AddStep_BlankDescription_ThrowsAndDoesNotMutate()
     {
         var recipe = CreateRecipe();
@@ -169,6 +271,16 @@ public sealed class RecipeTests
 
         Assert.Equal("recipe-step.order.non-negative", exception.Code);
         Assert.Empty(recipe.Steps);
+    }
+
+    [Fact]
+    public void AddStep_ValidValues_AllowsNoIngredientAssociations()
+    {
+        var recipe = CreateRecipe();
+
+        recipe.AddStep("Triturar", null, 0);
+
+        Assert.Empty(Assert.Single(recipe.Steps).RecipeIngredientIds);
     }
 
     [Fact]

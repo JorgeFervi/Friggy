@@ -43,4 +43,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 9 están completadas. La siguiente unidad ejecutable es **10.1 — Invariantes en Domain**.
+Las fases 1 a 9 están completadas y la subfase 10.1 está verde. La siguiente unidad ejecutable es **10.2 — Contratos y actualización de receta**.
