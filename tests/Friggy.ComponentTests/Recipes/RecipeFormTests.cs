@@ -14,6 +14,8 @@ public sealed class RecipeFormTests : ComponentTest
     private static readonly Guid IngredientOneId = Guid.Parse("10000000-0000-0000-0000-000000000001");
     private static readonly Guid IngredientTwoId = Guid.Parse("10000000-0000-0000-0000-000000000002");
     private static readonly Guid UnitTypeId = Guid.Parse("20000000-0000-0000-0000-000000000001");
+    private static readonly Guid LineOneId = Guid.Parse("50000000-0000-0000-0000-000000000001");
+    private static readonly Guid LineTwoId = Guid.Parse("50000000-0000-0000-0000-000000000002");
     private static readonly Guid TagOneId = Guid.Parse("30000000-0000-0000-0000-000000000001");
     private static readonly Guid TagTwoId = Guid.Parse("30000000-0000-0000-0000-000000000002");
 
@@ -55,6 +57,86 @@ public sealed class RecipeFormTests : ComponentTest
             ["Servir", "Triturar"],
             component.FindAll("[data-testid='step-row'] textarea")
                 .Select(element => element.GetAttribute("value") ?? element.TextContent));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void SelectStepIngredient_ThenReorderLines_PreservesSelectionByIdentity()
+    {
+        var model = ValidModel();
+        model.Ingredients.Add(
+            new RecipeIngredientFormModel(IngredientOneId, UnitTypeId, 1m, 0, LineOneId));
+        model.Ingredients.Add(
+            new RecipeIngredientFormModel(IngredientTwoId, UnitTypeId, 2m, 1, LineTwoId));
+        model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
+        var component = RenderForm(model);
+
+        component.Find($"input[data-recipe-ingredient-id='{LineOneId}']").Change(true);
+        component.Find("button[aria-label='Mover ingrediente 2 arriba']").Click();
+
+        Assert.Equal([LineOneId], Assert.Single(model.Steps).RecipeIngredientIds);
+        Assert.Equal(
+            [LineOneId],
+            Assert.Single(model.ToUpdateRequest().Steps).RecipeIngredientIds);
+        Assert.True(
+            component.Find($"input[data-recipe-ingredient-id='{LineOneId}']")
+                .HasAttribute("checked"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void RemoveIngredient_AssociatedLine_RemovesSelectionAndUpdatesStepOptions()
+    {
+        var model = ValidModel();
+        model.Ingredients.Add(
+            new RecipeIngredientFormModel(IngredientOneId, UnitTypeId, 1m, 0, LineOneId));
+        model.Ingredients.Add(
+            new RecipeIngredientFormModel(IngredientTwoId, UnitTypeId, 2m, 1, LineTwoId));
+        model.Steps.Add(
+            new RecipeStepFormModel("Triturar", null, 0, [LineOneId, LineTwoId]));
+        var component = RenderForm(model);
+
+        component.Find("button[aria-label='Eliminar ingrediente 1']").Click();
+
+        Assert.Equal([LineTwoId], Assert.Single(model.Steps).RecipeIngredientIds);
+        Assert.Empty(component.FindAll($"input[data-recipe-ingredient-id='{LineOneId}']"));
+        Assert.Single(component.FindAll($"input[data-recipe-ingredient-id='{LineTwoId}']"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void StepWithNoIngredientLines_RendersAccessibleEmptyState()
+    {
+        var model = ValidModel();
+        model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
+
+        var component = RenderForm(model);
+
+        var associations = component.Find("[data-testid='step-ingredients']");
+        Assert.Contains(
+            "Añade ingredientes a la receta para poder asociarlos",
+            associations.TextContent,
+            StringComparison.Ordinal);
+        Assert.Empty(associations.QuerySelectorAll("input[type='checkbox']"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void AddIngredient_AfterStepExists_UpdatesAvailableAssociationsImmediately()
+    {
+        var model = ValidModel();
+        model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
+        var component = RenderForm(model);
+
+        component.Find("button[data-action='add-ingredient']").Click();
+
+        var ingredient = Assert.Single(model.Ingredients);
+        Assert.Single(
+            component.FindAll($"input[data-recipe-ingredient-id='{ingredient.Id}']"));
+        Assert.DoesNotContain(
+            "Añade ingredientes a la receta para poder asociarlos",
+            component.Find("[data-testid='step-ingredients']").TextContent,
+            StringComparison.Ordinal);
     }
 
     [Fact]

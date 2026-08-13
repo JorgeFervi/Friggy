@@ -5,7 +5,7 @@
 
 La asociación referencia `RecipeIngredient`, no el catálogo `Ingredient`, para distinguir líneas repetidas con unidades o cantidades diferentes.
 
-> **Progreso:** 10.1–10.4 completadas. La siguiente unidad ejecutable es **10.5 — Formulario y detalle**.
+> **Progreso:** 10.1–10.5 completadas. La siguiente unidad ejecutable es **10.6 — Gate**.
 
 ## 10.1 — Invariantes en Domain — Completada
 
@@ -44,12 +44,14 @@ La migración `AddRecipeStepIngredients` crea una tabla de unión vacía con uni
 
 Las rutas de recetas conservan sus verbos y ubicaciones, mientras OpenAPI publica la identidad opcional de cada línea y `recipeIngredientIds` en pasos de entrada y salida. Las pruebas HTTP cubren create/get/update con asociaciones ordenadas y el error estable `recipe-ingredient.not-found` con estado 400 sin persistencia parcial. Durante la regresión se detectó el intercambio de posiciones retenidas: la migración `DeferRecipeIngredientOrderUniqueness` mantiene la unicidad `(recipe_id, order)` como restricción PostgreSQL diferible, permitiendo reordenaciones atómicas y rechazando duplicados al confirmar. Quedaron verdes 7/7 pruebas de endpoints de recetas, 10/10 pruebas focalizadas de persistencia de recetas y 78/78 en la suite Integration completa.
 
-## 10.5 — Formulario y detalle
+## 10.5 — Formulario y detalle — Completada
 
 1. Añadir selección múltiple accesible de líneas de ingrediente en cada paso.
 2. Actualizar opciones al añadir o retirar ingredientes sin conservar IDs inválidos.
 3. Mostrar nombre y unidad en detalle para diferenciar líneas repetidas.
 4. Cubrir edición, reordenación y estado vacío con bUnit.
+
+El formulario asigna una identidad estable a cada línea desde su creación y ofrece en cada paso un grupo accesible de casillas con cantidad, unidad e ingrediente. Añadir o reordenar líneas actualiza las opciones sin perder selecciones; eliminar una línea purga sus asociaciones y el mapeo descarta defensivamente IDs ausentes. La edición conserva identidades y vínculos recibidos de la API. El detalle resuelve cada asociación por línea, respeta el orden actual y distingue ingredientes repetidos por su unidad, mostrando un estado vacío explícito para pasos sin asociaciones. La suite Component quedó verde con 80/80 pruebas.
 
 ## 10.6 — Gate
 

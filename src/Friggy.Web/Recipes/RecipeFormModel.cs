@@ -31,13 +31,15 @@ public sealed class RecipeFormModel : IValidatableObject
                 item.IngredientId,
                 item.UnitTypeId,
                 item.Quantity,
-                item.Order)));
+                item.Order,
+                item.Id)));
         model.Steps.AddRange(response.Steps
             .OrderBy(item => item.Order)
             .Select(item => new RecipeStepFormModel(
                 item.Description,
                 item.EstimatedMinutes,
-                item.Order)));
+                item.Order,
+                item.RecipeIngredientIds)));
         model.TagIds.UnionWith(response.TagIds);
         model.MealTypeIds.UnionWith(response.MealTypeIds);
         return model;
@@ -125,7 +127,8 @@ public sealed class RecipeFormModel : IValidatableObject
                 item.IngredientId,
                 item.UnitTypeId,
                 item.Quantity,
-                order))
+                order,
+                item.Id))
             .ToArray();
 
     private RecipeStepRequest[] MapSteps() =>
@@ -133,6 +136,10 @@ public sealed class RecipeFormModel : IValidatableObject
             .Select((item, order) => new RecipeStepRequest(
                 item.Description,
                 item.EstimatedMinutes,
-                order))
+                order,
+                item.RecipeIngredientIds
+                    .Where(id => Ingredients.Any(ingredient => ingredient.Id == id))
+                    .OrderBy(id => Ingredients.FindIndex(ingredient => ingredient.Id == id))
+                    .ToArray()))
             .ToArray();
 }

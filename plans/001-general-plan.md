@@ -65,4 +65,4 @@ Una fase está terminada cuando su comportamiento está cubierto en la capa más
 
 ## Estado actual
 
-Las fases 1 a 9 están completadas y las subfases 10.1–10.4 están verdes. La siguiente unidad ejecutable es **10.5 — Formulario y detalle**.
+Las fases 1 a 9 están completadas y las subfases 10.1–10.5 están verdes. La siguiente unidad ejecutable es **10.6 — Gate**.

@@ -45,6 +45,9 @@
             var step = Model.Steps[index];
             <RecipeStepRow @key="step.ClientId"
                            Model="step"
+                           RecipeIngredients="Model.Ingredients"
+                           Ingredients="Ingredients"
+                           UnitTypes="UnitTypes"
                            Index="currentIndex"
                            Count="Model.Steps.Count"
                            MoveUp="() => MoveStep(currentIndex, -1)"
@@ -121,7 +124,13 @@
 
     private void RemoveIngredient(int index)
     {
+        var removedId = Model.Ingredients[index].Id;
         Model.Ingredients.RemoveAt(index);
+        foreach (var step in Model.Steps)
+        {
+            step.RecipeIngredientIds.Remove(removedId);
+        }
+
         Reindex(Model.Ingredients, (item, order) => item.Order = order);
     }
 

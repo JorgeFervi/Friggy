@@ -1,3 +1,5 @@
+@using Friggy.Application.Catalogs.Ingredients.Dtos
+@using Friggy.Application.Catalogs.UnitTypes.Dtos
 @using Friggy.Web.Recipes
 
 <fieldset data-testid="step-row">
@@ -11,6 +13,30 @@
     <InputNumber id="@($"step-time-{Model.ClientId}")"
                  min="0"
                  @bind-Value="Model.EstimatedMinutes" />
+
+    <fieldset data-testid="step-ingredients">
+        <legend>Ingredientes utilizados</legend>
+        @if (RecipeIngredients.Count == 0)
+        {
+            <p>Añade ingredientes a la receta para poder asociarlos.</p>
+        }
+        else
+        {
+            @for (var ingredientIndex = 0; ingredientIndex < RecipeIngredients.Count; ingredientIndex++)
+            {
+                var recipeIngredient = RecipeIngredients[ingredientIndex];
+                var checkboxId = $"step-{Model.ClientId}-ingredient-{recipeIngredient.Id}";
+                <label for="@checkboxId">
+                    <input id="@checkboxId"
+                           type="checkbox"
+                           data-recipe-ingredient-id="@recipeIngredient.Id"
+                           checked="@Model.RecipeIngredientIds.Contains(recipeIngredient.Id)"
+                           @onchange="eventArgs => ToggleIngredient(recipeIngredient.Id, eventArgs)" />
+                    Línea @(ingredientIndex + 1): @IngredientLabel(recipeIngredient)
+                </label>
+            }
+        }
+    </fieldset>
 
     <button type="button"
             aria-label="Mover paso @(Index + 1) arriba"
@@ -29,6 +55,15 @@
     [Parameter, EditorRequired]
     public RecipeStepFormModel Model { get; set; } = default!;
 
+    [Parameter, EditorRequired]
+    public IReadOnlyList<RecipeIngredientFormModel> RecipeIngredients { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<IngredientResponse> Ingredients { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<UnitTypeResponse> UnitTypes { get; set; } = [];
+
     [Parameter]
     public int Index { get; set; }
 
@@ -43,4 +78,28 @@
 
     [Parameter]
     public EventCallback Remove { get; set; }
+
+    private string IngredientLabel(RecipeIngredientFormModel recipeIngredient)
+    {
+        var ingredientName = Ingredients
+            .SingleOrDefault(item => item.Id == recipeIngredient.IngredientId)?.Name ??
+            "Ingrediente sin seleccionar";
+        var unitType = UnitTypes.SingleOrDefault(item => item.Id == recipeIngredient.UnitTypeId);
+        var unitName = unitType is null
+            ? "Unidad sin seleccionar"
+            : $"{unitType.Name} ({unitType.Symbol})";
+        return $"{recipeIngredient.Quantity} {unitName} de {ingredientName}";
+    }
+
+    private void ToggleIngredient(Guid recipeIngredientId, ChangeEventArgs eventArgs)
+    {
+        if (eventArgs.Value is true)
+        {
+            Model.RecipeIngredientIds.Add(recipeIngredientId);
+        }
+        else
+        {
+            Model.RecipeIngredientIds.Remove(recipeIngredientId);
+        }
+    }
 }

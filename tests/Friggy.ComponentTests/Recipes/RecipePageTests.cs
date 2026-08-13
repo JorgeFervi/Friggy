@@ -19,8 +19,10 @@ public sealed class RecipePageTests : ComponentTest
     private static readonly Guid RecipeId = Guid.Parse("50000000-0000-0000-0000-000000000001");
     private static readonly Guid IngredientId = Guid.Parse("10000000-0000-0000-0000-000000000001");
     private static readonly Guid UnitTypeId = Guid.Parse("20000000-0000-0000-0000-000000000001");
+    private static readonly Guid SecondUnitTypeId = Guid.Parse("20000000-0000-0000-0000-000000000002");
     private static readonly Guid TagId = Guid.Parse("30000000-0000-0000-0000-000000000001");
     private static readonly Guid MealTypeId = Guid.Parse("40000000-0000-0000-0000-000000000001");
+    private static readonly Guid RecipeIngredientId = Guid.Parse("60000000-0000-0000-0000-000000000001");
 
     [Fact]
     [Trait("Category", "Component")]
@@ -199,6 +201,55 @@ public sealed class RecipePageTests : ComponentTest
             Assert.Contains("Vegano", component.Markup, StringComparison.Ordinal);
             Assert.Contains("Comida", component.Markup, StringComparison.Ordinal);
             Assert.Contains("Triturar", component.Markup, StringComparison.Ordinal);
+            Assert.Contains(
+                "1,5 Gramo (g) de Tomate",
+                component.Find("[data-testid='step-associated-ingredients']").TextContent,
+                StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void RecipeDetails_StepWithoutAssociations_RendersExplicitEmptyState()
+    {
+        var recipes = new StubRecipesApiClient { Recipe = CompleteRecipe(associateIngredient: false) };
+        RegisterApis(recipes);
+
+        var component = Render<global::Friggy.Web.Components.Pages.RecipeDetails>(parameters =>
+            parameters.Add(page => page.Id, RecipeId));
+
+        component.WaitForAssertion(() =>
+            Assert.Equal(
+                "Sin ingredientes asociados.",
+                component.Find("[data-testid='step-associated-ingredients-empty']")
+                    .TextContent
+                    .Trim()));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void RecipeDetails_RepeatedIngredientLines_RendersEachAssociatedUnit()
+    {
+        var secondLineId = Guid.Parse("60000000-0000-0000-0000-000000000002");
+        var response = CompleteRecipe() with
+        {
+            Ingredients =
+            [
+                new(RecipeIngredientId, IngredientId, UnitTypeId, 1.5m, 0),
+                new(secondLineId, IngredientId, SecondUnitTypeId, 2m, 1),
+            ],
+            Steps = [new(Guid.NewGuid(), "Triturar", 5, 0, [RecipeIngredientId, secondLineId])],
+        };
+        RegisterApis(new StubRecipesApiClient { Recipe = response });
+
+        var component = Render<global::Friggy.Web.Components.Pages.RecipeDetails>(parameters =>
+            parameters.Add(page => page.Id, RecipeId));
+
+        component.WaitForAssertion(() =>
+        {
+            var associations = component.Find("[data-testid='step-associated-ingredients']");
+            Assert.Contains("Gramo (g) de Tomate", associations.TextContent, StringComparison.Ordinal);
+            Assert.Contains("Unidad (ud) de Tomate", associations.TextContent, StringComparison.Ordinal);
         });
     }
 
@@ -219,6 +270,7 @@ public sealed class RecipePageTests : ComponentTest
         component.Find("[data-testid='ingredient-row'] input[data-field='quantity']").Change("1.5");
         component.Find("button[data-action='add-step']").Click();
         component.Find("[data-testid='step-row'] textarea").Change("Triturar");
+        component.Find("[data-testid='step-ingredients'] input[type='checkbox']").Change(true);
         component.Find($"#tag-{TagId}").Change(true);
         component.Find($"#meal-type-{MealTypeId}").Change(true);
         component.Find("form").Submit();
@@ -227,8 +279,12 @@ public sealed class RecipePageTests : ComponentTest
         {
             var request = Assert.Single(recipes.Created);
             Assert.Equal("Gazpacho", request.Name);
-            Assert.Equal(1.5m, Assert.Single(request.Ingredients).Quantity);
-            Assert.Equal("Triturar", Assert.Single(request.Steps).Description);
+            var ingredient = Assert.Single(request.Ingredients);
+            Assert.Equal(1.5m, ingredient.Quantity);
+            Assert.NotNull(ingredient.Id);
+            var step = Assert.Single(request.Steps);
+            Assert.Equal("Triturar", step.Description);
+            Assert.Equal([ingredient.Id.Value], step.RecipeIngredientIds);
             Assert.Equal(TagId, Assert.Single(request.TagIds));
             Assert.Equal(MealTypeId, Assert.Single(request.MealTypeIds));
             var navigation = GetRequiredService<NavigationManager>();
@@ -249,6 +305,9 @@ public sealed class RecipePageTests : ComponentTest
         Assert.Equal("Gazpacho", component.Find("#recipe-name").GetAttribute("value"));
         Assert.Single(component.FindAll("[data-testid='ingredient-row']"));
         Assert.Single(component.FindAll("[data-testid='step-row']"));
+        Assert.True(
+            component.Find($"input[data-recipe-ingredient-id='{RecipeIngredientId}']")
+                .HasAttribute("checked"));
         component.Find("#recipe-name").Change("Salmorejo");
         component.Find("form").Submit();
 
@@ -257,7 +316,12 @@ public sealed class RecipePageTests : ComponentTest
             var update = Assert.Single(recipes.Updated);
             Assert.Equal(RecipeId, update.Id);
             Assert.Equal("Salmorejo", update.Request.Name);
-            Assert.Equal(1.5m, Assert.Single(update.Request.Ingredients).Quantity);
+            var ingredient = Assert.Single(update.Request.Ingredients);
+            Assert.Equal(1.5m, ingredient.Quantity);
+            Assert.Equal(RecipeIngredientId, ingredient.Id);
+            Assert.Equal(
+                [RecipeIngredientId],
+                Assert.Single(update.Request.Steps).RecipeIngredientIds);
             var navigation = GetRequiredService<NavigationManager>();
             Assert.EndsWith($"/recipes/{RecipeId}", navigation.Uri, StringComparison.Ordinal);
         });
@@ -332,13 +396,20 @@ public sealed class RecipePageTests : ComponentTest
         component.Find("[data-testid='step-row'] textarea").Change("Triturar");
     }
 
-    private static RecipeResponse CompleteRecipe() =>
+    private static RecipeResponse CompleteRecipe(bool associateIngredient = true) =>
         new(
             RecipeId,
             "Gazpacho",
             20,
-            [new(Guid.NewGuid(), IngredientId, UnitTypeId, 1.5m, 0)],
-            [new(Guid.NewGuid(), "Triturar", 5, 0, [])],
+            [new(RecipeIngredientId, IngredientId, UnitTypeId, 1.5m, 0)],
+            [
+                new(
+                    Guid.NewGuid(),
+                    "Triturar",
+                    5,
+                    0,
+                    associateIngredient ? [RecipeIngredientId] : []),
+            ],
             [TagId],
             [MealTypeId]);
 
@@ -436,7 +507,8 @@ public sealed class RecipePageTests : ComponentTest
     private sealed class UnitTypesApiClientStub : IUnitTypesApiClient
     {
         public Task<IReadOnlyList<UnitTypeResponse>> ListAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<UnitTypeResponse>>([new(UnitTypeId, "Gramo", "g")]);
+            Task.FromResult<IReadOnlyList<UnitTypeResponse>>(
+                [new(UnitTypeId, "Gramo", "g"), new(SecondUnitTypeId, "Unidad", "ud")]);
         public Task<UnitTypeResponse> CreateAsync(CreateUnitTypeRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<UnitTypeResponse> UpdateAsync(Guid id, UpdateUnitTypeRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();

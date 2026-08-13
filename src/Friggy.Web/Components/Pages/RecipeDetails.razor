@@ -35,7 +35,7 @@ else if (recipe is not null)
         @foreach (var item in recipe.Ingredients.OrderBy(item => item.Order))
         {
             <li @key="item.Id">
-                @item.Quantity @UnitName(item.UnitTypeId) de @IngredientName(item.IngredientId)
+                @RecipeIngredientLabel(item)
             </li>
         }
     </ul>
@@ -44,11 +44,31 @@ else if (recipe is not null)
     <ol>
         @foreach (var step in recipe.Steps.OrderBy(item => item.Order))
         {
+            var associatedIngredients = recipe.Ingredients
+                .Where(item => step.RecipeIngredientIds.Contains(item.Id))
+                .OrderBy(item => item.Order)
+                .ToArray();
             <li @key="step.Id">
                 @step.Description
                 @if (step.EstimatedMinutes.HasValue)
                 {
                     <span> (@step.EstimatedMinutes min)</span>
+                }
+                <h3>Ingredientes utilizados</h3>
+                @if (associatedIngredients.Length == 0)
+                {
+                    <p data-testid="step-associated-ingredients-empty">
+                        Sin ingredientes asociados.
+                    </p>
+                }
+                else
+                {
+                    <ul data-testid="step-associated-ingredients">
+                        @foreach (var ingredient in associatedIngredients)
+                        {
+                            <li @key="ingredient.Id">@RecipeIngredientLabel(ingredient)</li>
+                        }
+                    </ul>
                 }
             </li>
         }
@@ -119,6 +139,9 @@ else if (recipe is not null)
         unitTypes.TryGetValue(id, out var unitType)
             ? $"{unitType.Name} ({unitType.Symbol})"
             : "Unidad desconocida";
+
+    private string RecipeIngredientLabel(RecipeIngredientResponse item) =>
+        $"{item.Quantity} {UnitName(item.UnitTypeId)} de {IngredientName(item.IngredientId)}";
 
     private string TagName(Guid id) =>
         tags.TryGetValue(id, out var tag) ? tag.Name : "Etiqueta desconocida";
