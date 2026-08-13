@@ -5,7 +5,7 @@
 
 La asociación referencia `RecipeIngredient`, no el catálogo `Ingredient`, para distinguir líneas repetidas con unidades o cantidades diferentes.
 
-> **Progreso:** 10.1 completada. La siguiente unidad ejecutable es **10.2 — Contratos y actualización de receta**.
+> **Progreso:** 10.1–10.2 completadas. La siguiente unidad ejecutable es **10.3 — Persistencia y migración**.
 
 ## 10.1 — Invariantes en Domain — Completada
 
@@ -18,12 +18,14 @@ No repartir ni duplicar cantidades en los pasos.
 
 `Recipe` administra las asociaciones mediante la identidad de `RecipeStep` y `RecipeIngredient`, rechazando elementos ajenos al agregado y duplicados. Los pasos pueden permanecer sin asociaciones; retirar una línea o un paso limpia sus vínculos, y la cantidad continúa perteneciendo exclusivamente a la línea de ingrediente. La suite Domain quedó verde con 115/115 pruebas y la regresión focalizada de persistencia de recetas con PostgreSQL superó 6/6 pruebas.
 
-## 10.2 — Contratos y actualización de receta
+## 10.2 — Contratos y actualización de receta — Completada
 
 1. Ampliar solicitudes y respuestas de paso con IDs de líneas de ingrediente.
 2. Validar referencias después de construir la identidad de las nuevas líneas.
 3. Mantener reemplazo de receta atómico y preservar asociaciones válidas.
 4. Probar alta, edición, reordenación y errores con fakes manuales.
+
+Las solicitudes aceptan una identidad opcional por línea y asociaciones opcionales por paso, conservando compatibilidad con clientes anteriores. Application construye primero todas las líneas y después valida los vínculos; las respuestas siempre exponen IDs ordenados por la posición actual de los ingredientes. `ReplaceWith` conserva identidades válidas, reutiliza líneas ya seguidas por persistencia y solo sustituye el agregado tras preparar el nuevo estado. Quedaron verdes Domain (115/115), Application (70/70), Component (73/73) y la regresión focalizada de endpoints con PostgreSQL (6/6).
 
 ## 10.3 — Persistencia y migración
 

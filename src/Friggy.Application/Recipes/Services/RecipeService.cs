@@ -87,17 +87,23 @@ public sealed class RecipeService(
                 item.IngredientId,
                 item.UnitTypeId,
                 item.Quantity,
-                item.Order);
+                item.Order,
+                item.Id);
         }
 
         foreach (var item in (stepRequests ?? []).OrderBy(item => item.Order))
         {
-            recipe.AddStep(
+            var step = recipe.AddStep(
                 item.Description,
                 item.EstimatedMinutes.HasValue
                     ? TimeSpan.FromMinutes(item.EstimatedMinutes.Value)
                     : null,
                 item.Order);
+
+            foreach (var recipeIngredientId in item.RecipeIngredientIds ?? [])
+            {
+                recipe.AssignIngredientToStep(step.Id, recipeIngredientId);
+            }
         }
 
         foreach (var tagId in tagIds ?? [])
@@ -177,8 +183,13 @@ public sealed class RecipeService(
         }
     }
 
-    private static RecipeResponse Map(Recipe recipe) =>
-        new(
+    private static RecipeResponse Map(Recipe recipe)
+    {
+        var ingredientOrderById = recipe.Ingredients.ToDictionary(
+            item => item.Id,
+            item => item.Order);
+
+        return new(
             recipe.Id,
             recipe.Name.Value,
             ToMinutes(recipe.EstimatedTime),
@@ -199,10 +210,14 @@ public sealed class RecipeService(
                     item.EstimatedTime.HasValue
                         ? ToMinutes(item.EstimatedTime.Value)
                         : null,
-                    item.Order))
+                    item.Order,
+                    item.RecipeIngredientIds
+                        .OrderBy(id => ingredientOrderById[id])
+                        .ToArray()))
                 .ToArray(),
             recipe.TagIds.ToArray(),
             recipe.MealTypeIds.ToArray());
+    }
 
     private static int ToMinutes(TimeSpan value) => checked((int)value.TotalMinutes);
 }

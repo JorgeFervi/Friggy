@@ -4,4 +4,5 @@ public sealed record RecipeIngredientRequest(
     Guid IngredientId,
     Guid UnitTypeId,
     decimal Quantity,
-    int Order);
+    int Order,
+    Guid? Id = null);

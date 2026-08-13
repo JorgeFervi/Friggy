@@ -41,11 +41,16 @@ public sealed class RecipeIngredient
         Guid ingredientId,
         Guid unitTypeId,
         decimal quantity,
-        int order)
+        int order,
+        Guid? id = null)
     {
         ValidateRequiredId(recipeId, "recipe-ingredient.recipe-id.required");
         ValidateRequiredId(ingredientId, "recipe-ingredient.ingredient-id.required");
         ValidateRequiredId(unitTypeId, "recipe-ingredient.unit-type-id.required");
+        if (id.HasValue)
+        {
+            ValidateRequiredId(id.Value, "recipe-ingredient.id.required");
+        }
 
         if (quantity <= 0)
         {
@@ -62,12 +67,28 @@ public sealed class RecipeIngredient
         }
 
         return new RecipeIngredient(
-            Guid.NewGuid(),
+            id ?? Guid.NewGuid(),
             recipeId,
             ingredientId,
             unitTypeId,
             quantity,
             order);
+    }
+
+    internal void UpdateFrom(RecipeIngredient replacement)
+    {
+        ArgumentNullException.ThrowIfNull(replacement);
+        if (Id != replacement.Id)
+        {
+            throw new ArgumentException(
+                "La línea de reemplazo debe conservar la misma identidad.",
+                nameof(replacement));
+        }
+
+        IngredientId = replacement.IngredientId;
+        UnitTypeId = replacement.UnitTypeId;
+        Quantity = replacement.Quantity;
+        Order = replacement.Order;
     }
 
     private static void ValidateRequiredId(Guid id, string code)

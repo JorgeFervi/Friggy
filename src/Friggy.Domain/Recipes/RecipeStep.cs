@@ -42,13 +42,21 @@ public sealed class RecipeStep
         Guid recipeId,
         string? description,
         TimeSpan? estimatedTime,
-        int order)
+        int order,
+        Guid? id = null)
     {
         if (recipeId == Guid.Empty)
         {
             throw new DomainValidationException(
                 "recipe-step.recipe-id.required",
                 "El identificador de la receta es obligatorio.");
+        }
+
+        if (id == Guid.Empty)
+        {
+            throw new DomainValidationException(
+                "recipe-step.id.required",
+                "El identificador del paso es obligatorio.");
         }
 
         var trimmedDescription = description?.Trim();
@@ -74,7 +82,7 @@ public sealed class RecipeStep
         }
 
         return new RecipeStep(
-            Guid.NewGuid(),
+            id ?? Guid.NewGuid(),
             recipeId,
             trimmedDescription,
             estimatedTime,

@@ -48,18 +48,27 @@ public sealed class Recipe
             estimatedTime);
     }
 
-    public void AddIngredient(
+    public RecipeIngredient AddIngredient(
         Guid ingredientId,
         Guid unitTypeId,
         decimal quantity,
-        int order)
+        int order,
+        Guid? id = null)
     {
         var ingredient = RecipeIngredient.Create(
             Id,
             ingredientId,
             unitTypeId,
             quantity,
-            order);
+            order,
+            id);
+
+        if (ingredients.Any(item => item.Id == ingredient.Id))
+        {
+            throw new RecipeConflictException(
+                "recipe-ingredient.id.duplicate",
+                "No puede haber dos líneas de ingrediente con la misma identidad.");
+        }
 
         if (ingredients.Any(item => item.Order == order))
         {
@@ -69,6 +78,7 @@ public sealed class Recipe
         }
 
         ingredients.Add(ingredient);
+        return ingredient;
     }
 
     public bool RemoveIngredient(Guid recipeIngredientId)
@@ -87,7 +97,7 @@ public sealed class Recipe
         return ingredients.Remove(ingredient);
     }
 
-    public void AddStep(string? description, TimeSpan? estimatedTime, int order)
+    public RecipeStep AddStep(string? description, TimeSpan? estimatedTime, int order)
     {
         var step = RecipeStep.Create(Id, description, estimatedTime, order);
 
@@ -99,6 +109,7 @@ public sealed class Recipe
         }
 
         steps.Add(step);
+        return step;
     }
 
     public bool RemoveStep(Guid recipeStepId)
@@ -192,20 +203,25 @@ public sealed class Recipe
             "recipe.name.required");
         ValidateEstimatedTime(replacement.EstimatedTime);
 
+        var existingIngredientsById = ingredients.ToDictionary(item => item.Id);
         var replacementIngredients = replacement.Ingredients
-            .Select(item => RecipeIngredient.Create(
-                Id,
-                item.IngredientId,
-                item.UnitTypeId,
-                item.Quantity,
-                item.Order))
+            .Select(item => existingIngredientsById.TryGetValue(item.Id, out var existing)
+                ? existing
+                : RecipeIngredient.Create(
+                    Id,
+                    item.IngredientId,
+                    item.UnitTypeId,
+                    item.Quantity,
+                    item.Order,
+                    item.Id))
             .ToArray();
         var replacementSteps = replacement.Steps
             .Select(item => RecipeStep.Create(
                 Id,
                 item.Description,
                 item.EstimatedTime,
-                item.Order))
+                item.Order,
+                item.Id))
             .ToArray();
         var replacementTags = replacement.TagIds
             .Select(tagId => RecipeTagLink.Create(Id, tagId))
@@ -213,6 +229,25 @@ public sealed class Recipe
         var replacementMealTypes = replacement.MealTypeIds
             .Select(mealTypeId => RecipeMealTypeLink.Create(Id, mealTypeId))
             .ToArray();
+
+        var ingredientsById = replacementIngredients.ToDictionary(item => item.Id);
+        var stepsById = replacementSteps.ToDictionary(item => item.Id);
+        foreach (var sourceStep in replacement.Steps)
+        {
+            var targetStep = stepsById[sourceStep.Id];
+            foreach (var recipeIngredientId in sourceStep.RecipeIngredientIds)
+            {
+                targetStep.AssignIngredient(ingredientsById[recipeIngredientId]);
+            }
+        }
+
+        foreach (var sourceIngredient in replacement.Ingredients)
+        {
+            if (existingIngredientsById.TryGetValue(sourceIngredient.Id, out var existing))
+            {
+                existing.UpdateFrom(sourceIngredient);
+            }
+        }
 
         Name = replacementName;
         EstimatedTime = replacement.EstimatedTime;

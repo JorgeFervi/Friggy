@@ -338,7 +338,7 @@ public sealed class RecipePageTests : ComponentTest
             "Gazpacho",
             20,
             [new(Guid.NewGuid(), IngredientId, UnitTypeId, 1.5m, 0)],
-            [new(Guid.NewGuid(), "Triturar", 5, 0)],
+            [new(Guid.NewGuid(), "Triturar", 5, 0, [])],
             [TagId],
             [MealTypeId]);
 

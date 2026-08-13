@@ -4,4 +4,5 @@ public sealed record RecipeStepResponse(
     Guid Id,
     string Description,
     int? EstimatedMinutes,
-    int Order);
+    int Order,
+    IReadOnlyList<Guid> RecipeIngredientIds);
