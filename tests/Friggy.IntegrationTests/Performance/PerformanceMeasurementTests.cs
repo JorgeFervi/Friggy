@@ -41,6 +41,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
                 recipes.Sum(recipe =>
                     recipe.Ingredients.Count +
                     recipe.Steps.Count +
+                    recipe.Steps.Sum(step => step.IngredientLinks.Count) +
                     recipe.Tags.Count +
                     recipe.MealTypes.Count),
                 recipeInterceptor.Commands.Count,
@@ -48,7 +49,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             measurements.Add(recipeMeasurement);
 
             Assert.Equal(scenario.RecipeCount, recipeMeasurement.RootRows);
-            Assert.Equal(5, recipeMeasurement.CommandCount);
+            Assert.Equal(6, recipeMeasurement.CommandCount);
             Assert.All(recipeMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -177,7 +178,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             measurements.Add(requirementsMeasurement);
 
             Assert.Equal(3, requirementsMeasurement.RootRows);
-            Assert.Equal(11, requirementsMeasurement.CommandCount);
+            Assert.Equal(12, requirementsMeasurement.CommandCount);
             Assert.All(requirementsMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -241,6 +242,12 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             for (var stepIndex = 0; stepIndex < 3; stepIndex++)
             {
                 recipe.AddStep($"Paso {stepIndex + 1}", TimeSpan.FromMinutes(stepIndex + 1), stepIndex);
+            }
+
+            foreach (var step in recipe.Steps)
+            {
+                var ingredient = recipe.Ingredients.Single(item => item.Order == step.Order);
+                recipe.AssignIngredientToStep(step.Id, ingredient.Id);
             }
 
             foreach (var tag in tags)

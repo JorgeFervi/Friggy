@@ -3,6 +3,7 @@ using Friggy.Domain.Recipes;
 using Friggy.Infrastructure.Persistence.Repositories;
 using Friggy.IntegrationTests.Testing;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Friggy.IntegrationTests.Persistence;
 
@@ -15,6 +16,13 @@ public sealed class RecipeRepositoryTests(PostgreSqlDatabaseFixture database)
     {
         var catalogs = await CreateCatalogsAsync();
         var recipe = CreateCompleteRecipe(catalogs, "Gazpacho");
+        var firstIngredient = recipe.Ingredients.Single(item => item.Order == 0);
+        var secondIngredient = recipe.Ingredients.Single(item => item.Order == 1);
+        var firstStep = recipe.Steps.Single(item => item.Order == 0);
+        var secondStep = recipe.Steps.Single(item => item.Order == 1);
+        recipe.AssignIngredientToStep(firstStep.Id, firstIngredient.Id);
+        recipe.AssignIngredientToStep(secondStep.Id, firstIngredient.Id);
+        recipe.AssignIngredientToStep(secondStep.Id, secondIngredient.Id);
 
         await using (var context = Database.CreateDbContext())
         {
@@ -36,6 +44,12 @@ public sealed class RecipeRepositoryTests(PostgreSqlDatabaseFixture database)
         Assert.Equal([0, 1], reloaded.Ingredients.Select(item => item.Order));
         Assert.Equal([1.125m, 2m], reloaded.Ingredients.Select(item => item.Quantity));
         Assert.Equal([0, 1], reloaded.Steps.Select(item => item.Order));
+        Assert.Equal(
+            [reloaded.Ingredients[0].Id],
+            reloaded.Steps[0].RecipeIngredientIds);
+        Assert.Equal(
+            [reloaded.Ingredients[0].Id, reloaded.Ingredients[1].Id],
+            reloaded.Steps[1].RecipeIngredientIds);
         Assert.Equal(catalogs.Tag.Id, Assert.Single(reloaded.TagIds));
         Assert.Equal(CatalogSeedIds.Lunch, Assert.Single(reloaded.MealTypeIds));
     }
@@ -58,8 +72,15 @@ public sealed class RecipeRepositoryTests(PostgreSqlDatabaseFixture database)
                 TestContext.Current.CancellationToken);
             Assert.NotNull(tracked);
             var replacement = Recipe.Create("Nueva", TimeSpan.FromMinutes(30));
-            replacement.AddIngredient(catalogs.IngredientOne.Id, CatalogSeedIds.Gram, 3m, 0);
-            replacement.AddStep("Servir", null, 0);
+            var replacementIngredient = replacement.AddIngredient(
+                catalogs.IngredientOne.Id,
+                CatalogSeedIds.Gram,
+                3m,
+                0);
+            var replacementStep = replacement.AddStep("Servir", null, 0);
+            replacement.AssignIngredientToStep(
+                replacementStep.Id,
+                replacementIngredient.Id);
             replacement.AddMealType(CatalogSeedIds.Dinner);
             replacement.EnsureComplete();
 
@@ -78,6 +99,9 @@ public sealed class RecipeRepositoryTests(PostgreSqlDatabaseFixture database)
         Assert.Equal(TimeSpan.FromMinutes(30), reloaded.EstimatedTime);
         Assert.Single(reloaded.Ingredients);
         Assert.Single(reloaded.Steps);
+        Assert.Equal(
+            [reloaded.Ingredients[0].Id],
+            reloaded.Steps[0].RecipeIngredientIds);
         Assert.Empty(reloaded.TagIds);
         Assert.Equal(CatalogSeedIds.Dinner, Assert.Single(reloaded.MealTypeIds));
         Assert.DoesNotContain(reloaded.Ingredients, item => oldIngredientIds.Contains(item.Id));
@@ -90,6 +114,9 @@ public sealed class RecipeRepositoryTests(PostgreSqlDatabaseFixture database)
     {
         var catalogs = await CreateCatalogsAsync();
         var recipe = CreateCompleteRecipe(catalogs, "Gazpacho");
+        var firstStep = recipe.Steps.Single(item => item.Order == 0);
+        var firstIngredient = recipe.Ingredients.Single(item => item.Order == 0);
+        recipe.AssignIngredientToStep(firstStep.Id, firstIngredient.Id);
         await SaveRecipeAsync(recipe);
 
         await using var context = Database.CreateDbContext();
@@ -100,7 +127,77 @@ public sealed class RecipeRepositoryTests(PostgreSqlDatabaseFixture database)
         var reloaded = Assert.Single(result);
         Assert.Equal([0, 1], reloaded.Ingredients.Select(item => item.Order));
         Assert.Equal([0, 1], reloaded.Steps.Select(item => item.Order));
+        Assert.Equal(
+            [reloaded.Ingredients[0].Id],
+            reloaded.Steps[0].RecipeIngredientIds);
         Assert.Empty(context.ChangeTracker.Entries());
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task RecipeStepIngredientLink_CrossRecipeReference_IsRejectedByDatabase()
+    {
+        var catalogs = await CreateCatalogsAsync();
+        var firstRecipe = CreateCompleteRecipe(catalogs, "Primera");
+        var secondRecipe = CreateCompleteRecipe(catalogs, "Segunda");
+        await SaveRecipeAsync(firstRecipe);
+        await SaveRecipeAsync(secondRecipe);
+
+        await using var context = Database.CreateDbContext();
+
+        var exception = await Assert.ThrowsAsync<PostgresException>(() =>
+            context.Database.ExecuteSqlInterpolatedAsync(
+                $"""
+                INSERT INTO recipe_step_ingredients
+                    (recipe_id, recipe_step_id, recipe_ingredient_id)
+                VALUES
+                    ({firstRecipe.Id}, {firstRecipe.Steps[0].Id}, {secondRecipe.Ingredients[0].Id})
+                """,
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal(PostgresErrorCodes.ForeignKeyViolation, exception.SqlState);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task RecipeRepository_RemoveIngredientOrStep_DeletesOnlyTheirAssociations()
+    {
+        var catalogs = await CreateCatalogsAsync();
+        var recipe = CreateCompleteRecipe(catalogs, "Gazpacho");
+        var ingredientToRemove = recipe.Ingredients[0];
+        var retainedIngredient = recipe.Ingredients[1];
+        var stepToRemove = recipe.Steps[0];
+        var retainedStep = recipe.Steps[1];
+        recipe.AssignIngredientToStep(stepToRemove.Id, ingredientToRemove.Id);
+        recipe.AssignIngredientToStep(retainedStep.Id, ingredientToRemove.Id);
+        recipe.AssignIngredientToStep(retainedStep.Id, retainedIngredient.Id);
+        await SaveRecipeAsync(recipe);
+
+        await using (var context = Database.CreateDbContext())
+        {
+            var repository = new RecipeRepository(context);
+            var tracked = await repository.GetByIdAsync(
+                recipe.Id,
+                TestContext.Current.CancellationToken);
+            Assert.NotNull(tracked);
+
+            Assert.True(tracked.RemoveIngredient(ingredientToRemove.Id));
+            Assert.True(tracked.RemoveStep(stepToRemove.Id));
+            await repository.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await using var verificationContext = Database.CreateDbContext();
+        var verificationRepository = new RecipeRepository(verificationContext);
+        var reloaded = await verificationRepository.GetByIdAsync(
+            recipe.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal(retainedIngredient.Id, Assert.Single(reloaded.Ingredients).Id);
+        Assert.Equal(retainedStep.Id, Assert.Single(reloaded.Steps).Id);
+        Assert.Equal([retainedIngredient.Id], reloaded.Steps[0].RecipeIngredientIds);
+        Assert.Single(await verificationContext.Set<RecipeStepIngredientLink>()
+            .ToArrayAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]

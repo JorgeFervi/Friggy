@@ -20,6 +20,7 @@ internal sealed class RecipeStepConfiguration : IEntityTypeConfiguration<RecipeS
                     "\"order\" >= 0");
             });
         builder.HasKey(item => item.Id);
+        builder.HasAlternateKey(item => new { item.RecipeId, item.Id });
         builder.Property(item => item.Id).ValueGeneratedNever();
         builder.Property(item => item.RecipeId).HasColumnName("recipe_id");
         builder.Property(item => item.Description)
@@ -29,6 +30,9 @@ internal sealed class RecipeStepConfiguration : IEntityTypeConfiguration<RecipeS
         builder.Property(item => item.EstimatedTime).HasColumnName("estimated_time");
         builder.Property(item => item.Order).HasColumnName("order");
         builder.HasIndex(item => new { item.RecipeId, item.Order }).IsUnique();
+        builder.Ignore(item => item.RecipeIngredientIds);
+        builder.Navigation(item => item.IngredientLinks)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
         builder.HasOne<Recipe>()
             .WithMany(recipe => recipe.Steps)
             .HasForeignKey(item => item.RecipeId)

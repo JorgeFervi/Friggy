@@ -40,6 +40,10 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             migration => Assert.EndsWith(
                 "_AddMealPlanEntrySkippedState",
                 migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_AddRecipeStepIngredients",
+                migration,
                 StringComparison.Ordinal));
         Assert.StartsWith("friggy_tests_", Database.DatabaseName, StringComparison.Ordinal);
     }
@@ -68,7 +72,7 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
             .GetAppliedMigrationsAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(true, tableWasRemoved);
-        Assert.Equal(8, appliedMigrations.Count());
+        Assert.Equal(9, appliedMigrations.Count());
     }
 
     [Fact]
@@ -206,5 +210,47 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
         Assert.Equal(MealPlanEntryStatus.Completed, entries[completedEntryId].Status);
         Assert.Equal(completedAt, entries[completedEntryId].CompletedAt);
         Assert.All(entries.Values, entry => Assert.False(entry.IsSkipped));
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task AddRecipeStepIngredientsMigration_ExistingRecipes_RemainValidWithoutAssociations()
+    {
+        const string phaseNineMigration = "20260812104103_AddMealPlanEntrySkippedState";
+        var recipeId = Guid.NewGuid();
+        var recipeIngredientId = Guid.NewGuid();
+        var recipeStepId = Guid.NewGuid();
+        await using var context = Database.CreateDbContext();
+        var migrator = context.GetService<IMigrator>();
+        await migrator.MigrateAsync(
+            phaseNineMigration,
+            TestContext.Current.CancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            INSERT INTO ingredients ("Id", name, normalized_name)
+            VALUES ({Guid.NewGuid()}, 'Ingrediente anterior', 'INGREDIENTE ANTERIOR');
+            INSERT INTO recipes ("Id", name, normalized_name, estimated_time)
+            VALUES ({recipeId}, 'Receta anterior', 'RECETA ANTERIOR', interval '10 minutes');
+            INSERT INTO recipe_ingredients
+                ("Id", recipe_id, ingredient_id, unit_type_id, quantity, "order")
+            SELECT
+                {recipeIngredientId}, {recipeId}, "Id", {CatalogSeedIds.Gram}, 1, 0
+            FROM ingredients
+            WHERE normalized_name = 'INGREDIENTE ANTERIOR';
+            INSERT INTO recipe_steps ("Id", recipe_id, description, estimated_time, "order")
+            VALUES ({recipeStepId}, {recipeId}, 'Preparar', NULL, 0);
+            """,
+            TestContext.Current.CancellationToken);
+
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        var repository = new Friggy.Infrastructure.Persistence.Repositories.RecipeRepository(context);
+        var recipe = await repository.GetByIdAsync(
+            recipeId,
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(recipe);
+        Assert.Empty(Assert.Single(recipe.Steps).RecipeIngredientIds);
+        Assert.Empty(await context.Set<Friggy.Domain.Recipes.RecipeStepIngredientLink>()
+            .ToArrayAsync(TestContext.Current.CancellationToken));
     }
 }

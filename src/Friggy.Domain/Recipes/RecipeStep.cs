@@ -35,6 +35,9 @@ public sealed class RecipeStep
 
     public int Order { get; private set; }
 
+    public IReadOnlyList<RecipeStepIngredientLink> IngredientLinks =>
+        ingredientLinks.AsReadOnly();
+
     public IReadOnlyList<Guid> RecipeIngredientIds =>
         ingredientLinks.Select(item => item.RecipeIngredientId).ToArray();
 

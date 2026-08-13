@@ -43,4 +43,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 9 están completadas y las subfases 10.1–10.2 están verdes. La siguiente unidad ejecutable es **10.3 — Persistencia y migración**.
+Las fases 1 a 9 están completadas y las subfases 10.1–10.3 están verdes. La siguiente unidad ejecutable es **10.4 — API**.

@@ -5,7 +5,7 @@
 
 La asociación referencia `RecipeIngredient`, no el catálogo `Ingredient`, para distinguir líneas repetidas con unidades o cantidades diferentes.
 
-> **Progreso:** 10.1–10.2 completadas. La siguiente unidad ejecutable es **10.3 — Persistencia y migración**.
+> **Progreso:** 10.1–10.3 completadas. La siguiente unidad ejecutable es **10.4 — API**.
 
 ## 10.1 — Invariantes en Domain — Completada
 
@@ -27,12 +27,14 @@ No repartir ni duplicar cantidades en los pasos.
 
 Las solicitudes aceptan una identidad opcional por línea y asociaciones opcionales por paso, conservando compatibilidad con clientes anteriores. Application construye primero todas las líneas y después valida los vínculos; las respuestas siempre exponen IDs ordenados por la posición actual de los ingredientes. `ReplaceWith` conserva identidades válidas, reutiliza líneas ya seguidas por persistencia y solo sustituye el agregado tras preparar el nuevo estado. Quedaron verdes Domain (115/115), Application (70/70), Component (73/73) y la regresión focalizada de endpoints con PostgreSQL (6/6).
 
-## 10.3 — Persistencia y migración
+## 10.3 — Persistencia y migración — Completada
 
 1. Crear tabla de unión con clave o índice único por paso y línea.
 2. Configurar cascada solo dentro del agregado de receta.
 3. Probar FK cruzada inválida y borrado de paso/línea en PostgreSQL.
 4. Verificar recetas anteriores sin asociaciones.
+
+La migración `AddRecipeStepIngredients` crea una tabla de unión vacía con unicidad por paso y línea, y FKs compuestas que impiden enlazar elementos de recetas diferentes. Las cascadas solo parten de `RecipeStep` y `RecipeIngredient`; el repositorio carga las asociaciones mediante una consulta separada constante y conserva `AsNoTrackingWithIdentityResolution` en listados. Se verificaron bases vacías, upgrade desde Fase 9, round-trip, referencias cruzadas, borrado de extremos y ausencia de N+1. La suite Integration quedó verde con 75/75 pruebas y el snapshot no tiene cambios pendientes.
 
 ## 10.4 — API
 

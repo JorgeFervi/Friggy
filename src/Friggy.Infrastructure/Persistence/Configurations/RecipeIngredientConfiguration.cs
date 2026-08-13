@@ -22,6 +22,7 @@ internal sealed class RecipeIngredientConfiguration
                     "\"order\" >= 0");
             });
         builder.HasKey(item => item.Id);
+        builder.HasAlternateKey(item => new { item.RecipeId, item.Id });
         builder.Property(item => item.Id).ValueGeneratedNever();
         builder.Property(item => item.RecipeId).HasColumnName("recipe_id");
         builder.Property(item => item.IngredientId).HasColumnName("ingredient_id");

@@ -59,6 +59,7 @@ public sealed class RecipeRepository(FriggyDbContext context) : IRecipeRepositor
         context.Recipes
             .Include(recipe => recipe.Ingredients.OrderBy(item => item.Order))
             .Include(recipe => recipe.Steps.OrderBy(item => item.Order))
+                .ThenInclude(step => step.IngredientLinks)
             .Include(recipe => recipe.Tags)
             .Include(recipe => recipe.MealTypes)
             .AsSplitQuery();
