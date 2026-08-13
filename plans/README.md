@@ -24,12 +24,12 @@ Los documentos se organizan por estado:
 | 7 | [Correcciones del MVP y navegación](completed/phases/07-mvp-corrections-and-navigation.md) | [Guía](completed/implementation/07-mvp-corrections-and-navigation-implementation.md) |
 | 8 | [Inventario y finalización de comidas](completed/phases/08-inventory-and-meal-completion.md) | [Guía](completed/implementation/08-inventory-and-meal-completion-implementation.md) |
 | 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | [Guía](completed/implementation/09-advanced-weekly-planning-implementation.md) |
+| 10 | [Ingredientes asociados a pasos](completed/phases/10-recipe-step-ingredients.md) | [Guía](completed/implementation/10-recipe-step-ingredients-implementation.md) |
 
 ## Fases planificadas
 
 | Fase | Plan | Implementación | Dependencia clave |
 |---|---|---|---|
-| 10 | [Ingredientes asociados a pasos](phases/10-recipe-step-ingredients.md) | [Guía](implementation/10-recipe-step-ingredients-implementation.md) | Fase 9 |
 | 11 | [Panel principal y analítica](phases/11-dashboard-and-analytics.md) | [Guía](implementation/11-dashboard-and-analytics-implementation.md) | Fases 8–10 |
 
 ## Reglas de uso
@@ -43,4 +43,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 9 están completadas y las subfases 10.1–10.5 están verdes. La siguiente unidad ejecutable es **10.6 — Gate**.
+Las fases 1 a 10 están completadas. La siguiente unidad ejecutable es **11.1 — Definir métricas verificables**.

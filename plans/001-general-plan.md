@@ -24,7 +24,7 @@ El recorrido objetivo es:
 | 7 | [Correcciones del MVP y navegación](completed/phases/07-mvp-corrections-and-navigation.md) | Fase 6 | Recetas eliminables cuando proceda y navegación persistente |
 | 8 | [Inventario y finalización de comidas](completed/phases/08-inventory-and-meal-completion.md) | Fase 7 y decisiones de inventario | Lotes, movimientos, raciones, carencias y consumo al completar |
 | 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | Fase 8 | Tipos por día, horarios y registro explícito de comidas no realizadas |
-| 10 | [Ingredientes asociados a pasos](phases/10-recipe-step-ingredients.md) | Fase 9 | Cada paso identifica qué líneas de ingrediente utiliza |
+| 10 | [Ingredientes asociados a pasos](completed/phases/10-recipe-step-ingredients.md) | Fase 9 | Cada paso identifica qué líneas de ingrediente utiliza |
 | 11 | [Panel principal y analítica](phases/11-dashboard-and-analytics.md) | Fases 8–10 | Próxima comida, carencias, cumplimiento y estadísticas verificables |
 
 No se comienza una fase posterior para compensar una fase anterior incompleta. Los contratos públicos pueden ampliarse, pero no deben romper el recorrido ya publicado sin migración y regresión explícitas.
@@ -65,4 +65,4 @@ Una fase está terminada cuando su comportamiento está cubierto en la capa más
 
 ## Estado actual
 
-Las fases 1 a 9 están completadas y las subfases 10.1–10.5 están verdes. La siguiente unidad ejecutable es **10.6 — Gate**.
+Las fases 1 a 10 están completadas. La siguiente unidad ejecutable es **11.1 — Definir métricas verificables**.

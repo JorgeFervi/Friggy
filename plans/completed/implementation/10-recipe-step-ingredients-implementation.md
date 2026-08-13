@@ -5,7 +5,7 @@
 
 La asociación referencia `RecipeIngredient`, no el catálogo `Ingredient`, para distinguir líneas repetidas con unidades o cantidades diferentes.
 
-> **Progreso:** 10.1–10.5 completadas. La siguiente unidad ejecutable es **10.6 — Gate**.
+> **Progreso:** fase 10 completada. La siguiente unidad ejecutable es **11.1 — Definir métricas verificables**.
 
 ## 10.1 — Invariantes en Domain — Completada
 
@@ -53,8 +53,12 @@ Las rutas de recetas conservan sus verbos y ubicaciones, mientras OpenAPI public
 
 El formulario asigna una identidad estable a cada línea desde su creación y ofrece en cada paso un grupo accesible de casillas con cantidad, unidad e ingrediente. Añadir o reordenar líneas actualiza las opciones sin perder selecciones; eliminar una línea purga sus asociaciones y el mapeo descarta defensivamente IDs ausentes. La edición conserva identidades y vínculos recibidos de la API. El detalle resuelve cada asociación por línea, respeta el orden actual y distingue ingredientes repetidos por su unidad, mostrando un estado vacío explícito para pasos sin asociaciones. La suite Component quedó verde con 80/80 pruebas.
 
-## 10.6 — Gate
+## 10.6 — Gate — Completada
 
 1. E2E: crear receta, asociar líneas a pasos, editar y volver a consultar.
 2. Verificar que las cantidades de inventario requeridas no cambian por estas asociaciones.
 3. Ejecutar todas las suites y `scripts/quality-gate.ps1`.
+
+El recorrido Playwright crea una receta, asocia una línea al paso, vuelve a editarla, añade y asocia una segunda línea con otra unidad y confirma tras recargar que ambas relaciones persisten. La regresión de Application compara los requisitos de inventario antes y después de asociar las líneas y demuestra que la cantidad requerida continúa siendo 3, sin duplicación por paso.
+
+`scripts/quality-gate.ps1` completó restore, build Release con 0 warnings, formato sin cambios, PostgreSQL real, Playwright y auditoría de paquetes sin vulnerabilidades. Resultado: 361/361 pruebas (115 Domain, 71 Application, 78 Integration, 80 Component y 17 E2E), 0 fallos y 0 omitidas.

@@ -41,6 +41,34 @@ public sealed class WeeklyPlanInventoryServiceTests
     }
 
     [Fact]
+    public async Task GetRequirements_AssigningIngredientLinesToStep_DoesNotChangeRequiredQuantities()
+    {
+        var scenario = Scenario.Create(servings: 2);
+        var secondLine = scenario.Recipe.AddIngredient(
+            scenario.Ingredient.Id,
+            scenario.Unit.Id,
+            0.5m,
+            1);
+
+        var beforeAssociations = await scenario.Service.GetRequirementsAsync(
+            scenario.Plan.Id,
+            TestContext.Current.CancellationToken);
+
+        var step = Assert.Single(scenario.Recipe.Steps);
+        scenario.Recipe.AssignIngredientToStep(
+            step.Id,
+            scenario.Recipe.Ingredients[0].Id);
+        scenario.Recipe.AssignIngredientToStep(step.Id, secondLine.Id);
+
+        var afterAssociations = await scenario.Service.GetRequirementsAsync(
+            scenario.Plan.Id,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(beforeAssociations.ToArray(), afterAssociations.ToArray());
+        Assert.Equal(3m, Assert.Single(afterAssociations).RequiredQuantity);
+    }
+
+    [Fact]
     public async Task GetRequirements_ExpirationBoundary_ExcludesYesterdayAndIncludesTodayAndTomorrow()
     {
         var scenario = Scenario.Create(servings: 1);

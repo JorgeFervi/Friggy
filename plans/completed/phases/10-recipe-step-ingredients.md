@@ -1,11 +1,11 @@
 # Fase 10 — Ingredientes asociados a pasos
 
-- **Estado:** En curso — subfases 10.1–10.5 completadas
+- **Estado:** Completada el 13 de agosto de 2026
 - **Estimación:** 2–4 días
-- **Dependencias:** [Fase 9 completada](../completed/phases/09-advanced-weekly-planning.md)
+- **Dependencias:** [Fase 9 completada](09-advanced-weekly-planning.md)
 - **Guía ejecutable:** [Implementación de la fase 10](../implementation/10-recipe-step-ingredients-implementation.md)
 
-Domain, Application, Infrastructure, API y Web ya conservan las asociaciones por identidad, protegen en PostgreSQL que ambos extremos pertenezcan a la misma receta y permiten editarlas y consultarlas. La siguiente unidad es **10.6 — Gate**.
+Domain, Application, Infrastructure, API y Web conservan las asociaciones por identidad, protegen en PostgreSQL que ambos extremos pertenezcan a la misma receta y permiten editarlas y consultarlas. El recorrido completo y la invariancia del inventario quedaron verificados por la puerta de calidad.
 
 ## Resultado esperado
 
