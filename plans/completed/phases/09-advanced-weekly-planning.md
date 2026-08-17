@@ -30,6 +30,6 @@ La alternativa se registra inicialmente como texto y no genera consumo automáti
 
 ## Handoff
 
-La fase entrega horarios y estados fiables a las fases de detalle de recetas y panel. El gate final superó 333/333 pruebas (107 Domain, 64 Application, 72 Integration, 73 Component y 17 E2E), sin fallos ni pruebas omitidas; build Release y formato limpios, y auditoría NuGet sin vulnerabilidades.
+La fase entrega horarios y estados fiables a la fase de detalle de recetas. El gate final superó 333/333 pruebas (107 Domain, 64 Application, 72 Integration, 73 Component y 17 E2E), sin fallos ni pruebas omitidas; build Release y formato limpios, y auditoría NuGet sin vulnerabilidades.
 
 La siguiente unidad ejecutable es **10.1 — Invariantes en Domain**.

@@ -31,4 +31,4 @@ Las cantidades siguen perteneciendo a `RecipeIngredient`. La relación por paso 
 
 ## Handoff
 
-Habilitar analítica y presentación de recetas con información de preparación más rica, sin cambiar las necesidades totales del inventario.
+La fase deja disponible información de preparación más rica sin cambiar las necesidades totales del inventario.

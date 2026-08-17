@@ -2,20 +2,18 @@
 
 ## Objetivo
 
-Evolucionar el MVP validado hasta un producto local que permita mantener el inventario doméstico, completar comidas con consumo trazable y consultar información útil sobre la planificación, sin mezclar en una sola fase correcciones previas, reglas de inventario y analítica.
+Evolucionar el MVP validado hasta un producto local que permita mantener el inventario doméstico y completar comidas con consumo trazable, sin mezclar en una sola fase correcciones previas y reglas de inventario.
 
 El recorrido objetivo es:
 
-> Corregir y navegar el MVP, registrar lotes y movimientos, calcular carencias de una semana, completar una comida consumiendo lotes elegidos, enriquecer la planificación, vincular ingredientes con pasos y consultar un panel basado en datos reales.
+> Corregir y navegar el MVP, registrar lotes y movimientos, calcular carencias de una semana, completar una comida consumiendo lotes elegidos, enriquecer la planificación y vincular ingredientes con pasos.
 
 ## Principios de alcance
 
 - Se conserva `Domain <- Application <- Infrastructure <- Api`; `Friggy.Web` consume la API por HTTP.
 - No se crean proyectos adicionales, microservicios, un bus de mensajes ni una infraestructura CQRS.
 - Cada fase entrega un recorrido vertical utilizable y deja verdes las cinco suites.
-- Las consultas del panel usan proyecciones de lectura focalizadas, sin duplicar reglas ni crear un segundo modelo persistente.
 - El historial de inventario no es event sourcing: el lote mantiene su cantidad actual y los movimientos explican sus cambios.
-- Los datos analíticos se derivan de comidas completadas y movimientos confirmados, nunca de planes futuros tratados como hechos.
 
 ## Secuencia de fases
 
@@ -25,7 +23,6 @@ El recorrido objetivo es:
 | 8 | [Inventario y finalización de comidas](completed/phases/08-inventory-and-meal-completion.md) | Fase 7 y decisiones de inventario | Lotes, movimientos, raciones, carencias y consumo al completar |
 | 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | Fase 8 | Tipos por día, horarios y registro explícito de comidas no realizadas |
 | 10 | [Ingredientes asociados a pasos](completed/phases/10-recipe-step-ingredients.md) | Fase 9 | Cada paso identifica qué líneas de ingrediente utiliza |
-| 11 | [Panel principal y analítica](phases/11-dashboard-and-analytics.md) | Fases 8–10 | Próxima comida, carencias, cumplimiento y estadísticas verificables |
 
 No se comienza una fase posterior para compensar una fase anterior incompleta. Los contratos públicos pueden ampliarse, pero no deben romper el recorrido ya publicado sin migración y regresión explícitas.
 
@@ -36,7 +33,6 @@ No se comienza una fase posterior para compensar una fase anterior incompleta. L
 - La finalización de una comida y sus consumos se guardan atómicamente.
 - La Fase 9 amplía la planificación con selección de tipos por día, hora prevista y estados posteriores distintos de completada.
 - La Fase 10 relaciona cada paso con líneas de ingrediente ya pertenecientes a su receta; no duplica las cantidades totales.
-- La Fase 11 agrega y proyecta datos existentes; no introduce una fuente de verdad paralela.
 
 ## Estrategia TDD y verificación
 
@@ -57,7 +53,6 @@ Cada migración debe funcionar desde una base vacía y desde el esquema de la fa
 - Lista de la compra automática.
 - Inteligencia artificial, imágenes e información nutricional.
 - Autenticación, varios usuarios y despliegue público.
-- Almacén analítico, procesamiento en segundo plano o caché sin evidencia de rendimiento.
 
 ## Definición de terminado
 
@@ -65,4 +60,4 @@ Una fase está terminada cuando su comportamiento está cubierto en la capa más
 
 ## Estado actual
 
-Las fases 1 a 10 están completadas. La siguiente unidad ejecutable es **11.1 — Definir métricas verificables**.
+Las fases 1 a 10 están completadas. No hay una siguiente fase aprobada.
