@@ -3,7 +3,7 @@
 Esta carpeta mantiene dos itinerarios consecutivos:
 
 1. [Plan general del MVP](000-general-plan.md): fases 1 a 6, ya completadas.
-2. [Plan general post-MVP](001-general-plan.md): correcciones, inventario, planificación avanzada y detalle de recetas.
+2. [Plan general post-MVP](001-general-plan.md): correcciones, inventario, planificación avanzada, detalle de recetas y evolución visual.
 
 Los documentos se organizan por estado:
 
@@ -28,7 +28,9 @@ Los documentos se organizan por estado:
 
 ## Fases planificadas
 
-No hay una siguiente fase aprobada. El próximo incremento se definirá antes de incorporarlo al roadmap.
+| Fase | Plan | Implementación | Dependencia clave |
+|---|---|---|---|
+| 11 | [Sistema visual y experiencia responsive](phases/11-visual-system-and-responsive-ui.md) | [Guía](implementation/11-visual-system-and-responsive-ui-implementation.md) | Fases 1–10 |
 
 ## Reglas de uso
 
@@ -41,4 +43,4 @@ No hay una siguiente fase aprobada. El próximo incremento se definirá antes de
 
 ## Estado actual
 
-Las fases 1 a 10 están completadas. No hay una siguiente unidad ejecutable aprobada.
+Las fases 1 a 10 están completadas. La siguiente unidad ejecutable es **11.1 — Contrato visual y banco de regresión**.

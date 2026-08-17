@@ -31,4 +31,4 @@ Las cantidades siguen perteneciendo a `RecipeIngredient`. La relación por paso 
 
 ## Handoff
 
-La fase deja disponible información de preparación más rica sin cambiar las necesidades totales del inventario.
+Aplicar el sistema visual y la experiencia responsive de la Fase 11 sin cambiar las necesidades totales del inventario ni los contratos existentes.

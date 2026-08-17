@@ -5,7 +5,7 @@
 
 La asociación referencia `RecipeIngredient`, no el catálogo `Ingredient`, para distinguir líneas repetidas con unidades o cantidades diferentes.
 
-> **Progreso:** fase 10 completada. No hay una siguiente unidad ejecutable aprobada.
+> **Progreso:** fase 10 completada. La siguiente unidad ejecutable es **11.1 — Contrato visual y banco de regresión**.
 
 ## 10.1 — Invariantes en Domain — Completada
 

@@ -2,11 +2,11 @@
 
 ## Objetivo
 
-Evolucionar el MVP validado hasta un producto local que permita mantener el inventario doméstico y completar comidas con consumo trazable, sin mezclar en una sola fase correcciones previas y reglas de inventario.
+Evolucionar el MVP validado hasta un producto local que permita mantener el inventario doméstico, completar comidas con consumo trazable y ofrecer una experiencia visual coherente y responsive, sin mezclar reglas funcionales con detalles de presentación.
 
 El recorrido objetivo es:
 
-> Corregir y navegar el MVP, registrar lotes y movimientos, calcular carencias de una semana, completar una comida consumiendo lotes elegidos, enriquecer la planificación y vincular ingredientes con pasos.
+> Corregir y navegar el MVP, registrar lotes y movimientos, calcular carencias de una semana, completar una comida consumiendo lotes elegidos, enriquecer la planificación, vincular ingredientes con pasos y presentar todos esos recorridos mediante una interfaz moderna y accesible.
 
 ## Principios de alcance
 
@@ -14,6 +14,8 @@ El recorrido objetivo es:
 - No se crean proyectos adicionales, microservicios, un bus de mensajes ni una infraestructura CQRS.
 - Cada fase entrega un recorrido vertical utilizable y deja verdes las cinco suites.
 - El historial de inventario no es event sourcing: el lote mantiene su cantidad actual y los movimientos explican sus cambios.
+- La interfaz usa componentes Razor propios, tokens CSS y recursos locales; no incorpora un framework visual ni dependencias de runtime externas.
+- La evolución visual conserva rutas, contratos HTTP y comportamiento funcional, y se valida en móvil, tablet y escritorio.
 
 ## Secuencia de fases
 
@@ -23,6 +25,7 @@ El recorrido objetivo es:
 | 8 | [Inventario y finalización de comidas](completed/phases/08-inventory-and-meal-completion.md) | Fase 7 y decisiones de inventario | Lotes, movimientos, raciones, carencias y consumo al completar |
 | 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | Fase 8 | Tipos por día, horarios y registro explícito de comidas no realizadas |
 | 10 | [Ingredientes asociados a pasos](completed/phases/10-recipe-step-ingredients.md) | Fase 9 | Cada paso identifica qué líneas de ingrediente utiliza |
+| 11 | [Sistema visual y experiencia responsive](phases/11-visual-system-and-responsive-ui.md) | Fases 1–10 | Componentes propios, navegación adaptativa y migración visual completa |
 
 No se comienza una fase posterior para compensar una fase anterior incompleta. Los contratos públicos pueden ampliarse, pero no deben romper el recorrido ya publicado sin migración y regresión explícitas.
 
@@ -33,6 +36,12 @@ No se comienza una fase posterior para compensar una fase anterior incompleta. L
 - La finalización de una comida y sus consumos se guardan atómicamente.
 - La Fase 9 amplía la planificación con selección de tipos por día, hora prevista y estados posteriores distintos de completada.
 - La Fase 10 relaciona cada paso con líneas de ingrediente ya pertenecientes a su receta; no duplica las cantidades totales.
+
+## Evolución de la interfaz
+
+- La Fase 11 introduce primero fundamentos visuales y componentes reutilizables y migra después las páginas por prioridad.
+- La portada presenta las recetas existentes en tarjetas y mantiene una composición extensible para añadir en el futuro una sección independiente de estadísticas, sin reservar espacios vacíos ni anticipar contratos.
+- El diseño se entrega únicamente en modo claro, con tipografías locales, navegación lateral en escritorio y menú deslizable en móvil y tablet.
 
 ## Estrategia TDD y verificación
 
@@ -53,6 +62,7 @@ Cada migración debe funcionar desde una base vacía y desde el esquema de la fa
 - Lista de la compra automática.
 - Inteligencia artificial, imágenes e información nutricional.
 - Autenticación, varios usuarios y despliegue público.
+- Modo oscuro, una biblioteca UI de terceros o cambios en los contratos de API durante la Fase 11.
 
 ## Definición de terminado
 
@@ -60,4 +70,4 @@ Una fase está terminada cuando su comportamiento está cubierto en la capa más
 
 ## Estado actual
 
-Las fases 1 a 10 están completadas. No hay una siguiente fase aprobada.
+Las fases 1 a 10 están completadas. La siguiente unidad ejecutable es **11.1 — Contrato visual y banco de regresión**.
