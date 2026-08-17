@@ -21,13 +21,17 @@
 ./scripts/start.ps1
 ./scripts/test.ps1
 ./scripts/quality-gate.ps1
+./scripts/update-visual-baselines.ps1 -Accept
 dotnet format Friggy.sln --verify-no-changes --no-restore
 ```
 
 El repositorio usa xUnit v3 sobre Microsoft Testing Platform y .NET 10. Para focalizar pruebas utiliza `--filter-class`, `--filter-method` o `--filter-trait`, sin el separador `--`.
 
+La regresión visual usa los E2E xUnit existentes y un comparador Node/Pixelmatch bloqueado con pnpm. `update-visual-baselines.ps1 -Accept` solo se ejecuta después de revisar las capturas `actual` y `diff`; nunca se usa para hacer verde un cambio visual no explicado.
+
 ## Seguridad y configuración
 
 - `.editorconfig`, `Directory.Build.props` y `Directory.Packages.props` son la fuente común de configuración.
 - No versiones secretos, `.env`, artefactos de Playwright ni el contenido de `.friggy`.
+- No versiones `TestResults/visual`; sí versiona los baseline visuales revisados bajo `tests/Friggy.EndToEndTests/VisualBaselines`.
 - Los cambios de esquema requieren una migración explícita y una prueba de integración con PostgreSQL real.

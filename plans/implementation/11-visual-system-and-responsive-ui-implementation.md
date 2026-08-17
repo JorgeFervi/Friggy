@@ -5,6 +5,8 @@
 
 La fase es una migración de presentación. No modifica Domain, Application, Infrastructure ni Api. Todo comportamiento de componentes comienza con un test bUnit/xUnit v3 fallido; los baseline iniciales se generan únicamente después de que la semántica y el diseño de cada incremento estén aprobados.
 
+> **Progreso:** 11.1 completada. La siguiente unidad ejecutable es **11.2 — Primitivos y estados comunes**.
+
 ## Reglas transversales
 
 1. Conservar rutas, `data-testid` necesarios, clientes HTTP y mensajes funcionales existentes.
@@ -13,7 +15,7 @@ La fase es una migración de presentación. No modifica Domain, Application, Inf
 4. No ocultar contenido para resolver responsive: cambiar composición preservando orden de lectura y acciones.
 5. Ejecutar después de cada subfase el test focalizado, la suite Component y los E2E afectados; actualizar baseline solo si el cambio esperado fue revisado.
 
-## 11.1 — Contrato visual y banco de regresión
+## 11.1 — Contrato visual y banco de regresión — Completada
 
 ### Rojo
 
@@ -26,7 +28,7 @@ La fase es una migración de presentación. No modifica Domain, Application, Inf
 1. Incorporar Inter 400/500/600/700 y Fraunces 600 en WOFF2 junto con sus licencias.
 2. Crear `fonts.css`, `tokens.css`, `base.css` y el punto de entrada de estilos; declarar la paleta, escalas y `font-display: swap`.
 3. Corregir `<html lang="es">`, normalización de `box-sizing`, fondo, tipografía, foco global y reduced motion.
-4. Añadir `package.json` y lockfile solo con `pixelmatch` y `pngjs`; `setup.ps1` comprueba Node LTS y ejecuta `npm ci`.
+4. Añadir `package.json` y `pnpm-lock.yaml` solo con `pixelmatch` y `pngjs`; `setup.ps1` comprueba Node LTS y ejecuta `pnpm install --frozen-lockfile`.
 5. Crear el comparador invocado por los tests xUnit: baseline versionado por plataforma, actual/diff en `TestResults/visual`, fallo por ausencia o dimensiones y ratio máximo 0,002.
 6. Añadir un comando explícito `scripts/update-visual-baselines.ps1 -Accept` que nunca sea llamado por el gate.
 
@@ -35,6 +37,12 @@ La fase es una migración de presentación. No modifica Domain, Application, Inf
 - El helper fija Chromium, locale, zona horaria, light scheme, device scale factor 1 y desactiva animaciones/caret.
 - `.gitignore` excluye actual y diff pero no baseline.
 - Documentar que los baseline se generan y comparan en el entorno Windows/Chromium validado; una futura CI deberá reproducir ese entorno o mantener baseline por plataforma.
+
+Se observaron cinco rojos focalizados por idioma, hojas, fuentes, tokens, lockfile y comparador ausentes. El verde incorpora Inter y Fraunces desde Fontsource 5.3.0 con licencias OFL, recursos WOFF2 locales, idioma español, paleta/tokens, base accesible y reduced motion. Pixelmatch 7.2.0 y pngjs 7.0.0 quedan fijados con pnpm exclusivamente para test; el comparador supera ausencia de baseline, dimensiones incompatibles y diferencias dentro/fuera del umbral.
+
+Playwright .NET captura Inicio en 360×800, 768×1024 y 1440×1000. Las tres imágenes se revisaron antes de aceptar los baseline Windows/Chromium; un foco visual incorrecto en el `h1` programático se corrigió antes de consolidarlos. `scripts/update-visual-baselines.ps1` exige `-Accept`, mientras setup y quality gate restauran y auditan el lockfile sin aceptar imágenes automáticamente.
+
+El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 369/369 pruebas: 115 Domain, 71 Application, 85 Integration, 80 Component y 18 E2E.
 
 ## 11.2 — Primitivos y estados comunes
 
@@ -166,7 +174,7 @@ La fase es una migración de presentación. No modifica Domain, Application, Inf
 2. Corregir overflow, orden de foco, contraste, labels, landmarks, nombres accesibles y reduced motion antes de ajustar cualquier baseline.
 3. Ejecutar la matriz visual completa con datos deterministas; revisar expected/actual/diff y aceptar únicamente cambios previstos.
 4. Verificar que no hay peticiones de fuentes, iconos, CSS o scripts de runtime a dominios externos.
-5. Ejecutar `scripts/quality-gate.ps1`, incluyendo Component, E2E, comparación visual, `npm audit --audit-level=high` y la auditoría NuGet existente.
+5. Ejecutar `scripts/quality-gate.ps1`, incluyendo Component, E2E, comparación visual, `pnpm audit --audit-level high` y la auditoría NuGet existente.
 6. Actualizar README con dirección visual, breakpoints, comando de baseline y reglas para crear componentes nuevos.
 7. Mover ambos documentos de fase a `completed/` solo con todas las rutas migradas y el gate completo en verde.
 

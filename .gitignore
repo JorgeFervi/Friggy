@@ -52,6 +52,10 @@ CodeCoverage/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+# Node tooling used only by visual regression tests
+node_modules/
+pnpm-debug.log*
+
 # NUnit
 *.VisualState.xml
 TestResult.xml

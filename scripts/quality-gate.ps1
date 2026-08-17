@@ -44,11 +44,17 @@ Push-Location $repositoryRoot
 try {
     Assert-CommandAvailable -Name 'dotnet'
     Assert-CommandAvailable -Name 'docker'
+    Assert-CommandAvailable -Name 'node'
+    Assert-CommandAvailable -Name 'pnpm'
 
     Invoke-Checked `
         -Description 'dotnet restore Friggy.sln --configfile NuGet.Config' `
         -FilePath 'dotnet' `
         -ArgumentList @('restore', 'Friggy.sln', '--configfile', 'NuGet.Config')
+    Invoke-Checked `
+        -Description 'pnpm install --frozen-lockfile' `
+        -FilePath 'pnpm' `
+        -ArgumentList @('install', '--frozen-lockfile')
     Invoke-Checked `
         -Description 'dotnet build Friggy.sln --configuration Release --no-restore' `
         -FilePath 'dotnet' `
@@ -63,6 +69,11 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "El gate de suites terminó con código $LASTEXITCODE."
     }
+
+    Invoke-Checked `
+        -Description 'pnpm audit --audit-level high' `
+        -FilePath 'pnpm' `
+        -ArgumentList @('audit', '--audit-level', 'high')
 
     Write-Host '> dotnet list Friggy.sln package --vulnerable --include-transitive --format json --no-restore' -ForegroundColor Cyan
     $auditOutput = & dotnet list Friggy.sln package `

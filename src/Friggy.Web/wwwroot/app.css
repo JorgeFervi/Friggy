@@ -1,6 +1,6 @@
-h1:focus {
-    outline: none;
-}
+@import url("css/fonts.css");
+@import url("css/tokens.css");
+@import url("css/base.css");
 
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;

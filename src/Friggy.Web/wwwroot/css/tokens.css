@@ -1,0 +1,45 @@
+:root {
+    color-scheme: light;
+
+    --color-primary-700: #284e63;
+    --color-primary-600: #356b85;
+    --color-primary-100: #dceaf0;
+    --color-canvas: #f3f6f7;
+    --color-surface: #ffffff;
+    --color-surface-muted: #e8eef1;
+    --color-text: #1e2c33;
+    --color-text-muted: #5c6b73;
+    --color-border: #cbd7dc;
+    --color-accent: #b7794c;
+    --color-danger: #a63f46;
+    --color-success: #3e745f;
+    --color-focus: #356b85;
+
+    --font-family-body: "Inter", "Segoe UI", sans-serif;
+    --font-family-display: "Fraunces", Georgia, serif;
+    --font-size-body: 1rem;
+    --font-size-small: 0.875rem;
+    --font-size-title: clamp(2rem, 5vw, 3.25rem);
+    --font-size-section-title: clamp(1.5rem, 3vw, 2.25rem);
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+
+    --radius-small: 0.5rem;
+    --radius-medium: 0.75rem;
+    --radius-large: 1.125rem;
+    --shadow-surface: 0 0.5rem 1.5rem rgb(40 78 99 / 0.09);
+    --content-max-width: 75rem;
+    --control-min-size: 2.75rem;
+    --motion-fast: 150ms;
+    --motion-standard: 220ms;
+    --focus-ring: 0 0 0 0.2rem rgb(53 107 133 / 0.28);
+
+    --breakpoint-tablet: 48rem;
+    --breakpoint-desktop: 75rem;
+}

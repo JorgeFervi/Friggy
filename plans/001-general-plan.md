@@ -70,4 +70,4 @@ Una fase está terminada cuando su comportamiento está cubierto en la capa más
 
 ## Estado actual
 
-Las fases 1 a 10 están completadas. La siguiente unidad ejecutable es **11.1 — Contrato visual y banco de regresión**.
+Las fases 1 a 10 y la subfase 11.1 están completadas. La Fase 11 está en curso y la siguiente unidad ejecutable es **11.2 — Primitivos y estados comunes**.

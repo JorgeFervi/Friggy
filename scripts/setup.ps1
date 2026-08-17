@@ -9,6 +9,13 @@ Push-Location $repositoryRoot
 try {
     Assert-CommandAvailable -Name 'dotnet'
     Assert-CommandAvailable -Name 'docker'
+    Assert-CommandAvailable -Name 'node'
+    Assert-CommandAvailable -Name 'pnpm'
+
+    Invoke-Checked `
+        -Description 'pnpm install --frozen-lockfile' `
+        -FilePath 'pnpm' `
+        -ArgumentList @('install', '--frozen-lockfile')
 
     Invoke-Checked `
         -Description 'dotnet --version' `

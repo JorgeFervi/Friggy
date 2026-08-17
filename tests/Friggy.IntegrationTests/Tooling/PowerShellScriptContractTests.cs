@@ -9,6 +9,7 @@ public sealed class PowerShellScriptContractTests
     [InlineData("start.ps1")]
     [InlineData("test.ps1")]
     [InlineData("quality-gate.ps1")]
+    [InlineData("update-visual-baselines.ps1")]
     public void Script_Always_EnablesStrictFailFastExecution(string scriptName)
     {
         var script = ReadScript(scriptName);
@@ -27,6 +28,9 @@ public sealed class PowerShellScriptContractTests
             script,
             "Assert-CommandAvailable -Name 'dotnet'",
             "Assert-CommandAvailable -Name 'docker'",
+            "Assert-CommandAvailable -Name 'node'",
+            "Assert-CommandAvailable -Name 'pnpm'",
+            "pnpm install --frozen-lockfile",
             "docker compose up --detach --wait postgres",
             "dotnet tool restore",
             "dotnet restore Friggy.sln",
@@ -78,13 +82,28 @@ public sealed class PowerShellScriptContractTests
         AssertInOrder(
             script,
             "dotnet restore Friggy.sln",
+            "pnpm install --frozen-lockfile",
             "dotnet build Friggy.sln",
             "dotnet format Friggy.sln",
             "./scripts/test.ps1 -SkipBuild",
+            "pnpm audit --audit-level high",
             "dotnet list Friggy.sln package");
         Assert.Contains("--format json", script, StringComparison.Ordinal);
         Assert.Contains("Get-VulnerabilityCount", script, StringComparison.Ordinal);
         Assert.DoesNotContain(" -- ", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VisualBaselineUpdateScript_RequiresExplicitAcceptanceAndCopiesReviewedActuals()
+    {
+        var script = ReadScript("update-visual-baselines.ps1");
+
+        Assert.Contains("[switch]$Accept", script, StringComparison.Ordinal);
+        Assert.Contains("if (-not $Accept)", script, StringComparison.Ordinal);
+        Assert.Contains("TestResults", script, StringComparison.Ordinal);
+        Assert.Contains("VisualBaselines", script, StringComparison.Ordinal);
+        Assert.Contains("Copy-Item", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("Remove-Item", script, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ReadScript(string scriptName) =>

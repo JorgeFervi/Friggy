@@ -1,0 +1,12 @@
+{
+  "name": "friggy-visual-testing",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "test:visual-comparator": "node --test scripts/test-visual-comparator.mjs"
+  },
+  "devDependencies": {
+    "pixelmatch": "7.2.0",
+    "pngjs": "7.0.0"
+  }
+}

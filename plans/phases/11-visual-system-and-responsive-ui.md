@@ -1,6 +1,6 @@
 # Fase 11 — Sistema visual y experiencia responsive
 
-- **Estado:** Futura
+- **Estado:** En curso desde el 17 de agosto de 2026; subfase 11.1 completada
 - **Estimación:** 12–18 días laborables
 - **Dependencias:** Fases 1–10 completadas y puerta de calidad verde
 - **Guía ejecutable:** [Implementación de la fase 11](../implementation/11-visual-system-and-responsive-ui-implementation.md)

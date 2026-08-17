@@ -26,7 +26,7 @@ Los documentos se organizan por estado:
 | 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | [Guía](completed/implementation/09-advanced-weekly-planning-implementation.md) |
 | 10 | [Ingredientes asociados a pasos](completed/phases/10-recipe-step-ingredients.md) | [Guía](completed/implementation/10-recipe-step-ingredients-implementation.md) |
 
-## Fases planificadas
+## Fase en curso
 
 | Fase | Plan | Implementación | Dependencia clave |
 |---|---|---|---|
@@ -43,4 +43,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 10 están completadas. La siguiente unidad ejecutable es **11.1 — Contrato visual y banco de regresión**.
+Las fases 1 a 10 y la subfase 11.1 están completadas. La siguiente unidad ejecutable es **11.2 — Primitivos y estados comunes**.

@@ -48,6 +48,8 @@ El piloto técnico local y el guion aplicado están registrados en el [cierre ej
 | Testcontainers.PostgreSql | 4.13.0 |
 | bUnit | 2.9.0 |
 | Playwright para .NET | 1.61.0 |
+| Node.js LTS | 24.19.0 |
+| pnpm | 11.19.0 |
 
 La puerta de calidad de la fase 1 se verificó con Docker Engine 29.6.2 y Docker Compose 5.3.1. Son versiones del entorno validado, no credenciales ni requisitos de producción.
 
@@ -60,7 +62,7 @@ Desde PowerShell, ejecutar los scripts en este orden:
 ./scripts/start.ps1
 ```
 
-`setup.ps1` comprueba .NET y Docker, arranca PostgreSQL, restaura herramientas y paquetes, aplica las migraciones e instala Chromium para Playwright. Puede ejecutarse de nuevo sin eliminar datos ni recrear la configuración local.
+`setup.ps1` comprueba .NET, Docker, Node.js y pnpm; instala las dependencias bloqueadas del comparador visual, arranca PostgreSQL, restaura herramientas y paquetes, aplica las migraciones e instala Chromium para Playwright. Puede ejecutarse de nuevo sin eliminar datos ni recrear la configuración local.
 
 `start.ps1` inicia la API en `http://localhost:5292` y la aplicación Web en `http://localhost:5179`. Si ya están disponibles, no crea procesos duplicados. Los logs locales se guardan bajo `.friggy/logs`, que no se versiona.
 
@@ -80,7 +82,21 @@ Antes de incorporar cambios, ejecutar:
 ./scripts/quality-gate.ps1
 ```
 
-El gate restaura con `NuGet.Config`, compila Release, verifica formato, ejecuta las cinco suites mediante Microsoft Testing Platform y falla si la auditoría JSON de NuGet encuentra vulnerabilidades.
+El gate restaura con `NuGet.Config` y `pnpm-lock.yaml`, compila Release, verifica formato, ejecuta las cinco suites mediante Microsoft Testing Platform y falla si las auditorías de NuGet o pnpm encuentran vulnerabilidades relevantes.
+
+## Fundamentos visuales y regresión
+
+La interfaz usa Inter para cuerpo y controles, Fraunces para títulos y una paleta clara azul grisácea. Fuentes, licencias y hojas de diseño están versionadas bajo `src/Friggy.Web/wwwroot`; la aplicación no solicita recursos visuales a CDN.
+
+Los E2E visuales capturan Chromium de forma determinista en 360×800, 768×1024 y 1440×1000. Los baseline aprobados son parte del repositorio; las capturas actuales y los diff se guardan bajo `TestResults/visual` y permanecen sin versionar.
+
+Una modificación visual intencionada debe ejecutarse primero para producir `actual` y `diff`. Solo después de revisarlos se aceptan los nuevos baseline mediante:
+
+```powershell
+./scripts/update-visual-baselines.ps1 -Accept
+```
+
+El gate nunca actualiza baseline automáticamente. El comparador Pixelmatch es tooling de pruebas y no se carga en la aplicación.
 
 Para ejecutar únicamente las reglas arquitectónicas con xUnit v3 sobre MTP:
 
