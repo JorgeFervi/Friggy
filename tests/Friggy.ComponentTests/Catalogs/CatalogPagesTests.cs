@@ -11,6 +11,52 @@ namespace Friggy.ComponentTests.Catalogs;
 
 public sealed class CatalogPagesTests : ComponentTest
 {
+    [Theory]
+    [InlineData("ingredients", "Tomate", "#ingredient-name")]
+    [InlineData("unit-types", "Gramo", "#unit-name")]
+    [InlineData("recipe-tags", "Vegano", "#tag-name")]
+    [InlineData("meal-types", "Cena", "#meal-name")]
+    [Trait("Category", "Component")]
+    public void Catalog_PopulatedState_ExposesEquivalentResponsiveActionsAndEditState(
+        string catalog,
+        string itemName,
+        string inputSelector)
+    {
+        var component = RenderCatalog(catalog, populated: true);
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.NotNull(component.Find(".page-header"));
+            Assert.NotNull(component.Find(".friggy-catalog-page__cards"));
+            Assert.NotNull(component.Find(".friggy-catalog-page__table"));
+            Assert.Equal(2, component.FindAll($"button[aria-label='Editar {itemName}']").Count);
+            Assert.Equal(2, component.FindAll($"button[aria-label='Borrar {itemName}']").Count);
+        });
+
+        component.Find($"button[aria-label='Editar {itemName}']").Click();
+
+        Assert.Equal(itemName, component.Find(inputSelector).GetAttribute("value"));
+        Assert.Contains("Guardar cambios", component.Markup, StringComparison.Ordinal);
+        Assert.Contains("Cancelar edición", component.Markup, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("ingredients", "No hay ingredientes")]
+    [InlineData("unit-types", "No hay unidades")]
+    [InlineData("recipe-tags", "No hay etiquetas")]
+    [InlineData("meal-types", "No hay tipos de comida")]
+    [Trait("Category", "Component")]
+    public void Catalog_EmptyState_UsesFeedbackPanel(string catalog, string expectedText)
+    {
+        var component = RenderCatalog(catalog, populated: false);
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Contains(expectedText, component.Markup, StringComparison.Ordinal);
+            Assert.NotNull(component.Find(".feedback-panel"));
+        });
+    }
+
     [Fact]
     [Trait("Category", "Component")]
     public void UnitTypes_ApiReturnsUnit_RendersNameAndSymbol()
@@ -96,7 +142,7 @@ public sealed class CatalogPagesTests : ComponentTest
 
         component.WaitForAssertion(() =>
         {
-            Assert.Equal("Conexión rechazada.", component.Find("[role='alert']").TextContent);
+            Assert.Contains("Conexión rechazada.", component.Find("[role='alert']").TextContent, StringComparison.Ordinal);
             Assert.Equal("Taza", component.Find("#unit-name").GetAttribute("value"));
             Assert.Equal("tza", component.Find("#unit-symbol").GetAttribute("value"));
         });
@@ -119,7 +165,7 @@ public sealed class CatalogPagesTests : ComponentTest
 
         component.WaitForAssertion(() =>
         {
-            Assert.Equal("Conexión rechazada.", component.Find("[role='alert']").TextContent);
+            Assert.Contains("Conexión rechazada.", component.Find("[role='alert']").TextContent, StringComparison.Ordinal);
             Assert.Equal("Vegano", component.Find("#tag-name").GetAttribute("value"));
         });
     }
@@ -141,7 +187,7 @@ public sealed class CatalogPagesTests : ComponentTest
 
         component.WaitForAssertion(() =>
         {
-            Assert.Equal("Conexión rechazada.", component.Find("[role='alert']").TextContent);
+            Assert.Contains("Conexión rechazada.", component.Find("[role='alert']").TextContent, StringComparison.Ordinal);
             Assert.Equal("Merienda", component.Find("#meal-name").GetAttribute("value"));
         });
     }
@@ -157,14 +203,15 @@ public sealed class CatalogPagesTests : ComponentTest
             DeleteException = new HttpRequestException("Conexión rechazada."),
         };
         Services.AddSingleton<IUnitTypesApiClient>(api);
-        JavaScript.Setup<bool>("confirm", _ => true).SetResult(true);
+        SetupConfirmDialog();
         var component = Render<global::Friggy.Web.Components.Pages.UnitTypes>();
         component.WaitForElement("table");
 
-        component.FindAll("button").Single(button => button.TextContent == "Borrar").Click();
+        component.Find("button[aria-label='Borrar Taza']").Click();
+        component.FindAll("button").Single(button => button.TextContent.Contains("Borrar unidad", StringComparison.Ordinal)).Click();
 
         component.WaitForAssertion(() =>
-            Assert.Equal("Conexión rechazada.", component.Find("[role='alert']").TextContent));
+            Assert.Contains("Conexión rechazada.", component.Find("[role='alert']").TextContent, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -214,6 +261,62 @@ public sealed class CatalogPagesTests : ComponentTest
         disposable.Dispose();
 
         Assert.True(getToken().IsCancellationRequested);
+    }
+
+    private void SetupConfirmDialog()
+    {
+        var module = JavaScript.SetupModule("./js/confirm-dialog.js");
+        module.SetupVoid("show", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
+    }
+
+    private IRenderedComponent<IComponent> RenderCatalog(string catalog, bool populated)
+    {
+        const string id = "10000000-0000-0000-0000-000000000001";
+        var json = (catalog, populated) switch
+        {
+            (_, false) => "[]",
+            ("ingredients", true) => $"[{{\"id\":\"{id}\",\"name\":\"Tomate\"}}]",
+            ("unit-types", true) => $"[{{\"id\":\"{id}\",\"name\":\"Gramo\",\"symbol\":\"g\"}}]",
+            ("recipe-tags", true) => $"[{{\"id\":\"{id}\",\"name\":\"Vegano\"}}]",
+            ("meal-types", true) => $"[{{\"id\":\"{id}\",\"name\":\"Cena\",\"order\":2}}]",
+            _ => throw new ArgumentOutOfRangeException(nameof(catalog)),
+        };
+        Api.RespondWith("application/json", json);
+        var client = new CatalogApiClient(ApiClient);
+
+        return catalog switch
+        {
+            "ingredients" => RenderIngredients(client),
+            "unit-types" => RenderUnitTypes(client),
+            "recipe-tags" => RenderRecipeTags(client),
+            "meal-types" => RenderMealTypes(client),
+            _ => throw new ArgumentOutOfRangeException(nameof(catalog)),
+        };
+    }
+
+    private IRenderedComponent<IComponent> RenderIngredients(CatalogApiClient client)
+    {
+        Services.AddSingleton<IIngredientsApiClient>(client);
+        return Render<global::Friggy.Web.Components.Pages.Ingredients>();
+    }
+
+    private IRenderedComponent<IComponent> RenderUnitTypes(CatalogApiClient client)
+    {
+        Services.AddSingleton<IUnitTypesApiClient>(client);
+        return Render<global::Friggy.Web.Components.Pages.UnitTypes>();
+    }
+
+    private IRenderedComponent<IComponent> RenderRecipeTags(CatalogApiClient client)
+    {
+        Services.AddSingleton<IRecipeTagsApiClient>(client);
+        return Render<global::Friggy.Web.Components.Pages.RecipeTags>();
+    }
+
+    private IRenderedComponent<IComponent> RenderMealTypes(CatalogApiClient client)
+    {
+        Services.AddSingleton<IMealTypesApiClient>(client);
+        return Render<global::Friggy.Web.Components.Pages.MealTypes>();
     }
 
     private sealed class StubUnitTypesApiClient : IUnitTypesApiClient

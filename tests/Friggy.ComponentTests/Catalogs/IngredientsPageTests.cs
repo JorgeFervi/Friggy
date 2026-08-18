@@ -109,7 +109,7 @@ public sealed class IngredientsPageTests : ComponentTest
 
         component.WaitForAssertion(() =>
         {
-            Assert.Equal(detail, component.Find("[role='alert']").TextContent);
+            Assert.Contains(detail, component.Find("[role='alert']").TextContent, StringComparison.Ordinal);
             Assert.Equal("Tomate", component.Find("#ingredient-name").GetAttribute("value"));
         });
         Assert.Empty(api.Created);
@@ -132,7 +132,7 @@ public sealed class IngredientsPageTests : ComponentTest
 
         component.WaitForAssertion(() =>
         {
-            Assert.Equal("Conexión rechazada.", component.Find("[role='alert']").TextContent);
+            Assert.Contains("Conexión rechazada.", component.Find("[role='alert']").TextContent, StringComparison.Ordinal);
             Assert.Equal("Tomate", component.Find("#ingredient-name").GetAttribute("value"));
         });
         Assert.Empty(api.Created);

@@ -4,37 +4,144 @@
 @using Friggy.Application.Catalogs.UnitTypes.Dtos
 @using Friggy.Web.Api
 @inject IUnitTypesApiClient Api
-@inject IJSRuntime JavaScript
 
 <PageTitle>Unidades</PageTitle>
-<h1>Tipos de unidad</h1>
-<EditForm Model="model" OnValidSubmit="SaveAsync" FormName="unit-form">
-    <DataAnnotationsValidator />
-    <label for="unit-name">Nombre</label><InputText id="unit-name" @bind-Value="model.Name" /><ValidationMessage For="() => model.Name" />
-    <label for="unit-symbol">Símbolo</label><InputText id="unit-symbol" @bind-Value="model.Symbol" /><ValidationMessage For="() => model.Symbol" />
-    <button type="submit">@(editingId.HasValue ? "Guardar" : "Añadir")</button>
-    @if (editingId.HasValue) { <button type="button" @onclick="CancelEdit">Cancelar</button> }
-</EditForm>
-@if (error is not null) { <p role="alert">@error</p> }
-@if (loading) { <p>Cargando unidades…</p> }
-else if (string.IsNullOrWhiteSpace(error) && items.Count == 0) { <p>No hay unidades.</p> }
-else
+<div class="friggy-catalog-page">
+    <PageHeader Title="Tipos de unidad"
+                Eyebrow="Catálogo"
+                Description="Define las unidades y símbolos usados para cantidades, recetas e inventario." />
+    @if (error is not null)
+    {
+        <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+    }
+    <PageSection Heading="@(editingId.HasValue ? "Editar unidad" : "Añadir unidad")"
+                 Description="El símbolo debe ser breve y fácil de reconocer.">
+        <EditForm Model="model" OnValidSubmit="SaveAsync" FormName="unit-form" class="friggy-catalog-page__form">
+            <DataAnnotationsValidator />
+            <div class="friggy-catalog-page__fields">
+                <div>
+                    <label for="unit-name">Nombre</label>
+                    <InputText id="unit-name" @bind-Value="model.Name" />
+                    <ValidationMessage For="() => model.Name" />
+                </div>
+                <div>
+                    <label for="unit-symbol">Símbolo</label>
+                    <InputText id="unit-symbol" @bind-Value="model.Symbol" />
+                    <ValidationMessage For="() => model.Symbol" />
+                </div>
+            </div>
+            <FormActions>
+                <FriggyButton Type="FriggyButtonType.Submit" Busy="saving" BusyLabel="Guardando">
+                    @(editingId.HasValue ? "Guardar cambios" : "Añadir")
+                </FriggyButton>
+                @if (editingId.HasValue)
+                {
+                    <FriggyButton Variant="FriggyButtonVariant.Secondary" Disabled="saving" OnClick="CancelEdit">Cancelar edición</FriggyButton>
+                }
+            </FormActions>
+        </EditForm>
+    </PageSection>
+    <PageSection Heading="Unidades registradas" Description="Consulta nombre y símbolo antes de editar o eliminar.">
+        @if (loading)
+        {
+            <FeedbackPanel Title="Cargando unidades" Tone="FriggyTone.Info">Estamos preparando el catálogo.</FeedbackPanel>
+        }
+        else if (string.IsNullOrWhiteSpace(error) && items.Count == 0)
+        {
+            <FeedbackPanel Title="No hay unidades" Tone="FriggyTone.Neutral">Añade la primera con el formulario anterior.</FeedbackPanel>
+        }
+        else if (items.Count > 0)
+        {
+            <div class="friggy-catalog-page__cards" role="list">
+                @foreach (var item in items)
+                {
+                    <article class="friggy-catalog-card" role="listitem" @key="item.Id">
+                        <div><p class="friggy-catalog-card__eyebrow">Unidad</p><h3>@item.Name</h3><p>@item.Symbol</p></div>
+                        <div class="friggy-catalog-page__actions">
+                            <FriggyIconButton Label="@($"Editar {item.Name}")" Icon="FriggyIconName.Edit" OnClick="() => BeginEdit(item)" />
+                            <FriggyIconButton Label="@($"Borrar {item.Name}")" Icon="FriggyIconName.Delete" Variant="FriggyButtonVariant.Danger" OnClick="() => RequestDelete(item)" />
+                        </div>
+                    </article>
+                }
+            </div>
+            <div class="friggy-catalog-page__table">
+                <table>
+                    <thead><tr><th>Nombre</th><th>Símbolo</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
+                    <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr @key="item.Id"><td>@item.Name</td><td>@item.Symbol</td><td><div class="friggy-catalog-page__actions">
+                            <FriggyIconButton Label="@($"Editar {item.Name}")" Icon="FriggyIconName.Edit" OnClick="() => BeginEdit(item)" />
+                            <FriggyIconButton Label="@($"Borrar {item.Name}")" Icon="FriggyIconName.Delete" Variant="FriggyButtonVariant.Danger" OnClick="() => RequestDelete(item)" />
+                        </div></td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </PageSection>
+</div>
+
+@if (itemToDelete is not null)
 {
-    <table><thead><tr><th>Nombre</th><th>Símbolo</th><th>Acciones</th></tr></thead><tbody>
-    @foreach (var item in items) { <tr @key="item.Id"><td>@item.Name</td><td>@item.Symbol</td><td><button type="button" @onclick="() => BeginEdit(item)">Editar</button><button type="button" @onclick="() => DeleteAsync(item)">Borrar</button></td></tr> }
-    </tbody></table>
+    <ConfirmDialog IsOpen="true" Title="Borrar unidad"
+                   Message="@($"¿Quieres borrar {itemToDelete.Name}? Esta acción no se puede deshacer.")"
+                   ConfirmText="Borrar unidad" Busy="deleting" OnConfirm="DeleteAsync" OnCancel="CancelDelete" />
 }
+
 @code {
     private readonly CancellationTokenSource cancellation = new();
     private readonly UnitInput model = new();
     private IReadOnlyList<UnitTypeResponse> items = [];
-    private Guid? editingId; private string? error; private bool loading = true;
+    private UnitTypeResponse? itemToDelete;
+    private Guid? editingId;
+    private string? error;
+    private bool loading = true;
+    private bool saving;
+    private bool deleting;
+
     protected override async Task OnInitializedAsync() => await ReloadAsync();
-    private async Task ReloadAsync() { try { items = await Api.ListAsync(cancellation.Token); error = null; } catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = $"No se pudieron cargar las unidades: {ex.Message}"; } finally { loading = false; } }
-    private async Task SaveAsync() { try { if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name, model.Symbol), cancellation.Token); else await Api.CreateAsync(new(model.Name, model.Symbol), cancellation.Token); CancelEdit(); await ReloadAsync(); } catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; } }
+    private async Task ReloadAsync()
+    {
+        try { items = await Api.ListAsync(cancellation.Token); error = null; }
+        catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = $"No se pudieron cargar las unidades: {ex.Message}"; }
+        finally { loading = false; }
+    }
+    private async Task SaveAsync()
+    {
+        if (saving) return;
+        saving = true;
+        try
+        {
+            if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name, model.Symbol), cancellation.Token);
+            else await Api.CreateAsync(new(model.Name, model.Symbol), cancellation.Token);
+            CancelEdit();
+            await ReloadAsync();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; }
+        finally { saving = false; }
+    }
     private void BeginEdit(UnitTypeResponse item) { editingId = item.Id; model.Name = item.Name; model.Symbol = item.Symbol; }
     private void CancelEdit() { editingId = null; model.Name = string.Empty; model.Symbol = string.Empty; }
-    private async Task DeleteAsync(UnitTypeResponse item) { if (await JavaScript.InvokeAsync<bool>("confirm", $"¿Borrar {item.Name}?")) { try { await Api.DeleteAsync(item.Id, cancellation.Token); await ReloadAsync(); } catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; } } }
+    private void RequestDelete(UnitTypeResponse item) { if (!deleting) itemToDelete = item; }
+    private void CancelDelete() => itemToDelete = null;
+    private async Task DeleteAsync()
+    {
+        var item = itemToDelete;
+        if (item is null || deleting) return;
+        deleting = true;
+        try { await Api.DeleteAsync(item.Id, cancellation.Token); await ReloadAsync(); }
+        catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; }
+        finally { deleting = false; itemToDelete = null; }
+    }
     public void Dispose() { cancellation.Cancel(); cancellation.Dispose(); GC.SuppressFinalize(this); }
-    private sealed class UnitInput { [Required(ErrorMessage = "El nombre es obligatorio.")] [StringLength(120)] public string Name { get; set; } = string.Empty; [Required(ErrorMessage = "El símbolo es obligatorio.")] [StringLength(20)] public string Symbol { get; set; } = string.Empty; }
+    private sealed class UnitInput
+    {
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [StringLength(120)]
+        public string Name { get; set; } = string.Empty;
+        [Required(ErrorMessage = "El símbolo es obligatorio.")]
+        [StringLength(20)]
+        public string Symbol { get; set; } = string.Empty;
+    }
 }

@@ -1,6 +1,7 @@
 @import url("css/fonts.css");
 @import url("css/tokens.css");
 @import url("css/base.css");
+@import url("css/catalogs.css");
 
 .valid.modified:not([type=checkbox]) {
     outline: 0.0625rem solid var(--color-success);

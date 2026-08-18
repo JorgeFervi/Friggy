@@ -1,7 +1,12 @@
 ﻿<script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
 
-<dialog id="components-reconnect-modal" data-nosnippet>
+<dialog id="components-reconnect-modal"
+        aria-labelledby="components-reconnect-title"
+        aria-modal="true"
+        data-nosnippet>
     <div class="components-reconnect-container">
+        <p class="friggy-reconnect__eyebrow">Conexión con Friggy</p>
+        <h2 id="components-reconnect-title">Conexión interrumpida</h2>
         <div class="components-rejoining-animation" aria-hidden="true">
             <div></div>
             <div></div>

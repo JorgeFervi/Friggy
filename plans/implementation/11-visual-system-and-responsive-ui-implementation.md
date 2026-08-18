@@ -5,7 +5,7 @@
 
 La fase es una migración de presentación. No modifica Domain, Application, Infrastructure ni Api. Todo comportamiento de componentes comienza con un test bUnit/xUnit v3 fallido; los baseline iniciales se generan únicamente después de que la semántica y el diseño de cada incremento estén aprobados.
 
-> **Progreso:** 11.1, 11.2, 11.3, 11.4, 11.5 y 11.6 completadas. La siguiente unidad ejecutable es **11.7 — Catálogos y páginas secundarias**.
+> **Progreso:** 11.1, 11.2, 11.3, 11.4, 11.5, 11.6 y 11.7 completadas. La siguiente unidad ejecutable es **11.8 — Auditoría responsive, accesibilidad y gate**.
 
 ## Reglas transversales
 
@@ -203,6 +203,14 @@ El gate final completó build Release con 0 warnings, formato limpio, auditoría
 
 - Baseline representativo de un catálogo en móvil/escritorio; los otros se protegen por bUnit y estructura compartida.
 - Ninguna página queda fuera del shell o utiliza confirmaciones/feedback sin estilizar.
+
+Ingredientes, Unidades, Etiquetas y Tipos de comida conservan sus rutas, clientes HTTP y reglas de negocio, pero ahora comparten el lenguaje visual Friggy sin introducir una abstracción CRUD genérica. Cada catálogo presenta cards compactas en móvil y tabla semántica en escritorio, con nombres accesibles equivalentes para editar y borrar, formularios responsive, estados busy y ConfirmDialog propio.
+
+NotFound y Error ofrecen contenido seguro en español y una salida clara hacia Inicio. El diálogo de reconexión conserva los identificadores requeridos por Blazor, añade título accesible, `aria-modal`, controles táctiles y reduced motion. No quedan referencias `ui-` ni confirmaciones nativas en las páginas migradas.
+
+bUnit parametriza los estados poblado, vacío, edición y error de los cuatro catálogos, además de proteger las páginas secundarias. Playwright aísla los datos de Etiquetas en PostgreSQL y valida cards a 360×800, tabla a 1440×1000, objetivos táctiles y ausencia de overflow. Se revisaron y aceptaron dos baseline representativos.
+
+El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 434/434 pruebas: 115 Domain, 71 Application, 85 Integration, 136 Component y 27 E2E.
 
 ## 11.8 — Auditoría responsive, accesibilidad y gate
 

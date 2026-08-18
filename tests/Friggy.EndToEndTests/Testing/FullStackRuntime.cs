@@ -94,6 +94,18 @@ internal sealed class FullStackRuntime : IFullStackRuntime
             cancellationToken);
     }
 
+    public async Task ResetRecipeTagDataAsync(CancellationToken cancellationToken)
+    {
+        var options = new DbContextOptionsBuilder<FriggyDbContext>()
+            .UseNpgsql(database.GetConnectionString())
+            .Options;
+
+        await using var context = new FriggyDbContext(options);
+        await context.Database.ExecuteSqlRawAsync(
+            "TRUNCATE TABLE recipe_tags CASCADE;",
+            cancellationToken);
+    }
+
     public Task StartApiAsync(CancellationToken cancellationToken)
     {
         apiProcess = StartProcess(
