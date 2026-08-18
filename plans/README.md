@@ -43,4 +43,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 10 y las subfases 11.1 a 11.5 están completadas. La siguiente unidad ejecutable es **11.6 — Inventario**.
+Las fases 1 a 10 y las subfases 11.1 a 11.6 están completadas. La siguiente unidad ejecutable es **11.7 — Catálogos y páginas secundarias**.

@@ -82,6 +82,18 @@ internal sealed class FullStackRuntime : IFullStackRuntime
             cancellationToken);
     }
 
+    public async Task ResetInventoryDataAsync(CancellationToken cancellationToken)
+    {
+        var options = new DbContextOptionsBuilder<FriggyDbContext>()
+            .UseNpgsql(database.GetConnectionString())
+            .Options;
+
+        await using var context = new FriggyDbContext(options);
+        await context.Database.ExecuteSqlRawAsync(
+            "TRUNCATE TABLE inventory_lots CASCADE;",
+            cancellationToken);
+    }
+
     public Task StartApiAsync(CancellationToken cancellationToken)
     {
         apiProcess = StartProcess(

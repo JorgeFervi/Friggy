@@ -1,0 +1,41 @@
+.friggy-inventory-details { display: grid; gap: var(--space-7); min-width: 0; }
+.friggy-inventory-details__operation-status {
+    background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
+    border: 0.0625rem solid color-mix(in srgb, var(--color-success) 34%, var(--color-border));
+    border-radius: var(--radius-medium); color: var(--color-success); font-weight: 600; margin: 0;
+    padding: var(--space-4) var(--space-5);
+}
+.friggy-inventory-details__operations { display: grid; gap: var(--space-5); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.friggy-inventory-details__quantity-operation,
+.friggy-inventory-details__expiration-operation { display: grid; gap: var(--space-5); }
+.friggy-inventory-details__quantity-operation > div:first-child,
+.friggy-inventory-details__expiration-operation > div:first-child { display: grid; gap: var(--space-2); }
+.friggy-inventory-details__movement-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.friggy-inventory-details__expiration-operation { align-items: end; grid-template-columns: minmax(0, 1fr) auto; }
+.friggy-inventory-details__movement-cards { display: none; }
+.friggy-inventory-details__movement-table { max-width: 100%; overflow-x: auto; }
+.friggy-inventory-details__movement-table table { min-width: 38rem; width: 100%; }
+
+@media (max-width: 63.99rem) {
+    .friggy-inventory-details__operations { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 47.99rem) {
+    .friggy-inventory-details__movement-actions { align-items: stretch; flex-direction: column; }
+    .friggy-inventory-details__expiration-operation { align-items: stretch; grid-template-columns: 1fr; }
+    .friggy-inventory-details__movement-cards { display: grid; gap: var(--space-4); }
+    .friggy-inventory-details__movement-table { display: none; }
+}
+
+.friggy-inventory-movement {
+    background: var(--color-surface); border: 0.0625rem solid var(--color-border); border-radius: var(--radius-large);
+    display: grid; gap: var(--space-4); padding: var(--space-4);
+}
+.friggy-inventory-movement p,
+.friggy-inventory-movement time { margin: 0; }
+.friggy-inventory-movement__type { font-family: var(--font-family-display); font-size: 1.1rem; font-weight: 600; }
+.friggy-inventory-movement time { color: var(--color-text-muted); font-size: var(--font-size-small); }
+.friggy-inventory-movement dl { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+.friggy-inventory-movement dl div { display: grid; gap: var(--space-1); }
+.friggy-inventory-movement dt { color: var(--color-text-muted); font-size: var(--font-size-small); }
+.friggy-inventory-movement dd { font-weight: 700; margin: 0; }

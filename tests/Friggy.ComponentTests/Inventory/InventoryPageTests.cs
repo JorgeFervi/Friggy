@@ -67,6 +67,31 @@ public sealed class InventoryPageTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void Inventory_ShowUnavailable_RendersResponsiveCollectionAndEveryStatus()
+    {
+        var api = RegisterApis();
+        api.Items.Add(CreateLot(2m));
+        api.Items.Add(CreateLot(0m));
+        api.Items.Add(CreateLot(1m) with { IsExpired = true });
+        var component = Render<global::Friggy.Web.Components.Pages.Inventory>();
+        component.WaitForElement("input[type='checkbox']");
+
+        component.Find("input[type='checkbox']").Change(true);
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Equal([false, true], api.ListRequests);
+            Assert.Equal(3, component.FindAll("[data-testid='inventory-lot-item']").Count);
+            Assert.NotNull(component.Find(".friggy-inventory__cards"));
+            Assert.NotNull(component.Find(".friggy-inventory__table"));
+            Assert.Contains("Disponible", component.Markup, StringComparison.Ordinal);
+            Assert.Contains("Agotado", component.Markup, StringComparison.Ordinal);
+            Assert.Contains("Caducado", component.Markup, StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void InventoryLotDetails_PartialConsumption_ShowsAppliedAndUnappliedConfirmation()
     {
         var api = RegisterApis();
@@ -82,8 +107,8 @@ public sealed class InventoryPageTests : ComponentTest
         component.WaitForAssertion(() =>
         {
             Assert.Equal(2m, api.LastConsumption?.Quantity);
-            Assert.Contains("quedaron", component.Find("[role='status']").TextContent);
-            Assert.Contains("sin registrar", component.Find("[role='status']").TextContent);
+            Assert.Contains("quedaron", component.Find(".friggy-inventory-details__operation-status").TextContent);
+            Assert.Contains("sin registrar", component.Find(".friggy-inventory-details__operation-status").TextContent);
         });
     }
 
@@ -100,13 +125,65 @@ public sealed class InventoryPageTests : ComponentTest
 
         component.Find("#lot-expiration-date").Change("2026-08-30");
         component.FindAll("button")
-            .Single(button => button.TextContent == "Corregir caducidad")
+            .Single(button => button.TextContent.Trim() == "Corregir caducidad")
             .Click();
 
         component.WaitForAssertion(() =>
         {
             Assert.Equal(new DateOnly(2026, 8, 30), api.LastExpiration?.ExpirationDate);
-            Assert.Equal("Caducidad corregida.", component.Find("[role='status']").TextContent);
+            Assert.Equal("Caducidad corregida.", component.Find(".friggy-inventory-details__operation-status").TextContent);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void InventoryLotDetails_Discard_RequiresOwnConfirmationAndRegistersMovement()
+    {
+        SetupConfirmDialog();
+        var api = RegisterApis();
+        var lot = CreateLot(3m);
+        api.Items.Add(lot);
+        var component = Render<global::Friggy.Web.Components.Pages.InventoryLotDetails>(
+            parameters => parameters.Add(page => page.Id, lot.Id));
+        component.WaitForElement("#lot-operation-quantity");
+
+        component.Find("#lot-operation-quantity").Change("1");
+        component.FindAll("button").Single(button => button.TextContent.Trim() == "Descartar").Click();
+
+        Assert.Null(api.LastDiscard);
+        var dialog = component.Find("dialog");
+        Assert.Equal("Confirmar descarte", dialog.QuerySelector("h2")?.TextContent);
+        dialog.QuerySelectorAll("button")
+            .Single(button => button.TextContent == "Descartar lote")
+            .Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Equal(1m, api.LastDiscard?.Quantity);
+            Assert.Equal("Descarte registrado.", component.Find(".friggy-inventory-details__operation-status").TextContent);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void InventoryLotDetails_Adjust_UsesSecondaryActionAndUpdatesQuantity()
+    {
+        var api = RegisterApis();
+        var lot = CreateLot(3m);
+        api.Items.Add(lot);
+        var component = Render<global::Friggy.Web.Components.Pages.InventoryLotDetails>(
+            parameters => parameters.Add(page => page.Id, lot.Id));
+        component.WaitForElement("#lot-operation-quantity");
+
+        component.Find("#lot-operation-quantity").Change("2.25");
+        component.FindAll("button")
+            .Single(button => button.TextContent.Trim() == "Ajustar a cantidad real")
+            .Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Equal(2.25m, api.LastAdjustment?.ActualQuantity);
+            Assert.Equal("Cantidad ajustada.", component.Find(".friggy-inventory-details__operation-status").TextContent);
         });
     }
 
@@ -132,20 +209,36 @@ public sealed class InventoryPageTests : ComponentTest
         return api;
     }
 
+    private void SetupConfirmDialog()
+    {
+        var module = JavaScript.SetupModule("./js/confirm-dialog.js");
+        module.SetupVoid("show", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
+    }
+
     private sealed class StubInventoryApiClient : IInventoryApiClient
     {
         public List<InventoryLotResponse> Items { get; } = [];
         public List<CreateInventoryLotRequest> Created { get; } = [];
+        public List<bool> ListRequests { get; } = [];
         public Exception? ListException { get; set; }
         public InventoryQuantityRequest? LastConsumption { get; private set; }
+        public InventoryQuantityRequest? LastDiscard { get; private set; }
+        public AdjustInventoryLotRequest? LastAdjustment { get; private set; }
         public CorrectInventoryExpirationRequest? LastExpiration { get; private set; }
 
         public Task<IReadOnlyList<InventoryLotResponse>> ListAsync(
             bool includeUnavailable,
-            CancellationToken cancellationToken) =>
-            ListException is null
-                ? Task.FromResult<IReadOnlyList<InventoryLotResponse>>(Items)
+            CancellationToken cancellationToken)
+        {
+            ListRequests.Add(includeUnavailable);
+            return ListException is null
+                ? Task.FromResult<IReadOnlyList<InventoryLotResponse>>(
+                    includeUnavailable
+                        ? Items
+                        : Items.Where(item => !item.IsExpired && item.Quantity > 0).ToArray())
                 : Task.FromException<IReadOnlyList<InventoryLotResponse>>(ListException);
+        }
 
         public Task<InventoryLotResponse> CreateAsync(
             CreateInventoryLotRequest request,
@@ -188,10 +281,25 @@ public sealed class InventoryPageTests : ComponentTest
                 applied,
                 request.Quantity - applied));
         }
-        public Task<InventoryOperationResponse> DiscardAsync(Guid id, InventoryQuantityRequest request, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<InventoryLotResponse> AdjustAsync(Guid id, AdjustInventoryLotRequest request, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+        public Task<InventoryOperationResponse> DiscardAsync(Guid id, InventoryQuantityRequest request, CancellationToken cancellationToken)
+        {
+            LastDiscard = request;
+            var index = Items.FindIndex(item => item.Id == id);
+            var applied = Math.Min(Items[index].Quantity, request.Quantity);
+            var updated = Items[index] with { Quantity = Items[index].Quantity - applied };
+            Items[index] = updated;
+            return Task.FromResult(new InventoryOperationResponse(
+                updated,
+                applied,
+                request.Quantity - applied));
+        }
+        public Task<InventoryLotResponse> AdjustAsync(Guid id, AdjustInventoryLotRequest request, CancellationToken cancellationToken)
+        {
+            LastAdjustment = request;
+            var index = Items.FindIndex(item => item.Id == id);
+            Items[index] = Items[index] with { Quantity = request.ActualQuantity };
+            return Task.FromResult(Items[index]);
+        }
     }
 
     private sealed class StubIngredientsApiClient : IIngredientsApiClient

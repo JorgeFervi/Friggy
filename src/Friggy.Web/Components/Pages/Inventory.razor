@@ -10,76 +10,133 @@
 @inject IUnitTypesApiClient UnitTypesApi
 
 <PageTitle>Inventario</PageTitle>
-<h1>Inventario</h1>
+<div class="friggy-inventory">
+    <PageHeader Title="Inventario"
+                Eyebrow="Tu despensa al día"
+                Description="Organiza cada lote, controla su caducidad y aprovecha mejor tus ingredientes." />
 
-<EditForm Model="form" OnValidSubmit="CreateAsync" FormName="inventory-lot-form" data-testid="inventory-lot-form">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div>
-        <label for="inventory-ingredient">Ingrediente</label>
-        <InputSelect id="inventory-ingredient" @bind-Value="form.IngredientId">
-            <option value="">Selecciona un ingrediente</option>
-            @foreach (var ingredient in ingredients.OrderBy(item => item.Name))
+    @if (error is not null)
+    {
+        <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+    }
+
+    <PageSection Heading="Añadir un lote"
+                 Description="Registra la cantidad disponible y su fecha de caducidad.">
+        <EditForm Model="form"
+                  OnValidSubmit="CreateAsync"
+                  FormName="inventory-lot-form"
+                  class="friggy-inventory__form"
+                  data-testid="inventory-lot-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="friggy-inventory__fields">
+                <div>
+                    <label for="inventory-ingredient">Ingrediente</label>
+                    <InputSelect id="inventory-ingredient" @bind-Value="form.IngredientId">
+                        <option value="">Selecciona un ingrediente</option>
+                        @foreach (var ingredient in ingredients.OrderBy(item => item.Name))
+                        {
+                            <option value="@ingredient.Id">@ingredient.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => form.IngredientId" />
+                </div>
+                <div>
+                    <label for="inventory-unit">Unidad</label>
+                    <InputSelect id="inventory-unit" @bind-Value="form.UnitTypeId">
+                        <option value="">Selecciona una unidad</option>
+                        @foreach (var unit in units.OrderBy(item => item.Name))
+                        {
+                            <option value="@unit.Id">@unit.Name (@unit.Symbol)</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => form.UnitTypeId" />
+                </div>
+                <div>
+                    <label for="inventory-quantity">Cantidad</label>
+                    <InputNumber id="inventory-quantity" @bind-Value="form.Quantity" />
+                    <ValidationMessage For="() => form.Quantity" />
+                </div>
+                <div>
+                    <label for="inventory-expiration">Caducidad</label>
+                    <InputDate id="inventory-expiration" @bind-Value="form.ExpirationDate" />
+                </div>
+            </div>
+            <FormActions>
+                <FriggyButton Type="FriggyButtonType.Submit" Busy="saving" BusyLabel="Guardando lote">
+                    Añadir lote
+                </FriggyButton>
+            </FormActions>
+        </EditForm>
+    </PageSection>
+
+    <PageSection Heading="Lotes registrados"
+                 Description="Consulta cantidades, fechas y disponibilidad sin perder el historial.">
+        <Actions>
+            <label class="friggy-inventory__filter">
+                <InputCheckbox @bind-Value="includeUnavailable" @bind-Value:after="ReloadAsync" />
+                <span>Mostrar agotados y caducados</span>
+            </label>
+        </Actions>
+        <ChildContent>
+            @if (loading)
             {
-                <option value="@ingredient.Id">@ingredient.Name</option>
+                <FeedbackPanel Title="Cargando inventario" Tone="FriggyTone.Info">Estamos preparando tus lotes.</FeedbackPanel>
             }
-        </InputSelect>
-    </div>
-    <div>
-        <label for="inventory-unit">Unidad</label>
-        <InputSelect id="inventory-unit" @bind-Value="form.UnitTypeId">
-            <option value="">Selecciona una unidad</option>
-            @foreach (var unit in units.OrderBy(item => item.Name))
+            else if (lots.Count == 0)
             {
-                <option value="@unit.Id">@unit.Name (@unit.Symbol)</option>
+                <FeedbackPanel Title="No hay lotes para mostrar" Tone="FriggyTone.Neutral">
+                    Añade un lote o activa el filtro para consultar los agotados y caducados.
+                </FeedbackPanel>
             }
-        </InputSelect>
-    </div>
-    <div>
-        <label for="inventory-quantity">Cantidad</label>
-        <InputNumber id="inventory-quantity" @bind-Value="form.Quantity" />
-    </div>
-    <div>
-        <label for="inventory-expiration">Caducidad</label>
-        <InputDate id="inventory-expiration" @bind-Value="form.ExpirationDate" />
-    </div>
-    <button type="submit" disabled="@saving">@(saving ? "Guardando…" : "Añadir lote")</button>
-</EditForm>
+            else
+            {
+                <div class="friggy-inventory__cards" role="list" data-testid="inventory-card-list">
+                    @foreach (var lot in lots)
+                    {
+                        <article class="friggy-inventory-lot-card"
+                                 role="listitem"
+                                 data-testid="inventory-lot-item"
+                                 @key="lot.Id">
+                            <div class="friggy-inventory-lot-card__header">
+                                <div>
+                                    <p class="friggy-inventory-lot-card__eyebrow">Lote de inventario</p>
+                                    <h3><a href="inventory/@lot.Id">@lot.IngredientName</a></h3>
+                                </div>
+                                <StatusBadge Tone="@StatusTone(lot)">@StatusLabel(lot)</StatusBadge>
+                            </div>
+                            <dl class="friggy-inventory-lot-card__facts">
+                                <div><dt>Cantidad</dt><dd>@lot.Quantity @lot.UnitSymbol</dd></div>
+                                <div><dt>Caducidad</dt><dd>@lot.ExpirationDate.ToString("dd/MM/yyyy")</dd></div>
+                            </dl>
+                            <a class="friggy-inventory-lot-card__link" href="inventory/@lot.Id">Ver detalle e historial</a>
+                        </article>
+                    }
+                </div>
 
-<label>
-    <InputCheckbox @bind-Value="includeUnavailable" @bind-Value:after="ReloadAsync" />
-    Mostrar agotados y caducados
-</label>
-
-@if (loading)
-{
-    <p>Cargando inventario…</p>
-}
-else if (error is not null)
-{
-    <p role="alert">@error</p>
-}
-else if (lots.Count == 0)
-{
-    <p>No hay lotes para mostrar.</p>
-}
-else
-{
-    <table>
-        <thead><tr><th>Ingrediente</th><th>Cantidad</th><th>Caducidad</th><th>Estado</th></tr></thead>
-        <tbody>
-        @foreach (var lot in lots)
-        {
-            <tr @key="lot.Id">
-                <td><a href="inventory/@lot.Id">@lot.IngredientName</a></td>
-                <td>@lot.Quantity @lot.UnitSymbol</td>
-                <td>@lot.ExpirationDate.ToString("dd/MM/yyyy")</td>
-                <td>@(lot.IsExpired ? "Caducado" : lot.Quantity == 0 ? "Agotado" : "Disponible")</td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+                <div class="friggy-inventory__table" data-testid="inventory-table">
+                    <table>
+                        <thead>
+                            <tr><th>Ingrediente</th><th>Cantidad</th><th>Caducidad</th><th>Estado</th><th><span class="visually-hidden">Acciones</span></th></tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var lot in lots)
+                        {
+                            <tr @key="lot.Id">
+                                <td><a href="inventory/@lot.Id">@lot.IngredientName</a></td>
+                                <td>@lot.Quantity @lot.UnitSymbol</td>
+                                <td>@lot.ExpirationDate.ToString("dd/MM/yyyy")</td>
+                                <td><StatusBadge Tone="@StatusTone(lot)">@StatusLabel(lot)</StatusBadge></td>
+                                <td><a href="inventory/@lot.Id" aria-label="Ver detalle de @lot.IngredientName">Ver detalle</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </ChildContent>
+    </PageSection>
+</div>
 
 @code {
     private readonly CancellationTokenSource cancellation = new();
@@ -136,8 +193,22 @@ else
 
     private async Task ReloadAsync()
     {
-        lots = await InventoryApi.ListAsync(includeUnavailable, cancellation.Token);
+        try
+        {
+            lots = await InventoryApi.ListAsync(includeUnavailable, cancellation.Token);
+            error = null;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
     }
+
+    private static string StatusLabel(InventoryLotResponse lot) =>
+        lot.IsExpired ? "Caducado" : lot.Quantity == 0 ? "Agotado" : "Disponible";
+
+    private static FriggyTone StatusTone(InventoryLotResponse lot) =>
+        lot.IsExpired ? FriggyTone.Danger : lot.Quantity == 0 ? FriggyTone.Neutral : FriggyTone.Success;
 
     public void Dispose()
     {

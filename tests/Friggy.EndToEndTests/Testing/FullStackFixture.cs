@@ -68,6 +68,12 @@ public sealed class FullStackFixture : IAsyncLifetime
         await runtime.ResetPlanningDataAsync(cancellationToken);
     }
 
+    public async Task ResetInventoryDataAsync(CancellationToken cancellationToken)
+    {
+        EnsureInitialized("reiniciar los datos de inventario");
+        await runtime.ResetInventoryDataAsync(cancellationToken);
+    }
+
     public async Task StopApiAsync(CancellationToken cancellationToken)
     {
         EnsureInitialized("detener la API");
@@ -120,6 +126,8 @@ internal interface IFullStackRuntime : IDisposable
     Task ResetRecipeDataAsync(CancellationToken cancellationToken);
 
     Task ResetPlanningDataAsync(CancellationToken cancellationToken);
+
+    Task ResetInventoryDataAsync(CancellationToken cancellationToken);
 
     Task StartApiAsync(CancellationToken cancellationToken);
 

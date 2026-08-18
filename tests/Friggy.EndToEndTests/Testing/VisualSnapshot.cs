@@ -17,6 +17,10 @@ internal static class VisualSnapshot
             transition-delay: 0s !important;
             transition-duration: 0s !important;
         }
+
+        [data-visual-hide] {
+            visibility: hidden !important;
+        }
         """;
     private static readonly string RepositoryRoot = FindRepositoryRoot();
 

@@ -6,46 +6,127 @@
 
 <PageTitle>Detalle del lote</PageTitle>
 
-@if (lot is null)
-{
-    <h1>Detalle del lote</h1>
-    <p role="alert">@(error ?? "Cargando lote…")</p>
-}
-else
-{
-    <h1>@lot.IngredientName</h1>
-    <p>@lot.Quantity @lot.UnitSymbol disponibles. Caduca el @lot.ExpirationDate.ToString("dd/MM/yyyy").</p>
-    <p><a href="inventory">Volver al inventario</a></p>
-    @if (error is not null) { <p role="alert">@error</p> }
-    @if (status is not null) { <p role="status">@status</p> }
+<div class="friggy-inventory-details">
+    @if (lot is null)
+    {
+        <PageHeader Title="Detalle del lote"
+                    Eyebrow="Inventario"
+                    Description="Consulta la cantidad y los movimientos del lote.">
+            <Breadcrumb><a href="inventory">Inventario</a></Breadcrumb>
+        </PageHeader>
+        <FeedbackPanel Title="@(error is null ? "Cargando lote" : "No pudimos cargar el lote")"
+                       Tone="@(error is null ? FriggyTone.Info : FriggyTone.Danger)">
+            @(error ?? "Estamos preparando la información del lote.")
+        </FeedbackPanel>
+    }
+    else
+    {
+        <PageHeader Title="@lot.IngredientName"
+                    Eyebrow="Detalle del lote"
+                    Description="@LotSummary(lot)">
+            <Breadcrumb><a href="inventory">Inventario</a></Breadcrumb>
+            <Actions><StatusBadge Tone="@StatusTone(lot)">@StatusLabel(lot)</StatusBadge></Actions>
+        </PageHeader>
 
-    <label for="lot-operation-quantity">Cantidad</label>
-    <InputNumber id="lot-operation-quantity" @bind-Value="operationQuantity" />
-    <button disabled="@saving" @onclick="ConsumeAsync">Consumir</button>
-    <button disabled="@saving" @onclick="DiscardAsync">Descartar</button>
-    <button disabled="@saving" @onclick="AdjustAsync">Ajustar a cantidad real</button>
-
-    <div>
-        <label for="lot-expiration-date">Caducidad</label>
-        <InputDate id="lot-expiration-date" @bind-Value="expirationDate" />
-        <button disabled="@saving" @onclick="CorrectExpirationAsync">Corregir caducidad</button>
-    </div>
-
-    <h2>Historial</h2>
-    <table>
-        <thead><tr><th>Momento</th><th>Tipo</th><th>Cambio</th><th>Resultado</th></tr></thead>
-        <tbody>
-        @foreach (var movement in lot.Movements.OrderByDescending(item => item.OccurredAt))
+        @if (error is not null)
         {
-            <tr @key="movement.Id">
-                <td>@movement.OccurredAt.ToLocalTime().ToString("g")</td>
-                <td>@MovementLabel(movement.Type)</td>
-                <td>@movement.Delta</td>
-                <td>@movement.ResultingQuantity</td>
-            </tr>
+            <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel>
         }
-        </tbody>
-    </table>
+        @if (status is not null)
+        {
+            <p class="friggy-inventory-details__operation-status" role="status">@status</p>
+        }
+
+        <div class="friggy-inventory-details__operations">
+            <PageSection Heading="Registrar movimiento"
+                         Description="Consume, descarta o reconcilia la cantidad real del lote.">
+                <div class="friggy-inventory-details__quantity-operation">
+                    <div>
+                        <label for="lot-operation-quantity">Cantidad (@lot.UnitSymbol)</label>
+                        <InputNumber id="lot-operation-quantity" @bind-Value="operationQuantity" />
+                    </div>
+                    <div class="friggy-inventory-details__movement-actions">
+                        <FriggyButton Busy="saving" BusyLabel="Registrando" OnClick="ConsumeAsync">Consumir</FriggyButton>
+                        <FriggyButton Variant="FriggyButtonVariant.Secondary" Disabled="saving" OnClick="AdjustAsync">
+                            Ajustar a cantidad real
+                        </FriggyButton>
+                        <FriggyButton Variant="FriggyButtonVariant.Danger" Disabled="saving" OnClick="RequestDiscard">
+                            Descartar
+                        </FriggyButton>
+                    </div>
+                </div>
+            </PageSection>
+
+            <PageSection Heading="Corregir caducidad"
+                         Description="Actualiza la fecha si la etiqueta o el registro no coinciden.">
+                <div class="friggy-inventory-details__expiration-operation">
+                    <div>
+                        <label for="lot-expiration-date">Caducidad</label>
+                        <InputDate id="lot-expiration-date" @bind-Value="expirationDate" />
+                    </div>
+                    <FriggyButton Variant="FriggyButtonVariant.Secondary"
+                                  Busy="saving"
+                                  BusyLabel="Corrigiendo"
+                                  OnClick="CorrectExpirationAsync">
+                        Corregir caducidad
+                    </FriggyButton>
+                </div>
+            </PageSection>
+        </div>
+
+        <PageSection Heading="Historial"
+                     Description="Todos los cambios quedan ordenados desde el más reciente.">
+            @if (lot.Movements.Count == 0)
+            {
+                <FeedbackPanel Title="Sin movimientos" Tone="FriggyTone.Neutral">Este lote todavía no tiene movimientos registrados.</FeedbackPanel>
+            }
+            else
+            {
+                <div class="friggy-inventory-details__movement-cards" role="list">
+                    @foreach (var movement in lot.Movements.OrderByDescending(item => item.OccurredAt))
+                    {
+                        <article class="friggy-inventory-movement" role="listitem" @key="movement.Id">
+                            <div>
+                                <p class="friggy-inventory-movement__type">@MovementLabel(movement.Type)</p>
+                                <time datetime="@movement.OccurredAt.ToString("O")" data-visual-hide>@movement.OccurredAt.ToLocalTime().ToString("g")</time>
+                            </div>
+                            <dl>
+                                <div><dt>Cambio</dt><dd>@movement.Delta @lot.UnitSymbol</dd></div>
+                                <div><dt>Resultado</dt><dd>@movement.ResultingQuantity @lot.UnitSymbol</dd></div>
+                            </dl>
+                        </article>
+                    }
+                </div>
+                <div class="friggy-inventory-details__movement-table">
+                    <table>
+                        <thead><tr><th>Momento</th><th>Tipo</th><th>Cambio</th><th>Resultado</th></tr></thead>
+                        <tbody>
+                        @foreach (var movement in lot.Movements.OrderByDescending(item => item.OccurredAt))
+                        {
+                            <tr @key="movement.Id">
+                                <td data-visual-hide>@movement.OccurredAt.ToLocalTime().ToString("g")</td>
+                                <td>@MovementLabel(movement.Type)</td>
+                                <td>@movement.Delta @lot.UnitSymbol</td>
+                                <td>@movement.ResultingQuantity @lot.UnitSymbol</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </PageSection>
+    }
+</div>
+
+@if (confirmingDiscard)
+{
+    <ConfirmDialog IsOpen="true"
+                   Title="Confirmar descarte"
+                   Message="@DiscardMessage"
+                   ConfirmText="Descartar lote"
+                   Busy="saving"
+                   OnConfirm="DiscardAsync"
+                   OnCancel="CancelDiscard" />
 }
 
 @code {
@@ -54,10 +135,14 @@ else
     private decimal operationQuantity;
     private DateOnly expirationDate;
     private bool saving;
+    private bool confirmingDiscard;
     private string? error;
     private string? status;
 
     [Parameter] public Guid Id { get; set; }
+
+    private string DiscardMessage =>
+        $"¿Quieres descartar {operationQuantity} {lot?.UnitSymbol} de este lote? El movimiento quedará registrado en el historial.";
 
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
@@ -69,13 +154,27 @@ else
             : "Consumo registrado.";
     });
 
-    private Task DiscardAsync() => RunOperationAsync(async () =>
+    private void RequestDiscard()
     {
-        var result = await InventoryApi.DiscardAsync(Id, new(operationQuantity), cancellation.Token);
-        status = result.UnappliedQuantity > 0
-            ? $"Se descartaron {result.AppliedQuantity}; quedaron {result.UnappliedQuantity} sin registrar."
-            : "Descarte registrado.";
-    });
+        if (!saving)
+        {
+            confirmingDiscard = true;
+        }
+    }
+
+    private void CancelDiscard() => confirmingDiscard = false;
+
+    private async Task DiscardAsync()
+    {
+        await RunOperationAsync(async () =>
+        {
+            var result = await InventoryApi.DiscardAsync(Id, new(operationQuantity), cancellation.Token);
+            status = result.UnappliedQuantity > 0
+                ? $"Se descartaron {result.AppliedQuantity}; quedaron {result.UnappliedQuantity} sin registrar."
+                : "Descarte registrado.";
+        });
+        confirmingDiscard = false;
+    }
 
     private Task AdjustAsync() => RunOperationAsync(async () =>
     {
@@ -91,6 +190,11 @@ else
 
     private async Task RunOperationAsync(Func<Task> operation)
     {
+        if (saving)
+        {
+            return;
+        }
+
         saving = true;
         error = null;
         status = null;
@@ -117,8 +221,19 @@ else
             expirationDate = lot.ExpirationDate;
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
-        { error = exception.Message; }
+        {
+            error = exception.Message;
+        }
     }
+
+    private static string LotSummary(InventoryLotResponse item) =>
+        $"{item.Quantity} {item.UnitSymbol} disponibles · Caduca el {item.ExpirationDate:dd/MM/yyyy}";
+
+    private static string StatusLabel(InventoryLotResponse item) =>
+        item.IsExpired ? "Caducado" : item.Quantity == 0 ? "Agotado" : "Disponible";
+
+    private static FriggyTone StatusTone(InventoryLotResponse item) =>
+        item.IsExpired ? FriggyTone.Danger : item.Quantity == 0 ? FriggyTone.Neutral : FriggyTone.Success;
 
     private static string MovementLabel(InventoryMovementKind kind) => kind switch
     {

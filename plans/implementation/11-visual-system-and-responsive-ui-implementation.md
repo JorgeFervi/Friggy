@@ -5,7 +5,7 @@
 
 La fase es una migración de presentación. No modifica Domain, Application, Infrastructure ni Api. Todo comportamiento de componentes comienza con un test bUnit/xUnit v3 fallido; los baseline iniciales se generan únicamente después de que la semántica y el diseño de cada incremento estén aprobados.
 
-> **Progreso:** 11.1, 11.2, 11.3, 11.4 y 11.5 completadas. La siguiente unidad ejecutable es **11.6 — Inventario**.
+> **Progreso:** 11.1, 11.2, 11.3, 11.4, 11.5 y 11.6 completadas. La siguiente unidad ejecutable es **11.7 — Catálogos y páginas secundarias**.
 
 ## Reglas transversales
 
@@ -156,7 +156,7 @@ El selector de lotes se adapta como diálogo inferior en móvil y superficie mod
 
 Se revisaron y aceptaron seis baseline: lista en 360 y 1440 px, calendario poblado en 360, 768 y 1440 px, y finalización en 360 px. Playwright comprueba además la ausencia de overflow horizontal en los tres viewports. Las 122 pruebas de componentes y los 23 E2E completos quedan verdes; el gate consolidado de la subfase verifica 416 pruebas.
 
-## 11.6 — Inventario
+## 11.6 — Inventario — Completada
 
 ### Rojo
 
@@ -175,6 +175,14 @@ Se revisaron y aceptaron seis baseline: lista en 360 y 1440 px, calendario pobla
 
 - Baseline de listado y detalle con estados representativos en 360 y 1440 px.
 - No se modifica ningún DTO, endpoint ni consulta de inventario.
+
+El listado de inventario adopta PageHeader y dos PageSection independientes para el alta y la colección. El formulario distribuye sus campos en dos columnas amplias y los apila en móvil; el filtro conserva el acceso a lotes agotados y caducados. Los lotes se presentan como cards en móvil y tabla semántica en tablet/escritorio, con cantidades, unidades, fechas y StatusBadge para disponible, agotado y caducado.
+
+El detalle agrupa consumo, ajuste, descarte y corrección de caducidad en superficies claras y responsive. El descarte requiere el ConfirmDialog propio antes de llamar al cliente HTTP, y todas las operaciones conservan protección busy, mensajes parciales y recarga del lote. El historial ofrece cards en móvil y tabla en anchos mayores; muestra cambio, resultado y unidad sin alterar movimientos, DTO, endpoint ni consulta.
+
+Playwright crea datos deterministas y reinicia únicamente inventory_lots en el PostgreSQL efímero. Se revisaron y aceptaron cuatro baseline: listado y detalle en 360×800 y 1440×1000. El recorrido verifica los tres estados, objetivos táctiles mínimos, scroll vertical y ausencia de overflow horizontal.
+
+El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 421/421 pruebas: 115 Domain, 71 Application, 85 Integration, 125 Component y 25 E2E.
 
 ## 11.7 — Catálogos y páginas secundarias
 
