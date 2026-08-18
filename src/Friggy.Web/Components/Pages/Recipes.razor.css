@@ -1,0 +1,6 @@
+.friggy-recipes-page { display: grid; gap: var(--space-6); }
+.friggy-recipes-page__create {
+    align-items: center; background: var(--color-primary-700); border-radius: var(--radius-medium);
+    color: var(--color-surface); display: inline-flex; font-weight: 700; justify-content: center;
+    min-height: var(--control-min-size); padding: var(--space-2) var(--space-5); text-decoration: none;
+}

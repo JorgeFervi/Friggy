@@ -1,0 +1,35 @@
+.friggy-recipe-card {
+    background: var(--color-surface); border: 0.0625rem solid var(--color-border); border-radius: var(--radius-large);
+    box-shadow: var(--shadow-surface); display: grid; grid-template-rows: 5.25rem 1fr auto;
+    min-height: 18rem; overflow: hidden; position: relative;
+}
+.friggy-recipe-card__accent { background: linear-gradient(135deg, var(--color-primary-100), var(--color-surface-muted)); overflow: hidden; position: relative; }
+.friggy-recipe-card__accent span {
+    border: 0.125rem solid rgb(53 107 133 / 0.22); border-radius: 50%; height: 5rem; position: absolute;
+    right: calc(var(--space-5) * var(--accent-index, 1)); top: calc(-2rem + var(--accent-index, 1) * 0.5rem); width: 5rem;
+}
+.friggy-recipe-card__accent span:nth-child(2) { --accent-index: 2; }
+.friggy-recipe-card__accent span:nth-child(3) { --accent-index: 3; }
+.friggy-recipe-card__body { padding: var(--space-5); }
+.friggy-recipe-card__eyebrow {
+    color: var(--color-accent); font-size: var(--font-size-small); font-weight: 700; letter-spacing: 0.08em;
+    margin-bottom: var(--space-2); text-transform: uppercase;
+}
+.friggy-recipe-card h3 { color: var(--color-primary-700); font-family: var(--font-family-display); font-size: 1.5rem; margin-bottom: var(--space-4); }
+.friggy-recipe-card__time { align-items: center; color: var(--color-text-muted); display: flex; gap: var(--space-2); margin: 0; }
+.friggy-recipe-card__actions {
+    align-items: center; border-top: 0.0625rem solid var(--color-border); display: flex; flex-wrap: wrap;
+    gap: var(--space-2); padding: var(--space-3) var(--space-5);
+}
+.friggy-recipe-card__actions a {
+    border-radius: var(--radius-small); font-weight: 600; min-height: var(--control-min-size);
+    padding: var(--space-2) var(--space-3); text-decoration: none;
+}
+.friggy-recipe-card__detail { background: var(--color-primary-700); color: var(--color-surface); }
+.friggy-recipe-card__edit { color: var(--color-primary-700); }
+.friggy-recipe-card__actions ::deep .friggy-button { margin-left: auto; }
+@media (max-width: 29.99rem) {
+    .friggy-recipe-card__actions { align-items: stretch; }
+    .friggy-recipe-card__actions a { flex: 1 1 auto; text-align: center; }
+    .friggy-recipe-card__actions ::deep .friggy-button { margin-left: 0; width: 100%; }
+}

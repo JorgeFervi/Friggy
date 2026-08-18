@@ -2,7 +2,7 @@
 @using Friggy.Application.Catalogs.UnitTypes.Dtos
 @using Friggy.Web.Recipes
 
-<fieldset data-testid="step-row">
+<fieldset class="friggy-recipe-step-row" data-testid="step-row">
     <legend>Paso @(Index + 1)</legend>
 
     <label for="step-description-@Model.ClientId">Descripción</label>
@@ -14,7 +14,7 @@
                  min="0"
                  @bind-Value="Model.EstimatedMinutes" />
 
-    <fieldset data-testid="step-ingredients">
+    <fieldset class="friggy-recipe-step-row__ingredients" data-testid="step-ingredients">
         <legend>Ingredientes utilizados</legend>
         @if (RecipeIngredients.Count == 0)
         {
@@ -38,6 +38,7 @@
         }
     </fieldset>
 
+    <div class="friggy-recipe-step-row__actions">
     <button type="button"
             aria-label="Mover paso @(Index + 1) arriba"
             disabled="@(Index == 0)"
@@ -49,6 +50,7 @@
     <button type="button"
             aria-label="Eliminar paso @(Index + 1)"
             @onclick="Remove">Eliminar</button>
+    </div>
 </fieldset>
 
 @code {

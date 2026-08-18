@@ -2,38 +2,35 @@
 @using Friggy.Application.Catalogs.UnitTypes.Dtos
 @using Friggy.Web.Recipes
 
-<fieldset data-testid="ingredient-row">
+<fieldset class="friggy-recipe-ingredient-row" data-testid="ingredient-row">
     <legend>Ingrediente @(Index + 1)</legend>
 
-    <label for="ingredient-@Model.ClientId">Ingrediente</label>
-    <InputSelect id="@($"ingredient-{Model.ClientId}")"
-                 data-field="ingredient"
-                 @bind-Value="Model.IngredientId">
-        <option value="@Guid.Empty">Selecciona un ingrediente</option>
-        @foreach (var ingredient in Ingredients)
-        {
-            <option value="@ingredient.Id">@ingredient.Name</option>
-        }
-    </InputSelect>
+    <div class="friggy-recipe-ingredient-row__field">
+        <label for="ingredient-@Model.ClientId">Ingrediente</label>
+        <InputSelect id="@($"ingredient-{Model.ClientId}")" data-field="ingredient" @bind-Value="Model.IngredientId">
+            <option value="@Guid.Empty">Selecciona un ingrediente</option>
+            @foreach (var ingredient in Ingredients)
+            {
+                <option value="@ingredient.Id">@ingredient.Name</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="friggy-recipe-ingredient-row__field">
+        <label for="unit-type-@Model.ClientId">Unidad</label>
+        <InputSelect id="@($"unit-type-{Model.ClientId}")" data-field="unit-type" @bind-Value="Model.UnitTypeId">
+            <option value="@Guid.Empty">Selecciona una unidad</option>
+            @foreach (var unitType in UnitTypes)
+            {
+                <option value="@unitType.Id">@unitType.Name (@unitType.Symbol)</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="friggy-recipe-ingredient-row__field">
+        <label for="quantity-@Model.ClientId">Cantidad</label>
+        <InputNumber id="@($"quantity-{Model.ClientId}")" data-field="quantity" min="0.001" step="0.001" @bind-Value="Model.Quantity" />
+    </div>
 
-    <label for="unit-type-@Model.ClientId">Unidad</label>
-    <InputSelect id="@($"unit-type-{Model.ClientId}")"
-                 data-field="unit-type"
-                 @bind-Value="Model.UnitTypeId">
-        <option value="@Guid.Empty">Selecciona una unidad</option>
-        @foreach (var unitType in UnitTypes)
-        {
-            <option value="@unitType.Id">@unitType.Name (@unitType.Symbol)</option>
-        }
-    </InputSelect>
-
-    <label for="quantity-@Model.ClientId">Cantidad</label>
-    <InputNumber id="@($"quantity-{Model.ClientId}")"
-                 data-field="quantity"
-                 min="0.001"
-                 step="0.001"
-                 @bind-Value="Model.Quantity" />
-
+    <div class="friggy-recipe-ingredient-row__actions">
     <button type="button"
             aria-label="Mover ingrediente @(Index + 1) arriba"
             disabled="@(Index == 0)"
@@ -45,6 +42,7 @@
     <button type="button"
             aria-label="Eliminar ingrediente @(Index + 1)"
             @onclick="Remove">Eliminar</button>
+    </div>
 </fieldset>
 
 @code {

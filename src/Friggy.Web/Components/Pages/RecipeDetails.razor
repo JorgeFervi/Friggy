@@ -16,32 +16,34 @@
 
 @if (loading)
 {
-    <h1>Receta</h1>
-    <p>Cargando receta…</p>
+    <PageHeader Title="Receta" Eyebrow="Recetario" />
+    <FeedbackPanel Title="Cargando receta" Tone="FriggyTone.Info">Estamos preparando todos los detalles.</FeedbackPanel>
 }
 else if (error is not null)
 {
-    <h1>Receta</h1>
-    <p role="alert">@error</p>
+    <PageHeader Title="Receta" Eyebrow="Recetario" />
+    <FeedbackPanel Title="No pudimos cargar la receta" Tone="FriggyTone.Danger">@error</FeedbackPanel>
 }
 else if (recipe is not null)
 {
-    <h1>@recipe.Name</h1>
-    <p>Tiempo estimado: @recipe.EstimatedMinutes minutos</p>
-    <p><a href="recipes/@recipe.Id/edit">Editar receta</a></p>
+    <div class="friggy-recipe-details">
+    <PageHeader Title="@recipe.Name" Eyebrow="Recetario" Description="@($"Tiempo estimado: {recipe.EstimatedMinutes} minutos")">
+        <Breadcrumb><a href="recipes">Recetas</a><span aria-hidden="true"> / </span><span>@recipe.Name</span></Breadcrumb>
+        <Actions><a class="friggy-recipe-details__edit" href="recipes/@recipe.Id/edit">Editar receta</a></Actions>
+    </PageHeader>
 
-    <h2>Ingredientes</h2>
-    <ul>
-        @foreach (var item in recipe.Ingredients.OrderBy(item => item.Order))
-        {
-            <li @key="item.Id">
-                @RecipeIngredientLabel(item)
-            </li>
-        }
-    </ul>
+    <div class="friggy-recipe-details__columns">
+    <PageSection Heading="Ingredientes" Description="Todo lo necesario antes de empezar.">
+        <ul class="friggy-recipe-details__ingredients">
+            @foreach (var item in recipe.Ingredients.OrderBy(item => item.Order))
+            {
+                <li @key="item.Id">@RecipeIngredientLabel(item)</li>
+            }
+        </ul>
+    </PageSection>
 
-    <h2>Pasos</h2>
-    <ol>
+    <PageSection Heading="Pasos" Description="Sigue el orden para completar la preparación.">
+    <ol class="friggy-recipe-details__steps">
         @foreach (var step in recipe.Steps.OrderBy(item => item.Order))
         {
             var associatedIngredients = recipe.Ingredients
@@ -49,11 +51,13 @@ else if (recipe is not null)
                 .OrderBy(item => item.Order)
                 .ToArray();
             <li @key="step.Id">
-                @step.Description
+                <div class="friggy-recipe-details__step-copy">
+                <p>@step.Description</p>
                 @if (step.EstimatedMinutes.HasValue)
                 {
-                    <span> (@step.EstimatedMinutes min)</span>
+                    <span class="friggy-recipe-details__step-time">@step.EstimatedMinutes min</span>
                 }
+                </div>
                 <h3>Ingredientes utilizados</h3>
                 @if (associatedIngredients.Length == 0)
                 {
@@ -73,18 +77,25 @@ else if (recipe is not null)
             </li>
         }
     </ol>
+    </PageSection>
+    </div>
 
-    @if (recipe.TagIds.Count > 0)
+    @if (recipe.TagIds.Count > 0 || recipe.MealTypeIds.Count > 0)
     {
-        <h2>Etiquetas</h2>
-        <p>@string.Join(", ", recipe.TagIds.Select(TagName))</p>
+        <PageSection Heading="Clasificación">
+            <div class="friggy-recipe-details__badges">
+                @foreach (var tagId in recipe.TagIds)
+                {
+                    <StatusBadge Tone="FriggyTone.Info">@TagName(tagId)</StatusBadge>
+                }
+                @foreach (var mealTypeId in recipe.MealTypeIds)
+                {
+                    <StatusBadge Tone="FriggyTone.Neutral">@MealTypeName(mealTypeId)</StatusBadge>
+                }
+            </div>
+        </PageSection>
     }
-
-    @if (recipe.MealTypeIds.Count > 0)
-    {
-        <h2>Tipos de comida</h2>
-        <p>@string.Join(", ", recipe.MealTypeIds.Select(MealTypeName))</p>
-    }
+    </div>
 }
 
 @code {

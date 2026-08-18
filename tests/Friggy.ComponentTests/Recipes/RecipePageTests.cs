@@ -91,11 +91,12 @@ public sealed class RecipePageTests : ComponentTest
             Recipes = [new(RecipeId, "Gazpacho", 20)],
         };
         Services.AddSingleton<IRecipesApiClient>(recipes);
-        JavaScript.Setup<bool>("confirm", _ => true).SetResult(true);
+        SetupConfirmDialog();
         var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
         component.WaitForElement("button[data-action='delete-recipe']");
 
         component.Find("button[data-action='delete-recipe']").Click();
+        component.Find(".confirm-dialog__actions button.friggy-button--danger").Click();
 
         component.WaitForAssertion(() =>
         {
@@ -113,11 +114,12 @@ public sealed class RecipePageTests : ComponentTest
             Recipes = [new(RecipeId, "Gazpacho", 20)],
         };
         Services.AddSingleton<IRecipesApiClient>(recipes);
-        JavaScript.Setup<bool>("confirm", _ => true).SetResult(false);
+        SetupConfirmDialog();
         var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
         component.WaitForElement("button[data-action='delete-recipe']");
 
         component.Find("button[data-action='delete-recipe']").Click();
+        component.Find(".confirm-dialog__actions button.friggy-button--secondary").Click();
 
         component.WaitForAssertion(() =>
         {
@@ -138,11 +140,12 @@ public sealed class RecipePageTests : ComponentTest
             PendingDelete = pendingDelete,
         };
         Services.AddSingleton<IRecipesApiClient>(recipes);
-        JavaScript.Setup<bool>("confirm", _ => true).SetResult(true);
+        SetupConfirmDialog();
         var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
         component.WaitForElement("button[data-action='delete-recipe']");
 
         component.Find("button[data-action='delete-recipe']").Click();
+        component.Find(".confirm-dialog__actions button.friggy-button--danger").Click();
 
         component.WaitForAssertion(() =>
         {
@@ -167,11 +170,12 @@ public sealed class RecipePageTests : ComponentTest
             DeleteException = await CreatePersistenceConflictAsync(),
         };
         Services.AddSingleton<IRecipesApiClient>(recipes);
-        JavaScript.Setup<bool>("confirm", _ => true).SetResult(true);
+        SetupConfirmDialog();
         var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
         component.WaitForElement("button[data-action='delete-recipe']");
 
         component.Find("button[data-action='delete-recipe']").Click();
+        component.Find(".confirm-dialog__actions button.friggy-button--danger").Click();
 
         component.WaitForAssertion(() =>
         {
@@ -382,6 +386,13 @@ public sealed class RecipePageTests : ComponentTest
         Services.AddSingleton<IUnitTypesApiClient>(new UnitTypesApiClientStub());
         Services.AddSingleton<IRecipeTagsApiClient>(new RecipeTagsApiClientStub());
         Services.AddSingleton<IMealTypesApiClient>(new MealTypesApiClientStub());
+    }
+
+    private void SetupConfirmDialog()
+    {
+        var module = JavaScript.SetupModule("./js/confirm-dialog.js");
+        module.SetupVoid("show", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
     }
 
     private static void FillMinimalForm(IRenderedComponent<global::Friggy.Web.Components.Pages.RecipeEdit> component)

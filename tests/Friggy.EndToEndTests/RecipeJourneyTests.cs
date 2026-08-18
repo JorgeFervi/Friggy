@@ -90,14 +90,16 @@ public sealed class RecipeJourneyTests : FriggyPageTest
             await Page.GetByRole(AriaRole.Navigation, new() { Name = "Principal", Exact = true })
                 .GetByRole(AriaRole.Link, new() { Name = "Recetas", Exact = true })
                 .ClickAsync();
-            var recipeRow = Page.GetByRole(AriaRole.Row)
+            var recipeCard = Page.Locator("article[data-recipe-id]")
                 .Filter(new LocatorFilterOptions { HasText = recipeName });
-            await Expect(recipeRow).ToBeVisibleAsync();
-            Page.Dialog += async (_, dialog) => await dialog.AcceptAsync();
-            await recipeRow.GetByRole(AriaRole.Button, new() { Name = "Borrar", Exact = true })
+            await Expect(recipeCard).ToBeVisibleAsync();
+            await recipeCard.GetByRole(AriaRole.Button, new() { Name = "Borrar", Exact = true })
+                .ClickAsync();
+            await Page.GetByRole(AriaRole.Dialog, new() { Name = "Borrar receta", Exact = true })
+                .GetByRole(AriaRole.Button, new() { Name = "Borrar receta", Exact = true })
                 .ClickAsync();
 
-            await Expect(recipeRow)
+            await Expect(recipeCard)
                 .Not.ToBeVisibleAsync();
 
             await Page.GetByRole(AriaRole.Navigation, new() { Name = "Principal", Exact = true })

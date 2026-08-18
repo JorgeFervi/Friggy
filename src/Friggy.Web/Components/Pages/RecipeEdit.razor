@@ -16,16 +16,21 @@
 @inject NavigationManager Navigation
 
 <PageTitle>@(Id.HasValue ? "Editar receta" : "Nueva receta")</PageTitle>
-<h1>@(Id.HasValue ? "Editar receta" : "Nueva receta")</h1>
+<div class="friggy-recipe-edit">
+<PageHeader Title="@(Id.HasValue ? "Editar receta" : "Nueva receta")"
+            Eyebrow="Recetario"
+            Description="Organiza los ingredientes y pasos sin perder el orden de preparación.">
+    <Breadcrumb><a href="recipes">Recetas</a><span aria-hidden="true"> / </span><span>@(Id.HasValue ? "Editar" : "Nueva")</span></Breadcrumb>
+</PageHeader>
 
 @if (error is not null)
 {
-    <p role="alert">@error</p>
+    <FeedbackPanel Title="@(loadFailed ? "No pudimos cargar el formulario" : "No pudimos guardar la receta")" Tone="FriggyTone.Danger">@error</FeedbackPanel>
 }
 
 @if (loading)
 {
-    <p>Cargando formulario…</p>
+    <FeedbackPanel Title="Cargando formulario" Tone="FriggyTone.Info">Estamos preparando los catálogos necesarios.</FeedbackPanel>
 }
 else if (!loadFailed)
 {
@@ -37,6 +42,7 @@ else if (!loadFailed)
                 IsSaving="saving"
                 OnValidSubmit="SaveAsync" />
 }
+</div>
 
 @code {
     private readonly CancellationTokenSource cancellation = new();

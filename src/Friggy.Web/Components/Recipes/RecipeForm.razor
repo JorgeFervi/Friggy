@@ -4,20 +4,28 @@
 @using Friggy.Application.Catalogs.UnitTypes.Dtos
 @using Friggy.Web.Recipes
 
-<EditForm Model="Model" OnValidSubmit="OnValidSubmit" FormName="recipe-form">
+<EditForm class="friggy-recipe-form" Model="Model" OnValidSubmit="OnValidSubmit" FormName="recipe-form">
     <DataAnnotationsValidator />
-    <ValidationSummary />
+    <ValidationSummary class="friggy-recipe-form__validation" />
 
-    <label for="recipe-name">Nombre</label>
-    <InputText id="recipe-name" @bind-Value="Model.Name" />
-    <ValidationMessage For="() => Model.Name" />
+    <section class="friggy-recipe-form__surface" aria-labelledby="recipe-basics-heading">
+        <header><h2 id="recipe-basics-heading">Datos principales</h2><p>El nombre y el tiempo ayudan a encontrar la receta rápidamente.</p></header>
+        <div class="friggy-recipe-form__fields">
+            <div class="friggy-recipe-form__field">
+                <label for="recipe-name">Nombre</label>
+                <InputText id="recipe-name" @bind-Value="Model.Name" />
+                <ValidationMessage For="() => Model.Name" />
+            </div>
+            <div class="friggy-recipe-form__field">
+                <label for="recipe-estimated-minutes">Tiempo estimado (minutos)</label>
+                <InputNumber id="recipe-estimated-minutes" @bind-Value="Model.EstimatedMinutes" />
+                <ValidationMessage For="() => Model.EstimatedMinutes" />
+            </div>
+        </div>
+    </section>
 
-    <label for="recipe-estimated-minutes">Tiempo estimado (minutos)</label>
-    <InputNumber id="recipe-estimated-minutes" @bind-Value="Model.EstimatedMinutes" />
-    <ValidationMessage For="() => Model.EstimatedMinutes" />
-
-    <section aria-labelledby="recipe-ingredients-heading">
-        <h2 id="recipe-ingredients-heading">Ingredientes</h2>
+    <section class="friggy-recipe-form__surface" aria-labelledby="recipe-ingredients-heading">
+        <header><h2 id="recipe-ingredients-heading">Ingredientes</h2><p>Añade las cantidades y ordénalas como aparecerán en la receta.</p></header>
         @for (var index = 0; index < Model.Ingredients.Count; index++)
         {
             var currentIndex = index;
@@ -32,13 +40,11 @@
                                  MoveDown="() => MoveIngredient(currentIndex, 1)"
                                  Remove="() => RemoveIngredient(currentIndex)" />
         }
-        <button type="button" data-action="add-ingredient" @onclick="AddIngredient">
-            Añadir ingrediente
-        </button>
+        <FriggyButton Variant="FriggyButtonVariant.Secondary" DataAction="add-ingredient" OnClick="AddIngredient">Añadir ingrediente</FriggyButton>
     </section>
 
-    <section aria-labelledby="recipe-steps-heading">
-        <h2 id="recipe-steps-heading">Pasos</h2>
+    <section class="friggy-recipe-form__surface" aria-labelledby="recipe-steps-heading">
+        <header><h2 id="recipe-steps-heading">Pasos</h2><p>Describe la preparación en el orden en que debe realizarse.</p></header>
         @for (var index = 0; index < Model.Steps.Count; index++)
         {
             var currentIndex = index;
@@ -54,42 +60,34 @@
                            MoveDown="() => MoveStep(currentIndex, 1)"
                            Remove="() => RemoveStep(currentIndex)" />
         }
-        <button type="button" data-action="add-step" @onclick="AddStep">
-            Añadir paso
-        </button>
+        <FriggyButton Variant="FriggyButtonVariant.Secondary" DataAction="add-step" OnClick="AddStep">Añadir paso</FriggyButton>
     </section>
 
-    <fieldset>
-        <legend>Etiquetas</legend>
-        @foreach (var tag in Tags)
-        {
-            <label for="tag-@tag.Id">
-                <input id="tag-@tag.Id"
-                       type="checkbox"
-                       checked="@Model.TagIds.Contains(tag.Id)"
-                       @onchange="eventArgs => Toggle(Model.TagIds, tag.Id, eventArgs)" />
-                @tag.Name
-            </label>
-        }
-    </fieldset>
+    <section class="friggy-recipe-form__classification" aria-label="Clasificación de la receta">
+        <fieldset>
+            <legend>Etiquetas</legend>
+            <div class="friggy-recipe-form__options">
+                @foreach (var tag in Tags)
+                {
+                    <label for="tag-@tag.Id"><input id="tag-@tag.Id" type="checkbox" checked="@Model.TagIds.Contains(tag.Id)" @onchange="eventArgs => Toggle(Model.TagIds, tag.Id, eventArgs)" />@tag.Name</label>
+                }
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>Tipos de comida</legend>
+            <div class="friggy-recipe-form__options">
+                @foreach (var mealType in MealTypes.OrderBy(item => item.Order))
+                {
+                    <label for="meal-type-@mealType.Id"><input id="meal-type-@mealType.Id" type="checkbox" checked="@Model.MealTypeIds.Contains(mealType.Id)" @onchange="eventArgs => Toggle(Model.MealTypeIds, mealType.Id, eventArgs)" />@mealType.Name</label>
+                }
+            </div>
+        </fieldset>
+    </section>
 
-    <fieldset>
-        <legend>Tipos de comida</legend>
-        @foreach (var mealType in MealTypes.OrderBy(item => item.Order))
-        {
-            <label for="meal-type-@mealType.Id">
-                <input id="meal-type-@mealType.Id"
-                       type="checkbox"
-                       checked="@Model.MealTypeIds.Contains(mealType.Id)"
-                       @onchange="eventArgs => Toggle(Model.MealTypeIds, mealType.Id, eventArgs)" />
-                @mealType.Name
-            </label>
-        }
-    </fieldset>
-
-    <button type="submit" disabled="@IsSaving">
-        @(IsSaving ? "Guardando…" : "Guardar receta")
-    </button>
+    <FormActions>
+        <a class="friggy-recipe-form__cancel" href="recipes">Cancelar</a>
+        <FriggyButton Type="FriggyButtonType.Submit" Busy="IsSaving" BusyLabel="Guardando…">Guardar receta</FriggyButton>
+    </FormActions>
 </EditForm>
 
 @code {

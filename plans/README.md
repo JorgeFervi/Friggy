@@ -43,4 +43,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 10 y la subfase 11.1 están completadas. La siguiente unidad ejecutable es **11.2 — Primitivos y estados comunes**.
+Las fases 1 a 10 y las subfases 11.1 a 11.4 están completadas. La siguiente unidad ejecutable es **11.5 — Planificación semanal**.

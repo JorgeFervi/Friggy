@@ -4,7 +4,7 @@ using Microsoft.Playwright;
 namespace Friggy.EndToEndTests;
 
 [Collection(FullStackTestGroup.Name)]
-public sealed class VisualFoundationJourneyTests : FriggyPageTest
+public sealed class VisualFoundationJourneyTests(FullStackFixture fixture) : FriggyPageTest
 {
     private static readonly (string Name, ViewportSize Viewport)[] Viewports =
     [
@@ -20,14 +20,30 @@ public sealed class VisualFoundationJourneyTests : FriggyPageTest
     {
         await RunScenarioAsync(async () =>
         {
+            await fixture.ResetRecipeDataAsync(TestContext.Current.CancellationToken);
+            var visualFailures = new List<Exception>();
+
             foreach (var (name, viewport) in Viewports)
             {
                 await Page.SetViewportSizeAsync(viewport.Width, viewport.Height);
                 await NavigateToInteractivePageAsync("/");
-                await VisualSnapshot.AssertAsync(
-                    Page,
-                    $"home-{name}",
-                    TestContext.Current.CancellationToken);
+
+                try
+                {
+                    await VisualSnapshot.AssertAsync(
+                        Page,
+                        $"home-{name}",
+                        TestContext.Current.CancellationToken);
+                }
+                catch (InvalidOperationException exception)
+                {
+                    visualFailures.Add(exception);
+                }
+            }
+
+            if (visualFailures.Count > 0)
+            {
+                throw new AggregateException(visualFailures);
             }
         });
     }

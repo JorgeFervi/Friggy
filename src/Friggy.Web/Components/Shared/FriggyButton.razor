@@ -2,6 +2,7 @@
         type="@TypeValue"
         disabled="@(Disabled || Busy)"
         autofocus="@AutoFocus"
+        data-action="@DataAction"
         aria-busy="@(Busy ? "true" : null)"
         @onclick="HandleClickAsync">
     @if (Busy)
@@ -38,6 +39,9 @@
 
     [Parameter]
     public string BusyLabel { get; set; } = "Procesando";
+
+    [Parameter]
+    public string? DataAction { get; set; }
 
     [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }

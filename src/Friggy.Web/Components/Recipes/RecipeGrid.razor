@@ -1,0 +1,18 @@
+@using Friggy.Application.Recipes.Dtos
+
+<ul class="friggy-recipe-grid" aria-label="Lista de recetas">
+    @foreach (var recipe in Recipes)
+    {
+        <li @key="recipe.Id">
+            <RecipeCard Recipe="recipe" ShowManagementActions="ShowManagementActions"
+                        Deleting="DeletingRecipeIds.Contains(recipe.Id)" OnDeleteRequested="OnDeleteRequested" />
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<RecipeListItemResponse> Recipes { get; set; } = [];
+    [Parameter] public bool ShowManagementActions { get; set; }
+    [Parameter] public IReadOnlySet<Guid> DeletingRecipeIds { get; set; } = new HashSet<Guid>();
+    [Parameter] public EventCallback<RecipeListItemResponse> OnDeleteRequested { get; set; }
+}

@@ -1,19 +1,68 @@
-﻿@page "/"
+@page "/"
+@implements IDisposable
+@using Friggy.Application.Recipes.Dtos
+@using Friggy.Web.Api
+@using Friggy.Web.Components.Recipes
+@inject IRecipesApiClient RecipesApi
 
 <PageTitle>Friggy</PageTitle>
 
-<h1>Friggy</h1>
+<div class="friggy-home">
+    <PageHeader Title="Tu cocina, organizada"
+                Eyebrow="Bienvenido a Friggy"
+                Description="Guarda tus recetas, prepara la semana y mantén cada ingrediente bajo control.">
+        <Actions><a class="friggy-home__primary-action" href="recipes/new">Crear receta</a></Actions>
+    </PageHeader>
 
-<p>Gestiona los catálogos necesarios para preparar tus recetas.</p>
+    <PageSection Heading="Tus recetas" Description="Platos listos para volver a cocinar y compartir.">
+        @if (loading)
+        {
+            <FeedbackPanel Title="Cargando recetas" Tone="FriggyTone.Info">Estamos preparando tu recetario.</FeedbackPanel>
+        }
+        else if (error is not null)
+        {
+            <FeedbackPanel Title="No pudimos cargar las recetas" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+        }
+        else if (recipes.Count == 0)
+        {
+            <FeedbackPanel Title="Aún no hay recetas" Tone="FriggyTone.Neutral">
+                <ChildContent>Crea tu primera receta para empezar a organizar la cocina.</ChildContent>
+                <Actions><a href="recipes/new">Crear la primera receta</a></Actions>
+            </FeedbackPanel>
+        }
+        else
+        {
+            <RecipeGrid Recipes="recipes" />
+        }
+    </PageSection>
+</div>
 
-<p><a href="recipes">Recetas</a></p>
-<p><a href="weekly-plans">Planificación semanal</a></p>
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private IReadOnlyList<RecipeListItemResponse> recipes = [];
+    private string? error;
+    private bool loading = true;
 
-<nav id="catalogs" aria-label="Catálogos">
-    <ul>
-        <li><a href="ingredients">Ingredientes</a></li>
-        <li><a href="unit-types">Tipos de unidad</a></li>
-        <li><a href="recipe-tags">Etiquetas</a></li>
-        <li><a href="meal-types">Tipos de comida</a></li>
-    </ul>
-</nav>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            recipes = await RecipesApi.ListAsync(cancellation.Token);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

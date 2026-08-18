@@ -58,6 +58,18 @@ internal sealed class FullStackRuntime : IFullStackRuntime
         await context.Database.MigrateAsync(cancellationToken);
     }
 
+    public async Task ResetRecipeDataAsync(CancellationToken cancellationToken)
+    {
+        var options = new DbContextOptionsBuilder<FriggyDbContext>()
+            .UseNpgsql(database.GetConnectionString())
+            .Options;
+
+        await using var context = new FriggyDbContext(options);
+        await context.Database.ExecuteSqlRawAsync(
+            "TRUNCATE TABLE recipes CASCADE;",
+            cancellationToken);
+    }
+
     public Task StartApiAsync(CancellationToken cancellationToken)
     {
         apiProcess = StartProcess(

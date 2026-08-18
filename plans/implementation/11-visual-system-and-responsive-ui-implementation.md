@@ -5,7 +5,7 @@
 
 La fase es una migración de presentación. No modifica Domain, Application, Infrastructure ni Api. Todo comportamiento de componentes comienza con un test bUnit/xUnit v3 fallido; los baseline iniciales se generan únicamente después de que la semántica y el diseño de cada incremento estén aprobados.
 
-> **Progreso:** 11.1, 11.2 y 11.3 completadas. La siguiente unidad ejecutable es **11.4 — Inicio y recetas**.
+> **Progreso:** 11.1, 11.2, 11.3 y 11.4 completadas. La siguiente unidad ejecutable es **11.5 — Planificación semanal**.
 
 ## Reglas transversales
 
@@ -98,7 +98,7 @@ El drawer expone `aria-expanded`, `aria-controls`, `aria-hidden`, `aria-modal` e
 
 El shell incorpora enlace de salto, landmarks y `NavLink` con `aria-current`. El aviso no controlado de Blazor y el diálogo de reconexión se tradujeron al español y usan los tokens visuales sin modificar el script de reconexión. bUnit añade tres escenarios de layout y Playwright uno que cubre escritorio, tablet, foco, scroll y navegación. Se revisaron y aceptaron los baseline de Inicio en 360×800, 768×1024 y 1440×1000.
 
-## 11.4 — Inicio y recetas
+## 11.4 — Inicio y recetas — Completada
 
 ### Rojo
 
@@ -119,6 +119,14 @@ El shell incorpora enlace de salto, landmarks y `NavLink` con `aria-current`. El
 
 - Baseline de Inicio vacío y con recetas, formulario y detalle en 360 y 1440 px.
 - No se amplía `RecipeListItemResponse`; las cards muestran exclusivamente nombre, tiempo y acciones reales.
+
+Inicio carga el listado mediante `IRecipesApiClient` y presenta estados de carga, error, vacío y contenido dentro de secciones independientes. `RecipeCard` y `RecipeGrid` reutilizan el contrato existente sin inventar imágenes ni metadatos; la portada conserva espacio estructural para añadir estadísticas en el futuro, pero no renderiza placeholders ni anticipa contratos.
+
+El listado `/recipes` reutiliza la galería y mantiene edición, borrado, protección frente a acciones duplicadas y el conflicto de recetas planificadas. La confirmación del navegador se sustituyó por `ConfirmDialog`, con acciones accesibles y estado ocupado. Creación, edición y detalle adoptan `PageHeader`, `PageSection`, `FeedbackPanel`, `FormActions` y superficies responsive; ingredientes, pasos y clasificaciones preservan sus labels, identificadores, orden y asociaciones funcionales.
+
+bUnit cubre los cuatro estados de Inicio, la presentación y acciones de las cards, la composición del grid y toda la regresión anterior de recetas. Playwright conserva el recorrido funcional de creación y borrado y añade nueve baseline revisados: Inicio vacío en móvil, tablet y escritorio, Inicio con receta en móvil y escritorio, formulario en móvil y escritorio y detalle en móvil y escritorio.
+
+Los recorridos visuales reinician únicamente los datos de recetas del PostgreSQL efímero antes de capturar, de modo que sus resultados no dependen del orden de la suite ni de recetas creadas por planificación o inventario. El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 414/414 pruebas: 115 Domain, 71 Application, 85 Integration, 122 Component y 21 E2E.
 
 ## 11.5 — Planificación semanal
 

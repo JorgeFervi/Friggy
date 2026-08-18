@@ -2,59 +2,59 @@
 @implements IDisposable
 @using Friggy.Application.Recipes.Dtos
 @using Friggy.Web.Api
+@using Friggy.Web.Components.Recipes
 @inject IRecipesApiClient Api
-@inject IJSRuntime JavaScript
 
 <PageTitle>Recetas</PageTitle>
-<h1>Recetas</h1>
 
-<p><a href="recipes/new">Crear receta</a></p>
+<div class="friggy-recipes-page">
+    <PageHeader Title="Recetas"
+                Eyebrow="Tu recetario"
+                Description="Encuentra tus platos y conserva cada preparación en un único lugar.">
+        <Actions><a class="friggy-recipes-page__create" href="recipes/new">Crear receta</a></Actions>
+    </PageHeader>
 
-@if (error is not null)
-{
-    <p role="alert">@error</p>
-}
+    @if (error is not null)
+    {
+        <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+    }
 
-@if (loading)
+    @if (loading)
+    {
+        <FeedbackPanel Title="Cargando recetas" Tone="FriggyTone.Info">Estamos preparando tu recetario.</FeedbackPanel>
+    }
+    else if (error is null && recipes.Count == 0)
+    {
+        <FeedbackPanel Title="No hay recetas" Tone="FriggyTone.Neutral">
+            <ChildContent>Crea la primera receta para empezar tu colección.</ChildContent>
+            <Actions><a href="recipes/new">Crear receta</a></Actions>
+        </FeedbackPanel>
+    }
+    else if (recipes.Count > 0)
+    {
+        <RecipeGrid Recipes="recipes"
+                    ShowManagementActions="true"
+                    DeletingRecipeIds="pendingDeletes"
+                    OnDeleteRequested="RequestDelete" />
+    }
+</div>
+
+@if (recipeToDelete is not null)
 {
-    <p>Cargando recetas…</p>
-}
-else if (error is null && recipes.Count == 0)
-{
-    <p>No hay recetas. Crea la primera.</p>
-}
-else if (recipes.Count > 0)
-{
-    <table>
-        <thead>
-            <tr><th>Nombre</th><th>Tiempo</th><th>Acciones</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var recipe in recipes)
-            {
-                <tr @key="recipe.Id">
-                    <td>@recipe.Name</td>
-                    <td>@recipe.EstimatedMinutes min</td>
-                    <td>
-                        <a data-testid="recipe-detail" href="recipes/@recipe.Id">Ver</a>
-                        <a href="recipes/@recipe.Id/edit">Editar</a>
-                        <button type="button"
-                                data-action="delete-recipe"
-                                disabled="@pendingDeletes.Contains(recipe.Id)"
-                                @onclick="() => DeleteAsync(recipe)">
-                            @(pendingDeletes.Contains(recipe.Id) ? "Borrando…" : "Borrar")
-                        </button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <ConfirmDialog IsOpen="true"
+                   Title="Borrar receta"
+                   Message="@($"¿Quieres borrar la receta {recipeToDelete.Name}? Esta acción no se puede deshacer.")"
+                   ConfirmText="Borrar receta"
+                   Busy="pendingDeletes.Contains(recipeToDelete.Id)"
+                   OnConfirm="DeleteAsync"
+                   OnCancel="CancelDelete" />
 }
 
 @code {
     private readonly CancellationTokenSource cancellation = new();
     private readonly HashSet<Guid> pendingDeletes = [];
     private IReadOnlyList<RecipeListItemResponse> recipes = [];
+    private RecipeListItemResponse? recipeToDelete;
     private string? error;
     private bool loading = true;
 
@@ -74,23 +74,26 @@ else if (recipes.Count > 0)
         }
     }
 
-    private async Task DeleteAsync(RecipeListItemResponse recipe)
+    private void RequestDelete(RecipeListItemResponse recipe)
     {
-        if (!pendingDeletes.Add(recipe.Id))
+        if (!pendingDeletes.Contains(recipe.Id))
+        {
+            recipeToDelete = recipe;
+        }
+    }
+
+    private void CancelDelete() => recipeToDelete = null;
+
+    private async Task DeleteAsync()
+    {
+        var recipe = recipeToDelete;
+        if (recipe is null || !pendingDeletes.Add(recipe.Id))
         {
             return;
         }
 
         try
         {
-            var confirmed = await JavaScript.InvokeAsync<bool>(
-                "confirm",
-                $"¿Borrar la receta {recipe.Name}?");
-            if (!confirmed)
-            {
-                return;
-            }
-
             error = null;
             await Api.DeleteAsync(recipe.Id, cancellation.Token);
             recipes = recipes.Where(item => item.Id != recipe.Id).ToArray();
@@ -107,6 +110,7 @@ else if (recipes.Count > 0)
         finally
         {
             pendingDeletes.Remove(recipe.Id);
+            recipeToDelete = null;
         }
     }
 

@@ -1,0 +1,30 @@
+@using Friggy.Application.Recipes.Dtos
+
+<article class="friggy-recipe-card" data-recipe-id="@Recipe.Id">
+    <div class="friggy-recipe-card__accent" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="friggy-recipe-card__body">
+        <p class="friggy-recipe-card__eyebrow">Receta</p>
+        <h3>@Recipe.Name</h3>
+        <p class="friggy-recipe-card__time"><FriggyIcon Name="FriggyIconName.Time" /><span>@Recipe.EstimatedMinutes min</span></p>
+    </div>
+    <footer class="friggy-recipe-card__actions">
+        <a class="friggy-recipe-card__detail" data-testid="recipe-detail" href="recipes/@Recipe.Id">Ver receta</a>
+        @if (ShowManagementActions)
+        {
+            <a class="friggy-recipe-card__edit" href="recipes/@Recipe.Id/edit">Editar</a>
+            <FriggyButton Variant="FriggyButtonVariant.Ghost" Size="FriggyButtonSize.Compact"
+                          Disabled="Deleting" Busy="Deleting" BusyLabel="Borrando…"
+                          DataAction="delete-recipe" OnClick="RequestDeleteAsync">
+                Borrar
+            </FriggyButton>
+        }
+    </footer>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public RecipeListItemResponse Recipe { get; set; } = default!;
+    [Parameter] public bool ShowManagementActions { get; set; }
+    [Parameter] public bool Deleting { get; set; }
+    [Parameter] public EventCallback<RecipeListItemResponse> OnDeleteRequested { get; set; }
+    private Task RequestDeleteAsync() => OnDeleteRequested.InvokeAsync(Recipe);
+}
