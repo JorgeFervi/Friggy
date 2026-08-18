@@ -5,7 +5,7 @@
 
 La fase es una migración de presentación. No modifica Domain, Application, Infrastructure ni Api. Todo comportamiento de componentes comienza con un test bUnit/xUnit v3 fallido; los baseline iniciales se generan únicamente después de que la semántica y el diseño de cada incremento estén aprobados.
 
-> **Progreso:** 11.1 completada. La siguiente unidad ejecutable es **11.2 — Primitivos y estados comunes**.
+> **Progreso:** 11.1 y 11.2 completadas. La siguiente unidad ejecutable es **11.3 — Shell, sidebar y drawer**.
 
 ## Reglas transversales
 
@@ -44,12 +44,12 @@ Playwright .NET captura Inicio en 360×800, 768×1024 y 1440×1000. Las tres im�
 
 El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 369/369 pruebas: 115 Domain, 71 Application, 85 Integration, 80 Component y 18 E2E.
 
-## 11.2 — Primitivos y estados comunes
+## 11.2 — Primitivos y estados comunes — Completada
 
 ### Rojo
 
-1. bUnit verifica variantes, disabled/busy, tipo de botón y propagación única de eventos en `UiButton`.
-2. Verificar nombre accesible de `UiIconButton`, semántica y contenido de `UiCard`, `PageHeader`, `StatusBadge` y `FeedbackPanel`.
+1. bUnit verifica variantes, disabled/busy, tipo de botón y propagación única de eventos en `FriggyButton`.
+2. Verificar nombre accesible de `FriggyIconButton`, semántica y contenido de `FriggyCard`, `PageHeader`, `StatusBadge` y `FeedbackPanel`.
 3. Verificar asociación label–control, ayuda y error en `FormField` sin duplicar identificadores.
 4. Verificar que `ConfirmDialog` abre, mueve foco, confirma/cancela una sola vez y restaura foco.
 
@@ -64,6 +64,12 @@ El gate final completó build Release con 0 warnings, formato limpio, auditoría
 
 - Galería bUnit cubre cada variante y estado; no se añade una ruta pública de showcase.
 - Targets táctiles alcanzan 44×44 px y foco/contraste cumplen AA.
+
+Se incorporaron contratos cerrados para variantes, tipos, tamaños, tonos e iconos bajo `Friggy.Web.Components.DesignSystem`. `FriggyButton`, `FriggyIconButton`, `FriggyIcon`, `FriggyCard`, `PageHeader`, `PageSection`, `StatusBadge`, `FeedbackPanel`, `FormField`, `FormActions` y `ConfirmDialog` mantienen parámetros pequeños, CSS isolation y callbacks sin acceso a API ni estado de negocio. Los doce iconos necesarios se dibujan como SVG inline local, sin fuentes ni recursos remotos. Los componentes propios y sus clases CSS usan el prefijo `Friggy`/`friggy-` para evitar nombres genéricos.
+
+`FormField` entrega un contexto tipado para asociar label, ayuda y error sin duplicar identificadores. `ConfirmDialog` usa el elemento nativo `dialog` y un módulo local de dos operaciones: `showModal()` mueve el foco al botón de cancelar marcado con `autofocus`, y `close()` permite al navegador restaurar el foco previo. Un guard interno evita confirmaciones o cancelaciones duplicadas; las confirmaciones existentes se migrarán página a página en las subfases correspondientes.
+
+La galería bUnit añade 34 casos que cubren las cuatro variantes, tres tipos, dos tamaños, estados disabled/busy, cinco tonos, doce iconos, composición semántica, asociaciones de formulario y ciclo completo del diálogo. El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 403/403 pruebas: 115 Domain, 71 Application, 85 Integration, 114 Component y 18 E2E.
 
 ## 11.3 — Shell, sidebar y drawer
 
@@ -138,7 +144,7 @@ El gate final completó build Release con 0 warnings, formato limpio, auditoría
 
 ### Verde mínimo
 
-1. Separar el formulario de alta y la colección en `UiCard`/`PageSection` con jerarquía clara.
+1. Separar el formulario de alta y la colección en `FriggyCard`/`PageSection` con jerarquía clara.
 2. Mostrar lotes como cards en móvil y tabla en tablet/escritorio; reutilizar `StatusBadge`.
 3. Agrupar acciones destructivas y secundarias en el detalle, conservando confirmación y estados busy.
 4. Mantener cantidades, unidades, fechas y movimientos visibles y reconciliables.

@@ -1,0 +1,170 @@
+@inject IJSRuntime JavaScript
+@implements IAsyncDisposable
+
+<dialog @ref="dialog"
+        class="confirm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="@TitleId"
+        aria-describedby="@MessageId"
+        @oncancel="CancelAsync">
+    <div class="confirm-dialog__surface">
+        <header class="confirm-dialog__header">
+            <h2 id="@TitleId">@Title</h2>
+            <FriggyIconButton Label="Cerrar" Icon="FriggyIconName.Close" OnClick="CancelAsync" />
+        </header>
+        <p id="@MessageId" class="confirm-dialog__message">@Message</p>
+        <footer class="confirm-dialog__actions">
+            <FriggyButton Variant="FriggyButtonVariant.Secondary"
+                      AutoFocus="true"
+                      OnClick="CancelAsync">
+                @CancelText
+            </FriggyButton>
+            <FriggyButton Variant="FriggyButtonVariant.Danger"
+                      Busy="Busy"
+                      BusyLabel="Procesando"
+                      OnClick="ConfirmAsync">
+                @ConfirmText
+            </FriggyButton>
+        </footer>
+    </div>
+</dialog>
+
+@code {
+    private readonly string dialogId = $"confirm-{Guid.NewGuid():N}";
+    private ElementReference dialog;
+    private IJSObjectReference? module;
+    private bool shown;
+    private bool actionHandled;
+    private bool dismissedWhileOpen;
+    private bool disposed;
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Message { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ConfirmText { get; set; } = "Confirmar";
+
+    [Parameter]
+    public string CancelText { get; set; } = "Cancelar";
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private string TitleId => $"{dialogId}-title";
+
+    private string MessageId => $"{dialogId}-message";
+
+    protected override void OnParametersSet()
+    {
+        if (!IsOpen)
+        {
+            dismissedWhileOpen = false;
+            actionHandled = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JavaScript.InvokeAsync<IJSObjectReference>(
+                "import",
+                "./js/confirm-dialog.js");
+        }
+
+        if (module is null)
+        {
+            return;
+        }
+
+        if (IsOpen && !shown && !dismissedWhileOpen)
+        {
+            actionHandled = false;
+            await module.InvokeVoidAsync("show", dialog);
+            shown = true;
+        }
+        else if (!IsOpen && shown)
+        {
+            await CloseAsync();
+        }
+    }
+
+    private async Task ConfirmAsync()
+    {
+        if (Busy || actionHandled)
+        {
+            return;
+        }
+
+        actionHandled = true;
+        await OnConfirm.InvokeAsync();
+        await CloseAndNotifyAsync();
+    }
+
+    private async Task CancelAsync()
+    {
+        if (Busy || actionHandled)
+        {
+            return;
+        }
+
+        actionHandled = true;
+        await OnCancel.InvokeAsync();
+        await CloseAndNotifyAsync();
+    }
+
+    private async Task CloseAndNotifyAsync()
+    {
+        dismissedWhileOpen = true;
+        await CloseAsync();
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task CloseAsync()
+    {
+        if (module is not null && shown)
+        {
+            await module.InvokeVoidAsync("close", dialog);
+        }
+
+        shown = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        if (module is not null)
+        {
+            try
+            {
+                await module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+
+        GC.SuppressFinalize(this);
+    }
+}

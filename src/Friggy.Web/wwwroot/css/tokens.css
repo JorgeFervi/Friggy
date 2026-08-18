@@ -13,7 +13,9 @@
     --color-accent: #b7794c;
     --color-danger: #a63f46;
     --color-success: #3e745f;
+    --color-warning-text: #74451f;
     --color-focus: #356b85;
+    --color-overlay: rgb(30 44 51 / 0.58);
 
     --font-family-body: "Inter", "Segoe UI", sans-serif;
     --font-family-display: "Fraunces", Georgia, serif;
@@ -34,6 +36,7 @@
     --radius-medium: 0.75rem;
     --radius-large: 1.125rem;
     --shadow-surface: 0 0.5rem 1.5rem rgb(40 78 99 / 0.09);
+    --shadow-dialog: 0 1.5rem 4rem rgb(30 44 51 / 0.22);
     --content-max-width: 75rem;
     --control-min-size: 2.75rem;
     --motion-fast: 150ms;

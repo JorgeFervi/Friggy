@@ -1,0 +1,89 @@
+<button class="friggy-button @VariantClass @SizeClass"
+        type="@TypeValue"
+        disabled="@(Disabled || Busy)"
+        autofocus="@AutoFocus"
+        aria-busy="@(Busy ? "true" : null)"
+        @onclick="HandleClickAsync">
+    @if (Busy)
+    {
+        <span class="friggy-button__spinner" aria-hidden="true"></span>
+        <span>@BusyLabel</span>
+    }
+    else
+    {
+        @ChildContent
+    }
+</button>
+
+@code {
+    private bool handlingClick;
+
+    [Parameter]
+    public FriggyButtonVariant Variant { get; set; } = FriggyButtonVariant.Primary;
+
+    [Parameter]
+    public FriggyButtonType Type { get; set; } = FriggyButtonType.Button;
+
+    [Parameter]
+    public FriggyButtonSize Size { get; set; } = FriggyButtonSize.Regular;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public bool AutoFocus { get; set; }
+
+    [Parameter]
+    public string BusyLabel { get; set; } = "Procesando";
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    private string VariantClass => Variant switch
+    {
+        FriggyButtonVariant.Primary => "friggy-button--primary",
+        FriggyButtonVariant.Secondary => "friggy-button--secondary",
+        FriggyButtonVariant.Danger => "friggy-button--danger",
+        FriggyButtonVariant.Ghost => "friggy-button--ghost",
+        _ => throw new InvalidOperationException($"Variante de botón no compatible: {Variant}."),
+    };
+
+    private string TypeValue => Type switch
+    {
+        FriggyButtonType.Button => "button",
+        FriggyButtonType.Submit => "submit",
+        FriggyButtonType.Reset => "reset",
+        _ => throw new InvalidOperationException($"Tipo de botón no compatible: {Type}."),
+    };
+
+    private string SizeClass => Size switch
+    {
+        FriggyButtonSize.Regular => "friggy-button--regular",
+        FriggyButtonSize.Compact => "friggy-button--compact",
+        _ => throw new InvalidOperationException($"Tamaño de botón no compatible: {Size}."),
+    };
+
+    private async Task HandleClickAsync(MouseEventArgs args)
+    {
+        if (Disabled || Busy || handlingClick)
+        {
+            return;
+        }
+
+        handlingClick = true;
+        try
+        {
+            await OnClick.InvokeAsync(args);
+        }
+        finally
+        {
+            handlingClick = false;
+        }
+    }
+}

@@ -1,0 +1,44 @@
+<section class="page-section" aria-labelledby="@LabelledBy">
+    @if (!string.IsNullOrWhiteSpace(Heading) || !string.IsNullOrWhiteSpace(Description) || Actions is not null)
+    {
+        <header class="page-section__header">
+            <div>
+                @if (!string.IsNullOrWhiteSpace(Heading))
+                {
+                    <h2 id="@HeadingId">@Heading</h2>
+                }
+                @if (!string.IsNullOrWhiteSpace(Description))
+                {
+                    <p>@Description</p>
+                }
+            </div>
+            @if (Actions is not null)
+            {
+                <div class="page-section__actions">@Actions</div>
+            }
+        </header>
+    }
+    <div class="page-section__content">
+        @ChildContent
+    </div>
+</section>
+
+@code {
+    private readonly string sectionId = $"section-{Guid.NewGuid():N}";
+
+    [Parameter]
+    public string? Heading { get; set; }
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    private string HeadingId => $"{sectionId}-heading";
+
+    private string? LabelledBy => string.IsNullOrWhiteSpace(Heading) ? null : HeadingId;
+}

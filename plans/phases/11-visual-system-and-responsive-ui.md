@@ -1,6 +1,6 @@
 # Fase 11 — Sistema visual y experiencia responsive
 
-- **Estado:** En curso desde el 17 de agosto de 2026; subfase 11.1 completada
+- **Estado:** En curso desde el 17 de agosto de 2026; subfases 11.1 y 11.2 completadas
 - **Estimación:** 12–18 días laborables
 - **Dependencias:** Fases 1–10 completadas y puerta de calidad verde
 - **Guía ejecutable:** [Implementación de la fase 11](../implementation/11-visual-system-and-responsive-ui-implementation.md)
@@ -56,9 +56,9 @@ La paleta se centraliza en tokens CSS y se ajusta durante implementación solo s
 
 ### Componentes reutilizables iniciales
 
-- `UiIcon` e `UiIconButton`: iconos locales, nombre accesible obligatorio cuando no hay texto visible.
-- `UiButton`: variantes primary, secondary, ghost y danger; tamaños regular y compact; estados disabled y busy.
-- `UiCard` y `PageSection`: superficies y composición sin acoplamiento a datos de dominio.
+- `FriggyIcon` y `FriggyIconButton`: iconos locales, nombre accesible obligatorio cuando no hay texto visible.
+- `FriggyButton`: variantes primary, secondary, ghost y danger; tamaños regular y compact; estados disabled y busy.
+- `FriggyCard` y `PageSection`: superficies y composición sin acoplamiento a datos de dominio.
 - `PageHeader`: título, descripción opcional, breadcrumb y zona de acciones.
 - `StatusBadge`: tonos neutral, info, success, warning y danger.
 - `FeedbackPanel`: loading, empty y error con título, texto y acción opcional.

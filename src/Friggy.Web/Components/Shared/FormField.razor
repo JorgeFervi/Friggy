@@ -1,0 +1,55 @@
+<div class="form-field @InvalidClass">
+    <label for="@ResolvedControlId">@Label</label>
+    @if (!string.IsNullOrWhiteSpace(Help))
+    {
+        <p id="@HelpId" class="form-field__help">@Help</p>
+    }
+    <div class="form-field__control">
+        @ChildContent(Context)
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <p id="@ErrorId" class="form-field__error">@Error</p>
+    }
+</div>
+
+@code {
+    private readonly string generatedId = $"field-{Guid.NewGuid():N}";
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? ControlId { get; set; }
+
+    [Parameter]
+    public string? Help { get; set; }
+
+    [Parameter]
+    public string? Error { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment<FormFieldContext> ChildContent { get; set; } = default!;
+
+    private string ResolvedControlId => string.IsNullOrWhiteSpace(ControlId) ? generatedId : ControlId;
+
+    private string HelpId => $"{ResolvedControlId}-help";
+
+    private string ErrorId => $"{ResolvedControlId}-error";
+
+    private bool HasHelp => !string.IsNullOrWhiteSpace(Help);
+
+    private bool Invalid => !string.IsNullOrWhiteSpace(Error);
+
+    private string? InvalidClass => Invalid ? "form-field--invalid" : null;
+
+    private string? DescribedBy => (HasHelp, Invalid) switch
+    {
+        (true, true) => $"{HelpId} {ErrorId}",
+        (true, false) => HelpId,
+        (false, true) => ErrorId,
+        _ => null,
+    };
+
+    private FormFieldContext Context => new(ResolvedControlId, DescribedBy, Invalid);
+}

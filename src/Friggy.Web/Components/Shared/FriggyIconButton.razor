@@ -1,0 +1,54 @@
+<button class="friggy-icon-button @VariantClass"
+        type="button"
+        aria-label="@Label"
+        title="@Label"
+        disabled="@Disabled"
+        @onclick="HandleClickAsync">
+    <FriggyIcon Name="Icon" />
+</button>
+
+@code {
+    private bool handlingClick;
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public FriggyIconName Icon { get; set; }
+
+    [Parameter]
+    public FriggyButtonVariant Variant { get; set; } = FriggyButtonVariant.Ghost;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    private string VariantClass => Variant switch
+    {
+        FriggyButtonVariant.Primary => "friggy-icon-button--primary",
+        FriggyButtonVariant.Secondary => "friggy-icon-button--secondary",
+        FriggyButtonVariant.Danger => "friggy-icon-button--danger",
+        FriggyButtonVariant.Ghost => "friggy-icon-button--ghost",
+        _ => throw new InvalidOperationException($"Variante de botón no compatible: {Variant}."),
+    };
+
+    private async Task HandleClickAsync(MouseEventArgs args)
+    {
+        if (Disabled || handlingClick)
+        {
+            return;
+        }
+
+        handlingClick = true;
+        try
+        {
+            await OnClick.InvokeAsync(args);
+        }
+        finally
+        {
+            handlingClick = false;
+        }
+    }
+}

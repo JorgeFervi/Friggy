@@ -1,0 +1,28 @@
+<article class="friggy-card">
+    @if (!string.IsNullOrWhiteSpace(Heading))
+    {
+        <header class="friggy-card__header">
+            <h2>@Heading</h2>
+        </header>
+    }
+    <div class="friggy-card__content">
+        @ChildContent
+    </div>
+    @if (Footer is not null)
+    {
+        <footer class="friggy-card__footer">
+            @Footer
+        </footer>
+    }
+</article>
+
+@code {
+    [Parameter]
+    public string? Heading { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? Footer { get; set; }
+}

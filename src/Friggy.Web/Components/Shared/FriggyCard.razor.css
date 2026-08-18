@@ -1,0 +1,31 @@
+.friggy-card {
+    background: var(--color-surface);
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-large);
+    box-shadow: var(--shadow-surface);
+    overflow: hidden;
+}
+
+.friggy-card__header,
+.friggy-card__content,
+.friggy-card__footer {
+    padding: var(--space-5);
+}
+
+.friggy-card__header {
+    padding-block-end: 0;
+}
+
+.friggy-card__header h2 {
+    font-size: 1.35rem;
+    margin: 0;
+}
+
+.friggy-card__footer {
+    align-items: center;
+    background: var(--color-surface-muted);
+    border-block-start: 0.0625rem solid var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}

@@ -1,0 +1,47 @@
+<section class="feedback-panel @ToneClass"
+         role="@Role"
+         aria-live="@LiveMode">
+    <div class="feedback-panel__content">
+        @if (!string.IsNullOrWhiteSpace(Title))
+        {
+            <h2>@Title</h2>
+        }
+        <div class="feedback-panel__message">
+            @ChildContent
+        </div>
+    </div>
+    @if (Actions is not null)
+    {
+        <div class="feedback-panel__actions">
+            @Actions
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public FriggyTone Tone { get; set; } = FriggyTone.Info;
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    private string ToneClass => Tone switch
+    {
+        FriggyTone.Neutral => "feedback-panel--neutral",
+        FriggyTone.Info => "feedback-panel--info",
+        FriggyTone.Success => "feedback-panel--success",
+        FriggyTone.Warning => "feedback-panel--warning",
+        FriggyTone.Danger => "feedback-panel--danger",
+        _ => throw new InvalidOperationException($"Tono no compatible: {Tone}."),
+    };
+
+    private string Role => Tone == FriggyTone.Danger ? "alert" : "status";
+
+    private string LiveMode => Tone == FriggyTone.Danger ? "assertive" : "polite";
+}

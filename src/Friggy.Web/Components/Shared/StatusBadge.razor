@@ -1,0 +1,21 @@
+<span class="status-badge @ToneClass" role="status">
+    @ChildContent
+</span>
+
+@code {
+    [Parameter]
+    public FriggyTone Tone { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    private string ToneClass => Tone switch
+    {
+        FriggyTone.Neutral => "status-badge--neutral",
+        FriggyTone.Info => "status-badge--info",
+        FriggyTone.Success => "status-badge--success",
+        FriggyTone.Warning => "status-badge--warning",
+        FriggyTone.Danger => "status-badge--danger",
+        _ => throw new InvalidOperationException($"Tono no compatible: {Tone}."),
+    };
+}
