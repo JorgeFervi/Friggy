@@ -1,48 +1,52 @@
-.site-header {
-    align-items: center;
-    border-bottom: 1px solid #d7d7d7;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem 2rem;
-    padding: 1rem;
-}
-
-.site-title {
-    color: inherit;
-    font-size: 1.25rem;
+.friggy-skip-link {
+    background: var(--color-surface);
+    border-radius: var(--radius-small);
+    box-shadow: var(--shadow-dialog);
+    color: var(--color-primary-700);
     font-weight: 700;
-    text-decoration: none;
+    left: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    position: fixed;
+    top: var(--space-3);
+    transform: translateY(-200%);
+    transition: transform var(--motion-fast);
+    z-index: var(--layer-toast);
 }
 
-.site-header nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.site-content {
-    margin: 0 auto;
-    max-width: 72rem;
-    padding: 1rem;
+.friggy-skip-link:focus {
+    transform: translateY(0);
 }
 
 #blazor-error-ui {
     color-scheme: light only;
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    align-items: center;
+    background: var(--color-primary-700);
+    bottom: var(--space-4);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--shadow-dialog);
     box-sizing: border-box;
+    color: var(--color-surface);
     display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    gap: var(--space-4);
+    left: 50%;
+    max-width: calc(100% - 2rem);
+    padding: var(--space-3) var(--space-4);
     position: fixed;
-    width: 100%;
-    z-index: 1000;
+    transform: translateX(-50%);
+    width: max-content;
+    z-index: var(--layer-toast);
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui a { color: inherit; font-weight: 700; }
+#blazor-error-ui .dismiss {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    font-weight: 700;
+    min-height: var(--control-min-size);
+}
+
+@media (max-width: 30rem) {
+    #blazor-error-ui { align-items: stretch; flex-direction: column; width: calc(100% - 2rem); }
+}

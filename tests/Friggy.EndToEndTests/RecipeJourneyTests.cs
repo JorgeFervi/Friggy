@@ -106,10 +106,10 @@ public sealed class RecipeJourneyTests : FriggyPageTest
             await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Planes semanales", Exact = true }))
                 .ToBeVisibleAsync();
 
-            await Page.GetByRole(AriaRole.Navigation, new() { Name = "Principal", Exact = true })
-                .GetByRole(AriaRole.Link, new() { Name = "Catálogos", Exact = true })
+            await Page.GetByRole(AriaRole.Navigation, new() { Name = "Catálogos", Exact = true })
+                .GetByRole(AriaRole.Link, new() { Name = "Ingredientes", Exact = true })
                 .ClickAsync();
-            await Expect(Page.GetByRole(AriaRole.Navigation, new() { Name = "Catálogos", Exact = true }))
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Ingredientes", Exact = true }))
                 .ToBeVisibleAsync();
         });
     }

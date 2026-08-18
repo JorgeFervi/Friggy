@@ -1,0 +1,49 @@
+@inject IJSRuntime JavaScript
+@implements IAsyncDisposable
+
+<div class="friggy-navigation-drawer @(IsOpen ? "friggy-navigation-drawer--open" : null)" id="navigation-drawer"
+     aria-hidden="@(IsOpen ? "false" : "true")" inert="@(IsOpen ? null : string.Empty)" @onkeydown="HandleKeyDownAsync">
+    <div class="friggy-navigation-drawer__overlay" data-testid="drawer-overlay" aria-hidden="true" @onclick="CloseAsync"></div>
+    <aside class="friggy-navigation-drawer__panel" role="dialog" aria-modal="true" aria-label="Menú de navegación">
+        <div class="friggy-navigation-drawer__header">
+            <span>Menú</span>
+            <button type="button" data-drawer-initial-focus aria-label="Cerrar menú" @onclick="CloseAsync"><FriggyIcon Name="FriggyIconName.Close" /></button>
+        </div>
+        <SidebarNavigation IdSuffix="drawer" OnNavigate="CloseAsync" />
+    </aside>
+</div>
+
+@code {
+    private IJSObjectReference? module;
+    private bool? renderedOpenState;
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (renderedOpenState == IsOpen) return;
+        renderedOpenState = IsOpen;
+        if (IsOpen)
+        {
+            module ??= await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/navigation-drawer.js");
+            await module.InvokeVoidAsync("open", "navigation-drawer", "navigation-drawer-trigger");
+        }
+        else if (module is not null)
+        {
+            await module.InvokeVoidAsync("close", "navigation-drawer-trigger");
+        }
+    }
+
+    private Task CloseAsync() => IsOpen ? OnClose.InvokeAsync() : Task.CompletedTask;
+    private Task HandleKeyDownAsync(KeyboardEventArgs args) => args.Key == "Escape" ? CloseAsync() : Task.CompletedTask;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            try { await module.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+        GC.SuppressFinalize(this);
+    }
+}

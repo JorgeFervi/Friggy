@@ -1,0 +1,17 @@
+<div class="friggy-app-shell">
+    <aside class="friggy-app-shell__sidebar" data-testid="desktop-sidebar" aria-label="Navegación de Friggy">
+        <SidebarNavigation IdSuffix="desktop" />
+    </aside>
+    <div class="friggy-app-shell__workspace">
+        <MobileHeader DrawerOpen="DrawerOpen" OnMenuClick="OnMenuClick" />
+        <main id="main-content" class="friggy-app-shell__content" tabindex="-1">@ChildContent</main>
+    </div>
+    <NavigationDrawer IsOpen="DrawerOpen" OnClose="OnDrawerClose" />
+</div>
+
+@code {
+    [Parameter] public bool DrawerOpen { get; set; }
+    [Parameter] public EventCallback OnMenuClick { get; set; }
+    [Parameter] public EventCallback OnDrawerClose { get; set; }
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+}

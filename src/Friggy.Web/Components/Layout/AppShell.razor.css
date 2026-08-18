@@ -1,0 +1,20 @@
+.friggy-app-shell { min-height: 100vh; }
+.friggy-app-shell__sidebar { display: none; }
+.friggy-app-shell__workspace { min-width: 0; }
+.friggy-app-shell__content {
+    margin-inline: auto;
+    max-width: var(--content-max-width);
+    min-width: 0;
+    padding: clamp(var(--space-5), 4vw, var(--space-7)) clamp(var(--space-4), 4vw, var(--space-7));
+}
+@media (min-width: 75rem) {
+    .friggy-app-shell { display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
+    .friggy-app-shell__sidebar {
+        background: var(--color-primary-700);
+        display: block;
+        height: 100vh;
+        inset-block-start: 0;
+        overflow-y: auto;
+        position: sticky;
+    }
+}

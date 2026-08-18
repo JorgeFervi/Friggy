@@ -1,0 +1,15 @@
+<header class="friggy-mobile-header">
+    <a class="friggy-mobile-header__brand" href="/" aria-label="Friggy, ir al inicio">
+        <span class="friggy-mobile-header__mark" aria-hidden="true">F</span><span>Friggy</span>
+    </a>
+    <button id="navigation-drawer-trigger" class="friggy-mobile-header__menu" type="button"
+            aria-label="Abrir menú" aria-controls="navigation-drawer"
+            aria-expanded="@(DrawerOpen ? "true" : "false")" @onclick="OnMenuClick">
+        <FriggyIcon Name="FriggyIconName.Menu" />
+    </button>
+</header>
+
+@code {
+    [Parameter] public bool DrawerOpen { get; set; }
+    [Parameter] public EventCallback OnMenuClick { get; set; }
+}

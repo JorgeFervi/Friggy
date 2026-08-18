@@ -22,6 +22,10 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+body.friggy-drawer-open {
+    overflow: hidden;
+}
+
 h1,
 h2,
 h3,

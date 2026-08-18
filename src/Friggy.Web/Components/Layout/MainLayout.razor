@@ -1,32 +1,21 @@
 ﻿@inherits LayoutComponentBase
 
-<header class="site-header">
-    <a class="site-title" href="/">Friggy</a>
-    <nav aria-label="Principal">
-        <a href="/">Inicio</a>
-        <a href="/recipes">Recetas</a>
-        <a href="/weekly-plans">Planes semanales</a>
-        <a href="/inventory">Inventario</a>
-        <a href="/#catalogs">Catálogos</a>
-    </nav>
-</header>
-
-<main class="site-content">
-    @Body
-</main>
+<a class="friggy-skip-link" href="#main-content">Saltar al contenido</a>
+<AppShell DrawerOpen="drawerOpen" OnMenuClick="OpenDrawer" OnDrawerClose="CloseDrawer">@Body</AppShell>
 
 @if (interactive)
 {
     <span data-testid="interactive-ready" hidden aria-hidden="true"></span>
 }
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+<div id="blazor-error-ui" data-nosnippet role="alert">
+    <span>Se ha producido un error inesperado.</span>
+    <a href="." class="reload">Recargar</a>
+    <button type="button" class="dismiss" aria-label="Cerrar aviso">Cerrar</button>
 </div>
 
 @code {
+    private bool drawerOpen;
     private bool interactive;
 
     protected override void OnAfterRender(bool firstRender)
@@ -37,4 +26,7 @@
             StateHasChanged();
         }
     }
+
+    private void OpenDrawer() => drawerOpen = true;
+    private void CloseDrawer() => drawerOpen = false;
 }

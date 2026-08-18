@@ -1,0 +1,27 @@
+.friggy-mobile-header {
+    align-items: center;
+    background: rgb(255 255 255 / 0.96);
+    border-bottom: 0.0625rem solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    min-height: 4.5rem;
+    padding: var(--space-3) clamp(var(--space-4), 4vw, var(--space-6));
+    position: sticky;
+    top: 0;
+    z-index: var(--layer-header);
+}
+.friggy-mobile-header__brand {
+    align-items: center; color: var(--color-primary-700); display: inline-flex;
+    font-family: var(--font-family-display); font-size: 1.35rem; font-weight: 600;
+    gap: var(--space-3); text-decoration: none;
+}
+.friggy-mobile-header__mark {
+    align-items: center; background: var(--color-primary-700); border-radius: 50%; color: var(--color-surface);
+    display: inline-flex; height: 2.5rem; justify-content: center; width: 2.5rem;
+}
+.friggy-mobile-header__menu {
+    align-items: center; background: var(--color-surface); border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-medium); color: var(--color-primary-700); cursor: pointer; display: inline-flex;
+    height: var(--control-min-size); justify-content: center; padding: 0; width: var(--control-min-size);
+}
+@media (min-width: 75rem) { .friggy-mobile-header { display: none; } }

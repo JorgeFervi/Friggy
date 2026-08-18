@@ -1,5 +1,6 @@
 using Bunit;
 using Friggy.ComponentTests.Testing;
+using Friggy.Web.Components.Layout;
 using Microsoft.AspNetCore.Components;
 
 namespace Friggy.ComponentTests.Layout;
@@ -8,40 +9,96 @@ public sealed class MainLayoutTests : ComponentTest
 {
     [Fact]
     [Trait("Category", "Component")]
-    public void Render_FromRecipesPage_ShowsPersistentMainNavigation()
+    public void Render_FromRecipesPage_ShowsGroupedNavigationAndActiveRoute()
     {
         var navigation = GetRequiredService<NavigationManager>();
         navigation.NavigateTo("recipes");
 
-        var component = Render<global::Friggy.Web.Components.Layout.MainLayout>();
+        var component = Render<MainLayout>();
 
         Assert.EndsWith("/recipes", navigation.Uri, StringComparison.Ordinal);
+        Assert.Equal("Saltar al contenido", component.Find("a[href='#main-content']").TextContent.Trim());
+
+        var sidebar = component.Find("aside[data-testid='desktop-sidebar']");
+        Assert.Equal("Navegación de Friggy", sidebar.GetAttribute("aria-label"));
         Assert.Collection(
-            component.FindAll("nav[aria-label='Principal'] > a"),
-            link =>
-            {
-                Assert.Equal("Inicio", link.TextContent.Trim());
-                Assert.Equal("/", link.GetAttribute("href"));
-            },
-            link =>
-            {
-                Assert.Equal("Recetas", link.TextContent.Trim());
-                Assert.Equal("/recipes", link.GetAttribute("href"));
-            },
-            link =>
-            {
-                Assert.Equal("Planes semanales", link.TextContent.Trim());
-                Assert.Equal("/weekly-plans", link.GetAttribute("href"));
-            },
-            link =>
-            {
-                Assert.Equal("Inventario", link.TextContent.Trim());
-                Assert.Equal("/inventory", link.GetAttribute("href"));
-            },
-            link =>
-            {
-                Assert.Equal("Catálogos", link.TextContent.Trim());
-                Assert.Equal("/#catalogs", link.GetAttribute("href"));
-            });
+            sidebar.QuerySelectorAll("nav[aria-label='Principal'] a"),
+            link => AssertNavigationLink(link, "Inicio", "/", active: false),
+            link => AssertNavigationLink(link, "Recetas", "/recipes", active: true),
+            link => AssertNavigationLink(link, "Planes semanales", "/weekly-plans", active: false),
+            link => AssertNavigationLink(link, "Inventario", "/inventory", active: false));
+        Assert.Equal("Catálogos", sidebar.QuerySelector("[data-navigation-group='catalogs'] h2")?.TextContent.Trim());
+        Assert.Collection(
+            sidebar.QuerySelectorAll("[data-navigation-group='catalogs'] a"),
+            link => AssertNavigationLink(link, "Ingredientes", "/ingredients", active: false),
+            link => AssertNavigationLink(link, "Unidades", "/unit-types", active: false),
+            link => AssertNavigationLink(link, "Etiquetas", "/recipe-tags", active: false),
+            link => AssertNavigationLink(link, "Tipos de comida", "/meal-types", active: false));
+        Assert.Equal("main-content", component.Find("main").Id);
+        Assert.Equal("-1", component.Find("main").GetAttribute("tabindex"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void MobileMenu_OpenAndOverlayClose_ExposeAccessibleDrawerState()
+    {
+        var module = JavaScript.SetupModule("./js/navigation-drawer.js");
+        module.SetupVoid("open", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
+        var component = Render<MainLayout>();
+
+        var trigger = component.Find("button[aria-controls='navigation-drawer']");
+        Assert.Equal("false", trigger.GetAttribute("aria-expanded"));
+        Assert.Equal("Abrir menú", trigger.GetAttribute("aria-label"));
+
+        trigger.Click();
+
+        Assert.Equal("true", component.Find("button[aria-controls='navigation-drawer']").GetAttribute("aria-expanded"));
+        Assert.Equal("false", component.Find("#navigation-drawer").GetAttribute("aria-hidden"));
+        Assert.False(component.Find("#navigation-drawer").HasAttribute("inert"));
+        Assert.Contains("friggy-navigation-drawer--open", component.Find("#navigation-drawer").ClassList);
+        module.VerifyInvoke("open");
+
+        component.Find("[data-testid='drawer-overlay']").Click();
+
+        Assert.Equal("false", component.Find("button[aria-controls='navigation-drawer']").GetAttribute("aria-expanded"));
+        Assert.Equal("true", component.Find("#navigation-drawer").GetAttribute("aria-hidden"));
+        Assert.True(component.Find("#navigation-drawer").HasAttribute("inert"));
+        module.VerifyInvoke("close");
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void MobileMenu_CloseButtonEscapeAndNavigation_CloseDrawerExactlyOnce()
+    {
+        var module = JavaScript.SetupModule("./js/navigation-drawer.js");
+        module.SetupVoid("open", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
+        var component = Render<MainLayout>();
+
+        component.Find("button[aria-controls='navigation-drawer']").Click();
+        component.Find("#navigation-drawer button[aria-label='Cerrar menú']").Click();
+        Assert.Equal("true", component.Find("#navigation-drawer").GetAttribute("aria-hidden"));
+
+        component.Find("button[aria-controls='navigation-drawer']").Click();
+        component.Find("#navigation-drawer").KeyDown("Escape");
+        Assert.Equal("true", component.Find("#navigation-drawer").GetAttribute("aria-hidden"));
+
+        component.Find("button[aria-controls='navigation-drawer']").Click();
+        component.Find("#navigation-drawer a[href='/recipes']").Click();
+        Assert.Equal("true", component.Find("#navigation-drawer").GetAttribute("aria-hidden"));
+        module.VerifyInvoke("open", 3);
+        module.VerifyInvoke("close", 3);
+    }
+
+    private static void AssertNavigationLink(
+        AngleSharp.Dom.IElement link,
+        string text,
+        string href,
+        bool active)
+    {
+        Assert.Equal(text, link.TextContent.Trim());
+        Assert.Equal(href, link.GetAttribute("href"));
+        Assert.Equal(active ? "page" : null, link.GetAttribute("aria-current"));
     }
 }

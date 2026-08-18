@@ -5,7 +5,7 @@
 
 La fase es una migración de presentación. No modifica Domain, Application, Infrastructure ni Api. Todo comportamiento de componentes comienza con un test bUnit/xUnit v3 fallido; los baseline iniciales se generan únicamente después de que la semántica y el diseño de cada incremento estén aprobados.
 
-> **Progreso:** 11.1 y 11.2 completadas. La siguiente unidad ejecutable es **11.3 — Shell, sidebar y drawer**.
+> **Progreso:** 11.1, 11.2 y 11.3 completadas. La siguiente unidad ejecutable es **11.4 — Inicio y recetas**.
 
 ## Reglas transversales
 
@@ -71,7 +71,7 @@ Se incorporaron contratos cerrados para variantes, tipos, tamaños, tonos e icon
 
 La galería bUnit añade 34 casos que cubren las cuatro variantes, tres tipos, dos tamaños, estados disabled/busy, cinco tonos, doce iconos, composición semántica, asociaciones de formulario y ciclo completo del diálogo. El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 403/403 pruebas: 115 Domain, 71 Application, 85 Integration, 114 Component y 18 E2E.
 
-## 11.3 — Shell, sidebar y drawer
+## 11.3 — Shell, sidebar y drawer — Completada
 
 ### Rojo
 
@@ -91,6 +91,12 @@ La galería bUnit añade 34 casos que cubren las cuatro variantes, tres tipos, d
 
 - Capturas aprobadas del shell vacío y con contenido en los tres viewports.
 - Tabulación y lector de pantalla recorren navegación y contenido en orden lógico.
+
+`MainLayout` continúa como layout raíz y delega la composición en `AppShell`, `SidebarNavigation`, `MobileHeader` y `NavigationDrawer`. Desde 1200 px se muestra una sidebar fija de 17 rem; por debajo se ofrece una cabecera compacta y un drawer limitado al ancho disponible. Inicio, Recetas, Planes semanales e Inventario forman la navegación principal, mientras los cuatro catálogos quedan agrupados y etiquetados por separado.
+
+El drawer expone `aria-expanded`, `aria-controls`, `aria-hidden`, `aria-modal` e `inert` según estado. Se cierra mediante botón, overlay, `Escape` o selección de enlace. El módulo local `navigation-drawer.js` bloquea el scroll, contiene la tabulación y restaura el foco al disparador; la transferencia inicial se programa al finalizar el evento remoto de Blazor para evitar que el navegador devuelva el foco al botón de apertura.
+
+El shell incorpora enlace de salto, landmarks y `NavLink` con `aria-current`. El aviso no controlado de Blazor y el diálogo de reconexión se tradujeron al español y usan los tokens visuales sin modificar el script de reconexión. bUnit añade tres escenarios de layout y Playwright uno que cubre escritorio, tablet, foco, scroll y navegación. Se revisaron y aceptaron los baseline de Inicio en 360×800, 768×1024 y 1440×1000.
 
 ## 11.4 — Inicio y recetas
 

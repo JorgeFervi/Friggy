@@ -42,6 +42,9 @@
     --motion-fast: 150ms;
     --motion-standard: 220ms;
     --focus-ring: 0 0 0 0.2rem rgb(53 107 133 / 0.28);
+    --layer-header: 20;
+    --layer-drawer: 40;
+    --layer-toast: 60;
 
     --breakpoint-tablet: 48rem;
     --breakpoint-desktop: 75rem;
