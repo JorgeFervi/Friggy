@@ -1,7 +1,14 @@
 .page-section {
     display: grid;
     gap: var(--space-5);
+    grid-template-columns: minmax(0, 1fr);
     margin-block: var(--space-6);
+    min-width: 0;
+}
+
+.page-section__header,
+.page-section__content {
+    min-width: 0;
 }
 
 .page-section__header {

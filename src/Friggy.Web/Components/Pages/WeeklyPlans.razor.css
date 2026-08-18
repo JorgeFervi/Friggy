@@ -1,0 +1,21 @@
+.friggy-weekly-plans { display: grid; gap: var(--space-7); }
+.friggy-weekly-plans__form { display: grid; gap: var(--space-5); }
+.friggy-weekly-plans__fields { display: grid; gap: var(--space-4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.friggy-weekly-plans__fields > div { display: grid; gap: var(--space-2); }
+.friggy-weekly-plans__description { grid-column: 1 / -1; }
+.friggy-weekly-plans__grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+.friggy-weekly-plan-card {
+    background: var(--color-surface); border: 0.0625rem solid var(--color-border); border-radius: var(--radius-large);
+    box-shadow: var(--shadow-surface); display: grid; gap: var(--space-5); padding: var(--space-5);
+}
+.friggy-weekly-plan-card h3 { font-family: var(--font-family-display); font-size: 1.35rem; margin: 0 0 var(--space-2); }
+.friggy-weekly-plan-card p { color: var(--color-text-muted); margin: 0; }
+.friggy-weekly-plan-card__eyebrow { color: var(--color-primary-600) !important; font-size: var(--font-size-small); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.friggy-weekly-plan-card__actions { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; }
+.friggy-weekly-plan-card__actions a { color: var(--color-primary-700); font-weight: 700; }
+@media (max-width: 47.99rem) {
+    .friggy-weekly-plans__fields { grid-template-columns: 1fr; }
+    .friggy-weekly-plans__description { grid-column: auto; }
+    .friggy-weekly-plan-card__actions { align-items: stretch; flex-direction: column; }
+    .friggy-weekly-plan-card__actions a { align-items: center; display: inline-flex; min-height: var(--control-min-size); }
+}

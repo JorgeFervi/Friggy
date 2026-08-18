@@ -15,120 +15,103 @@
 
 <PageTitle>@(plan?.Name ?? "Plan semanal")</PageTitle>
 
-@if (loading)
-{
-    <h1>Plan semanal</h1>
-    <p>Cargando planificación…</p>
-}
-else if (plan is null)
-{
-    <h1>Plan semanal</h1>
-    <p role="alert">@(error ?? "No se pudo cargar el plan semanal.")</p>
-}
-else
-{
-    <h1>@plan.Name</h1>
-    <p>
-        Semana del @plan.StartDate.ToString("dd/MM/yyyy")
-        al @plan.EndDate.ToString("dd/MM/yyyy")
-    </p>
-    <p><a href="weekly-plans">Volver a planes semanales</a></p>
-
-    <EditForm Model="editModel"
-              OnValidSubmit="UpdateAsync"
-              FormName="weekly-plan-edit-form"
-              data-testid="weekly-plan-edit-form">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-        <div>
-            <label for="weekly-plan-edit-name">Nombre</label>
-            <InputText id="weekly-plan-edit-name" @bind-Value="editModel.Name" />
-            <ValidationMessage For="() => editModel.Name" />
-        </div>
-        <div>
-            <label for="weekly-plan-edit-description">Descripción</label>
-            <InputTextArea id="weekly-plan-edit-description" @bind-Value="editModel.Description" />
-        </div>
-        <button type="submit" disabled="@saving">@(saving ? "Guardando…" : "Guardar detalles")</button>
-    </EditForm>
-
-    @if (error is not null)
+<div class="friggy-weekly-plan-details">
+    @if (loading)
     {
-        <p role="alert">@error</p>
+        <PageHeader Title="Plan semanal" Eyebrow="Planificación" Description="Cargando tu calendario…" />
+        <FeedbackPanel Title="Cargando planificación" Tone="FriggyTone.Info">Estamos preparando la semana.</FeedbackPanel>
     }
-
-    @if (status is not null)
+    else if (plan is null)
     {
-        <p role="status">@status</p>
-    }
-
-    @if (recipes.Count == 0)
-    {
-        <p>No hay recetas disponibles. Crea una receta antes de asignarla.</p>
-    }
-
-    <WeeklyPlanCalendar Model="plan"
-                        Recipes="recipes"
-                        MealTypes="mealTypes"
-                        IsSaving="saving"
-                        OnChanged="ChangeEntryAsync"
-                        OnComplete="CompleteMealAsync"
-                        OnSlotAdded="AddSlotAsync"
-                        OnSlotRemoved="RemoveSlotAsync"
-                        OnSlotsReordered="ReorderSlotsAsync"
-                        OnSlotTimeChanged="SetSlotTimeAsync"
-                        OnEntrySkipped="SkipEntryAsync" />
-
-    <h2>Necesidades de inventario</h2>
-    @if (requirements.Count == 0)
-    {
-        <p>No hay ingredientes requeridos.</p>
+        <PageHeader Title="Plan semanal" Eyebrow="Planificación">
+            <Breadcrumb><a href="weekly-plans">Volver a planes semanales</a></Breadcrumb>
+        </PageHeader>
+        <FeedbackPanel Title="No se pudo cargar el plan" Tone="FriggyTone.Danger">@(error ?? "No se pudo cargar el plan semanal.")</FeedbackPanel>
     }
     else
     {
-        <table>
-            <thead><tr><th>Ingrediente</th><th>Requerido</th><th>Disponible</th><th>Faltante</th></tr></thead>
-            <tbody>
-            @foreach (var requirement in requirements)
-            {
-                <tr @key="@($"{requirement.IngredientId:N}-{requirement.UnitTypeId:N}")">
-                    <td>@requirement.IngredientName</td>
-                    <td>@requirement.RequiredQuantity @requirement.UnitSymbol</td>
-                    <td>@requirement.AvailableQuantity @requirement.UnitSymbol</td>
-                    <td>@requirement.MissingQuantity @requirement.UnitSymbol</td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    }
+        <PageHeader Title="@plan.Name"
+                    Eyebrow="Planificación semanal"
+                    Description="@($"Semana del {plan.StartDate:dd/MM/yyyy} al {plan.EndDate:dd/MM/yyyy}")">
+            <Breadcrumb><a href="weekly-plans">Volver a planes semanales</a></Breadcrumb>
+        </PageHeader>
 
-    @if (mealToComplete is not null)
-    {
-        <section aria-label="Seleccionar lotes para completar">
-            <h2>Selecciona los consumos</h2>
-            @if (completionLots.Count == 0)
+        @if (error is not null)
+        {
+            <FeedbackPanel Title="No pudimos guardar el cambio" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+        }
+        @if (status is not null)
+        {
+            <div class="friggy-weekly-plan-details__status" role="status">@status</div>
+        }
+
+        <PageSection Heading="Detalles del plan" Description="Actualiza el nombre o añade una nota para esta semana.">
+            <EditForm Model="editModel" OnValidSubmit="UpdateAsync" FormName="weekly-plan-edit-form"
+                      class="friggy-weekly-plan-details__form" data-testid="weekly-plan-edit-form">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="friggy-weekly-plan-details__fields">
+                    <div><label for="weekly-plan-edit-name">Nombre</label><InputText id="weekly-plan-edit-name" @bind-Value="editModel.Name" /><ValidationMessage For="() => editModel.Name" /></div>
+                    <div><label for="weekly-plan-edit-description">Descripción</label><InputTextArea id="weekly-plan-edit-description" @bind-Value="editModel.Description" /></div>
+                </div>
+                <FormActions><FriggyButton Type="FriggyButtonType.Submit" Busy="saving" BusyLabel="Guardando">Guardar detalles</FriggyButton></FormActions>
+            </EditForm>
+        </PageSection>
+
+        <PageSection Heading="Calendario" Description="Asigna recetas, ajusta horarios y registra lo que ocurre con cada comida.">
+            @if (recipes.Count == 0)
             {
-                <p>No hay lotes compatibles disponibles. Puedes completar la comida dejando toda la necesidad pendiente.</p>
+                <FeedbackPanel Title="No hay recetas disponibles" Tone="FriggyTone.Warning">Crea una receta antes de asignarla.</FeedbackPanel>
             }
-            @foreach (var candidate in completionLots)
+            <WeeklyPlanCalendar Model="plan" Recipes="recipes" MealTypes="mealTypes" IsSaving="saving"
+                                OnChanged="ChangeEntryAsync" OnComplete="CompleteMealAsync" OnSlotAdded="AddSlotAsync"
+                                OnSlotRemoved="RemoveSlotAsync" OnSlotsReordered="ReorderSlotsAsync"
+                                OnSlotTimeChanged="SetSlotTimeAsync" OnEntrySkipped="SkipEntryAsync" />
+        </PageSection>
+
+        <PageSection Heading="Necesidades de inventario" Description="Compara lo necesario con las existencias disponibles.">
+            @if (requirements.Count == 0)
             {
-                <div @key="candidate.Id">
-                    <label for="@($"completion-{candidate.Id:N}")">
-                        @candidate.IngredientName: @candidate.Quantity @candidate.UnitSymbol, caduca @candidate.ExpirationDate.ToString("dd/MM/yyyy")
-                    </label>
-                    <input id="@($"completion-{candidate.Id:N}")"
-                           type="number"
-                           min="0"
-                           step="0.001"
-                           value="@completionQuantities.GetValueOrDefault(candidate.Id)"
-                           @onchange="args => SetCompletionQuantity(candidate.Id, args)" />
+                <FeedbackPanel Title="Sin ingredientes requeridos" Tone="FriggyTone.Neutral">Asigna recetas para calcular las necesidades.</FeedbackPanel>
+            }
+            else
+            {
+                <div class="friggy-requirements-table" role="region" aria-label="Necesidades de inventario" tabindex="0">
+                    <table><thead><tr><th>Ingrediente</th><th>Requerido</th><th>Disponible</th><th>Faltante</th></tr></thead><tbody>
+                    @foreach (var requirement in requirements)
+                    {
+                        <tr @key="@($"{requirement.IngredientId:N}-{requirement.UnitTypeId:N}")"><td>@requirement.IngredientName</td><td>@requirement.RequiredQuantity @requirement.UnitSymbol</td><td>@requirement.AvailableQuantity @requirement.UnitSymbol</td><td>@requirement.MissingQuantity @requirement.UnitSymbol</td></tr>
+                    }
+                    </tbody></table>
                 </div>
             }
-            <button disabled="@saving" @onclick="ConfirmCompletionAsync">Confirmar finalización</button>
-            <button disabled="@saving" @onclick="CancelCompletion">Cancelar</button>
-        </section>
+        </PageSection>
+
+        @if (mealToComplete is not null)
+        {
+            <div class="friggy-completion-dialog__backdrop">
+                <section class="friggy-completion-dialog" role="dialog" aria-modal="true" aria-labelledby="completion-title" aria-describedby="completion-description">
+                    <header><p>Actualizar inventario</p><h2 id="completion-title">Selecciona los consumos</h2></header>
+                    <p id="completion-description">Indica cuánto quieres consumir de cada lote compatible.</p>
+                    @if (completionLots.Count == 0)
+                    {
+                        <FeedbackPanel Title="No hay lotes compatibles" Tone="FriggyTone.Warning">Puedes completar la comida dejando toda la necesidad pendiente.</FeedbackPanel>
+                    }
+                    <div class="friggy-completion-dialog__lots">
+                    @foreach (var candidate in completionLots)
+                    {
+                        <div @key="candidate.Id"><label for="@($"completion-{candidate.Id:N}")">@candidate.IngredientName: @candidate.Quantity @candidate.UnitSymbol, caduca @candidate.ExpirationDate.ToString("dd/MM/yyyy")</label><input id="@($"completion-{candidate.Id:N}")" type="number" min="0" step="0.001" value="@completionQuantities.GetValueOrDefault(candidate.Id)" @onchange="args => SetCompletionQuantity(candidate.Id, args)" /></div>
+                    }
+                    </div>
+                    <FormActions>
+                        <FriggyButton Variant="FriggyButtonVariant.Secondary" Disabled="saving" OnClick="CancelCompletion">Cancelar</FriggyButton>
+                        <FriggyButton Busy="saving" BusyLabel="Finalizando" OnClick="ConfirmCompletionAsync">Confirmar finalización</FriggyButton>
+                    </FormActions>
+                </section>
+            </div>
+        }
     }
-}
+</div>
 
 @code {
     private readonly CancellationTokenSource cancellation = new();

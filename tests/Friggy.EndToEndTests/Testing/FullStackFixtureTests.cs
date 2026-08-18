@@ -72,6 +72,22 @@ public sealed class FullStackFixtureTests
 
     [Fact]
     [Trait("Category", "E2E")]
+    public async Task ResetPlanningDataAsync_RunningEnvironment_DelegatesToIsolatedDatabase()
+    {
+        var runtime = new RecordingFullStackRuntime();
+        var fixture = new FullStackFixture(runtime, new RecordingEnvironmentVariables());
+        await fixture.InitializeAsync();
+        runtime.Operations.Clear();
+
+        await fixture.ResetPlanningDataAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(["reset-planning-data"], runtime.Operations);
+
+        await fixture.DisposeAsync();
+    }
+
+    [Fact]
+    [Trait("Category", "E2E")]
     public async Task DisposeAsync_InitializedEnvironment_StopsProcessesAndRestoresRunnerVariable()
     {
         var runtime = new RecordingFullStackRuntime();
@@ -104,6 +120,9 @@ public sealed class FullStackFixtureTests
 
         public Task ResetRecipeDataAsync(CancellationToken cancellationToken) =>
             RecordAsync("reset-recipe-data");
+
+        public Task ResetPlanningDataAsync(CancellationToken cancellationToken) =>
+            RecordAsync("reset-planning-data");
 
         public Task StartApiAsync(CancellationToken cancellationToken) => RecordAsync("start-api");
 

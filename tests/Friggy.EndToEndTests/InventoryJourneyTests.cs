@@ -50,7 +50,7 @@ public sealed class InventoryJourneyTests(FullStackFixture fixture) : FriggyPage
             await Page.GetByLabel(new Regex(ingredientName)).FillAsync("2");
             await Page.GetByRole(AriaRole.Button, new() { Name = "Confirmar finalización", Exact = true })
                 .ClickAsync();
-            await Expect(Page.GetByRole(AriaRole.Status))
+            await Expect(Page.Locator(".friggy-weekly-plan-details__status"))
                 .ToHaveTextAsync("Comida completada e inventario actualizado.");
 
             await Page.GotoAsync("about:blank");

@@ -4,36 +4,58 @@
 @using Friggy.Application.WeeklyPlans.Dtos
 @using Friggy.Web.WeeklyPlans
 
-<div class="weekly-plan-calendar" data-testid="weekly-plan-calendar">
+<div class="friggy-weekly-calendar" data-testid="weekly-plan-calendar">
     @foreach (var day in Model.Days.OrderBy(day => day.Date))
     {
         var orderedMeals = day.Meals.OrderBy(meal => meal.SlotOrder).ToArray();
-        <section class="weekly-plan-day"
+        <section class="friggy-weekly-calendar__day"
                  data-testid="weekly-plan-day"
                  aria-label="@DayLabel(day.Date)"
                  @key="day.Date">
-            <h2>@DayLabel(day.Date)</h2>
+            <header class="friggy-weekly-calendar__day-header">
+                <p>@day.Date.ToString("dd/MM")</p>
+                <h2>@DayLabel(day.Date)</h2>
+            </header>
+            <div class="friggy-weekly-calendar__meals">
             @foreach (var meal in orderedMeals)
             {
                 var selectId = $"meal-{day.Date:yyyyMMdd}-{meal.MealTypeId:N}";
                 var isLocked = meal.IsCompleted || meal.Status == MealPlanEntryState.Skipped;
-                <div class="meal-slot" data-testid="meal-slot" data-slot-id="@meal.SlotId" @key="meal.SlotId">
-                    <div>
+                <article class="friggy-meal-slot" data-testid="meal-slot" data-slot-id="@meal.SlotId" @key="meal.SlotId">
+                    <header class="friggy-meal-slot__header">
+                    <div class="friggy-meal-slot__title">
                         <strong>@meal.MealTypeName</strong>
-                        <button type="button"
+                        @if (meal.IsCompleted)
+                        {
+                            <StatusBadge Tone="FriggyTone.Success">Completada</StatusBadge>
+                        }
+                        else if (meal.Status == MealPlanEntryState.Skipped)
+                        {
+                            <StatusBadge Tone="FriggyTone.Warning">Omitida</StatusBadge>
+                        }
+                        else if (meal.RecipeId.HasValue)
+                        {
+                            <StatusBadge Tone="FriggyTone.Info">Planificada</StatusBadge>
+                        }
+                    </div>
+                    <div class="friggy-meal-slot__order" aria-label="Orden de @meal.MealTypeName">
+                        <button class="friggy-meal-slot__icon-button" type="button"
                                 disabled="@(IsSaving || meal.SlotOrder == 0)"
                                 aria-label="Subir @meal.MealTypeName"
                                 @onclick="() => MoveSlotAsync(day.Date, orderedMeals, meal.SlotId, -1)">↑</button>
-                        <button type="button"
+                        <button class="friggy-meal-slot__icon-button" type="button"
                                 disabled="@(IsSaving || meal.SlotOrder == orderedMeals.Length - 1)"
                                 aria-label="Bajar @meal.MealTypeName"
                                 @onclick="() => MoveSlotAsync(day.Date, orderedMeals, meal.SlotId, 1)">↓</button>
-                        <button type="button"
+                        <button class="friggy-meal-slot__remove-slot" type="button"
                                 disabled="@(IsSaving || meal.RecipeId.HasValue)"
                                 aria-label="Eliminar hueco @meal.MealTypeName"
                                 @onclick="() => OnSlotRemoved.InvokeAsync(meal.SlotId)">Eliminar hueco</button>
                     </div>
+                    </header>
 
+                    <div class="friggy-meal-slot__fields">
+                    <div class="friggy-meal-slot__field friggy-meal-slot__field--recipe">
                     <label for="@selectId">Receta</label>
                     <select id="@selectId"
                             value="@(meal.RecipeId?.ToString() ?? string.Empty)"
@@ -47,59 +69,70 @@
                             <option value="@recipe.Id">@recipe.Name</option>
                         }
                     </select>
-
+                    </div>
+                    <div class="friggy-meal-slot__field">
                     <label for="@($"{selectId}-time")">Hora prevista</label>
                     <input id="@($"{selectId}-time")"
                            type="time"
                            value="@meal.PlannedTime"
                            disabled="@IsSaving"
                            @onchange="args => OnSlotTimeChanged.InvokeAsync(new(meal.SlotId, args.Value?.ToString()))" />
+                    </div>
+                    </div>
                     @if (meal.PreparationStartsAt.HasValue)
                     {
-                        <span>Empezar preparación: @meal.PreparationStartsAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                        <p class="friggy-meal-slot__preparation">Empezar preparación: @meal.PreparationStartsAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
                     }
 
                     @if (meal.RecipeId.HasValue)
                     {
-                        <label for="@($"{selectId}-servings")">Raciones</label>
-                        <input id="@($"{selectId}-servings")"
-                               type="number"
-                               min="1"
-                               value="@meal.Servings"
-                               disabled="@(IsSaving || isLocked)"
-                               @onchange="args => ChangeServingsAsync(day.Date, meal, args)" />
+                        <div class="friggy-meal-slot__field friggy-meal-slot__servings">
+                            <label for="@($"{selectId}-servings")">Raciones</label>
+                            <input id="@($"{selectId}-servings")"
+                                   type="number"
+                                   min="1"
+                                   value="@meal.Servings"
+                                   disabled="@(IsSaving || isLocked)"
+                                   @onchange="args => ChangeServingsAsync(day.Date, meal, args)" />
+                        </div>
                         @if (meal.IsCompleted)
                         {
-                            <span>Completada</span>
+                            <p class="friggy-meal-slot__state-copy">Esta comida ya está completada.</p>
                         }
                         else if (meal.Status == MealPlanEntryState.Skipped)
                         {
-                            <span>Omitida: @meal.SkippedReason</span>
+                            <p class="friggy-meal-slot__state-copy">Omitida: @meal.SkippedReason</p>
                             @if (meal.AlternativeDescription is not null)
                             {
-                                <span>Alternativa: @meal.AlternativeDescription</span>
+                                <p class="friggy-meal-slot__state-copy">Alternativa: @meal.AlternativeDescription</p>
                             }
                         }
                         else
                         {
-                            <button type="button"
-                                    disabled="@IsSaving"
-                                    @onclick="() => OnComplete.InvokeAsync(new(day.Date, meal.MealTypeId, meal.RecipeId, meal.Servings))">
+                            <FriggyButton Size="FriggyButtonSize.Compact"
+                                          Disabled="IsSaving"
+                                          OnClick="() => OnComplete.InvokeAsync(new(day.Date, meal.MealTypeId, meal.RecipeId, meal.Servings))">
                                 Completar
-                            </button>
-                            <label for="@($"{selectId}-skip-reason")">Motivo para omitir</label>
-                            <input id="@($"{selectId}-skip-reason")"
-                                   value="@Draft(meal.SlotId).Reason"
-                                   @oninput="args => Draft(meal.SlotId).Reason = args.Value?.ToString()" />
-                            <label for="@($"{selectId}-alternative")">Alternativa</label>
-                            <input id="@($"{selectId}-alternative")"
-                                   value="@Draft(meal.SlotId).Alternative"
-                                   @oninput="args => Draft(meal.SlotId).Alternative = args.Value?.ToString()" />
-                            <button type="button"
-                                    disabled="@IsSaving"
-                                    @onclick="() => SkipAsync(day.Date, meal)">Omitir</button>
+                            </FriggyButton>
+                            <details class="friggy-meal-slot__skip">
+                                <summary>Omitir esta comida</summary>
+                                <div class="friggy-meal-slot__skip-fields">
+                                    <label for="@($"{selectId}-skip-reason")">Motivo para omitir</label>
+                                    <input id="@($"{selectId}-skip-reason")"
+                                           value="@Draft(meal.SlotId).Reason"
+                                           @oninput="args => Draft(meal.SlotId).Reason = args.Value?.ToString()" />
+                                    <label for="@($"{selectId}-alternative")">Alternativa</label>
+                                    <input id="@($"{selectId}-alternative")"
+                                           value="@Draft(meal.SlotId).Alternative"
+                                           @oninput="args => Draft(meal.SlotId).Alternative = args.Value?.ToString()" />
+                                    <FriggyButton Variant="FriggyButtonVariant.Secondary"
+                                                  Size="FriggyButtonSize.Compact"
+                                                  Disabled="IsSaving"
+                                                  OnClick="() => SkipAsync(day.Date, meal)">Omitir</FriggyButton>
+                                </div>
+                            </details>
                         }
-                        <button type="button"
+                        <button class="friggy-meal-slot__withdraw" type="button"
                                 data-date="@day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
                                 data-meal-type-id="@meal.MealTypeId"
                                 disabled="@(IsSaving || isLocked)"
@@ -108,9 +141,11 @@
                             Retirar
                         </button>
                     }
-                </div>
+                </article>
             }
+            </div>
 
+            <div class="friggy-weekly-calendar__add-slot">
             <label for="@($"add-slot-{day.Date:yyyyMMdd}")">Añadir tipo de comida</label>
             <select id="@($"add-slot-{day.Date:yyyyMMdd}")"
                     data-testid="add-meal-slot"
@@ -124,6 +159,7 @@
                     <option value="@mealType.Id">@mealType.Name</option>
                 }
             </select>
+            </div>
         </section>
     }
 </div>

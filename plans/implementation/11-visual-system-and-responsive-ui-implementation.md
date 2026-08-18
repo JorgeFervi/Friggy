@@ -5,7 +5,7 @@
 
 La fase es una migración de presentación. No modifica Domain, Application, Infrastructure ni Api. Todo comportamiento de componentes comienza con un test bUnit/xUnit v3 fallido; los baseline iniciales se generan únicamente después de que la semántica y el diseño de cada incremento estén aprobados.
 
-> **Progreso:** 11.1, 11.2, 11.3 y 11.4 completadas. La siguiente unidad ejecutable es **11.5 — Planificación semanal**.
+> **Progreso:** 11.1, 11.2, 11.3, 11.4 y 11.5 completadas. La siguiente unidad ejecutable es **11.6 — Inventario**.
 
 ## Reglas transversales
 
@@ -128,7 +128,7 @@ bUnit cubre los cuatro estados de Inicio, la presentación y acciones de las car
 
 Los recorridos visuales reinician únicamente los datos de recetas del PostgreSQL efímero antes de capturar, de modo que sus resultados no dependen del orden de la suite ni de recetas creadas por planificación o inventario. El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 414/414 pruebas: 115 Domain, 71 Application, 85 Integration, 122 Component y 21 E2E.
 
-## 11.5 — Planificación semanal
+## 11.5 — Planificación semanal — Completada
 
 ### Rojo
 
@@ -147,6 +147,14 @@ Los recorridos visuales reinician únicamente los datos de recetas del PostgreSQ
 
 - Baseline de lista, calendario poblado y finalización en móvil y escritorio; tablet cubre el cambio de layout.
 - Todas las pruebas de planificación e inventario continúan verdes.
+
+El listado de planes adopta `PageHeader`, `PageSection`, feedback y cards responsive, con un formulario apilado en móvil y distribuido en escritorio. La confirmación del navegador se sustituyó por `ConfirmDialog`; el borrado mantiene protección frente a acciones duplicadas y actualiza la colección sin alterar rutas ni contratos HTTP.
+
+El calendario presenta cada día como una superficie y cada comida como una unidad claramente jerarquizada. En escritorio, las comidas se distribuyen en tres columnas; tablet y móvil conservan el orden de lectura y apilan los controles cuando el ancho lo exige. Asignación, raciones, horarios, reordenación, alta y retirada de huecos, finalización y omisión siguen delegadas en la página. La omisión usa divulgación progresiva y los estados ya existentes se muestran mediante badges.
+
+El selector de lotes se adapta como diálogo inferior en móvil y superficie modal centrada en anchos mayores. Las necesidades de inventario conservan su tabla semántica con scroll interno, sin provocar overflow de la página. El fixture E2E puede reiniciar exclusivamente `weekly_plans` en el PostgreSQL efímero, evitando dependencia del orden de ejecución.
+
+Se revisaron y aceptaron seis baseline: lista en 360 y 1440 px, calendario poblado en 360, 768 y 1440 px, y finalización en 360 px. Playwright comprueba además la ausencia de overflow horizontal en los tres viewports. Las 122 pruebas de componentes y los 23 E2E completos quedan verdes; el gate consolidado de la subfase verifica 416 pruebas.
 
 ## 11.6 — Inventario
 

@@ -1,0 +1,22 @@
+.friggy-weekly-plan-details { display: grid; gap: var(--space-7); grid-template-columns: minmax(0, 1fr); max-width: 100%; min-width: 0; }
+.friggy-weekly-plan-details > * { min-width: 0; }
+.friggy-weekly-plan-details__status { background: var(--color-primary-100); border-left: 0.25rem solid var(--color-primary-600); border-radius: var(--radius-small); color: var(--color-primary-700); font-weight: 700; padding: var(--space-3) var(--space-4); }
+.friggy-weekly-plan-details__form, .friggy-weekly-plan-details__fields, .friggy-weekly-plan-details__fields > div { display: grid; gap: var(--space-4); }
+.friggy-weekly-plan-details__fields { grid-template-columns: minmax(14rem, 0.5fr) minmax(0, 1fr); }
+.friggy-weekly-plan-details__fields > div { gap: var(--space-2); }
+.friggy-requirements-table { max-width: 100%; min-width: 0; overflow-x: auto; width: 100%; }
+.friggy-requirements-table table { border-collapse: collapse; min-width: 40rem; width: 100%; }
+.friggy-requirements-table th, .friggy-requirements-table td { border-bottom: 0.0625rem solid var(--color-border); padding: var(--space-3); text-align: left; }
+.friggy-requirements-table th { color: var(--color-text-muted); font-size: var(--font-size-small); text-transform: uppercase; }
+.friggy-completion-dialog__backdrop { align-items: center; background: var(--color-overlay); display: flex; inset: 0; justify-content: center; padding: var(--space-4); position: fixed; z-index: var(--layer-toast); }
+.friggy-completion-dialog { background: var(--color-surface); border: 0; border-radius: var(--radius-large); box-shadow: var(--shadow-dialog); display: grid; gap: var(--space-4); max-height: calc(100dvh - 2rem); max-width: 36rem; overflow-y: auto; padding: var(--space-6); width: 100%; }
+.friggy-completion-dialog header p { color: var(--color-primary-600); font-size: var(--font-size-small); font-weight: 700; margin: 0; text-transform: uppercase; }
+.friggy-completion-dialog h2 { margin: var(--space-1) 0 0; }
+.friggy-completion-dialog__lots, .friggy-completion-dialog__lots > div { display: grid; gap: var(--space-3); }
+.friggy-completion-dialog__lots > div { background: var(--color-canvas); border-radius: var(--radius-medium); gap: var(--space-2); padding: var(--space-3); }
+.friggy-completion-dialog__lots label { font-weight: 600; }
+@media (max-width: 47.99rem) {
+    .friggy-weekly-plan-details__fields { grid-template-columns: 1fr; }
+    .friggy-completion-dialog__backdrop { align-items: end; padding: 0; }
+    .friggy-completion-dialog { border-radius: var(--radius-large) var(--radius-large) 0 0; max-height: 92dvh; padding: var(--space-5); }
+}

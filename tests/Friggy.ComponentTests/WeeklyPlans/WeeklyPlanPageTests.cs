@@ -31,6 +31,8 @@ public sealed class WeeklyPlanPageTests : ComponentTest
         component.WaitForAssertion(() =>
         {
             Assert.NotNull(component.Find("form[data-testid='weekly-plan-create-form']"));
+            Assert.Equal("Planes semanales", component.Find("h1").TextContent);
+            Assert.NotNull(component.Find(".friggy-weekly-plans"));
             Assert.Contains("No hay planes semanales", component.Markup, StringComparison.Ordinal);
         });
     }
@@ -86,11 +88,12 @@ public sealed class WeeklyPlanPageTests : ComponentTest
     {
         var api = new StubWeeklyPlansApiClient { Plan = EmptyPlan() };
         RegisterApis(api);
-        JavaScript.Setup<bool>("confirm", _ => true).SetResult(true);
+        SetupConfirmDialog();
         var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlans>();
         component.WaitForElement("button[data-action='delete-weekly-plan']");
 
         component.Find("button[data-action='delete-weekly-plan']").Click();
+        component.Find(".confirm-dialog__actions button.friggy-button--danger").Click();
 
         component.WaitForAssertion(() =>
         {
@@ -391,6 +394,13 @@ public sealed class WeeklyPlanPageTests : ComponentTest
         Services.AddSingleton<IWeeklyPlanInventoryApiClient>(
             weeklyPlanInventory ?? new StubWeeklyPlanInventoryApiClient());
         Services.AddSingleton<IInventoryApiClient>(inventory ?? new StubInventoryApiClient());
+    }
+
+    private void SetupConfirmDialog()
+    {
+        var module = JavaScript.SetupModule("./js/confirm-dialog.js");
+        module.SetupVoid("show", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
     }
 
     private static string CellSelector(DateOnly date, Guid mealTypeId) =>

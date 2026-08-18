@@ -4,82 +4,109 @@
 @using Friggy.Web.Api
 @using Friggy.Web.WeeklyPlans
 @inject IWeeklyPlansApiClient Api
-@inject IJSRuntime JavaScript
 @inject NavigationManager Navigation
 
 <PageTitle>Planes semanales</PageTitle>
-<h1>Planes semanales</h1>
+<div class="friggy-weekly-plans">
+    <PageHeader Title="Planes semanales"
+                Eyebrow="Organiza tus comidas"
+                Description="Prepara cada semana con calma y ten tus recetas e inventario bajo control." />
 
-<EditForm Model="model"
-          OnValidSubmit="CreateAsync"
-          FormName="weekly-plan-create-form"
-          data-testid="weekly-plan-create-form">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+    @if (error is not null)
+    {
+        <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+    }
 
-    <div>
-        <label for="weekly-plan-name">Nombre</label>
-        <InputText id="weekly-plan-name" @bind-Value="model.Name" />
-        <ValidationMessage For="() => model.Name" />
-    </div>
-    <div>
-        <label for="weekly-plan-start-date">Lunes de inicio</label>
-        <InputDate id="weekly-plan-start-date" @bind-Value="model.StartDate" />
-        <ValidationMessage For="() => model.StartDate" />
-    </div>
-    <div>
-        <label for="weekly-plan-description">Descripción</label>
-        <InputTextArea id="weekly-plan-description" @bind-Value="model.Description" />
-    </div>
-    <button type="submit" disabled="@saving">@(saving ? "Creando…" : "Crear plan")</button>
-</EditForm>
+    <PageSection Heading="Crear un plan"
+                 Description="Elige un lunes para construir una semana completa.">
+        <EditForm Model="model"
+                  OnValidSubmit="CreateAsync"
+                  FormName="weekly-plan-create-form"
+                  class="friggy-weekly-plans__form"
+                  data-testid="weekly-plan-create-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-@if (error is not null)
-{
-    <p role="alert">@error</p>
-}
+            <div class="friggy-weekly-plans__fields">
+                <div>
+                    <label for="weekly-plan-name">Nombre</label>
+                    <InputText id="weekly-plan-name" @bind-Value="model.Name" />
+                    <ValidationMessage For="() => model.Name" />
+                </div>
+                <div>
+                    <label for="weekly-plan-start-date">Lunes de inicio</label>
+                    <InputDate id="weekly-plan-start-date" @bind-Value="model.StartDate" />
+                    <ValidationMessage For="() => model.StartDate" />
+                </div>
+                <div class="friggy-weekly-plans__description">
+                    <label for="weekly-plan-description">Descripción</label>
+                    <InputTextArea id="weekly-plan-description" @bind-Value="model.Description" />
+                </div>
+            </div>
+            <FormActions>
+                <FriggyButton Type="FriggyButtonType.Submit" Busy="saving" BusyLabel="Creando plan">
+                    Crear plan
+                </FriggyButton>
+            </FormActions>
+        </EditForm>
+    </PageSection>
 
-@if (loading)
+    <PageSection Heading="Tus semanas" Description="Abre un plan para asignar recetas, horarios y consumos.">
+        @if (loading)
+        {
+            <FeedbackPanel Title="Cargando planes" Tone="FriggyTone.Info">Estamos preparando tus semanas.</FeedbackPanel>
+        }
+        else if (plans.Count == 0)
+        {
+            <FeedbackPanel Title="No hay planes semanales" Tone="FriggyTone.Neutral">Crea el primero con el formulario anterior.</FeedbackPanel>
+        }
+        else
+        {
+            <div class="friggy-weekly-plans__grid" role="list" data-testid="weekly-plan-list">
+                @foreach (var plan in plans)
+                {
+                    <article class="friggy-weekly-plan-card" role="listitem" @key="plan.Id">
+                        <div>
+                            <p class="friggy-weekly-plan-card__eyebrow">Semana planificada</p>
+                            <h3>@plan.Name</h3>
+                            <p>@plan.StartDate.ToString("dd/MM/yyyy") – @plan.EndDate.ToString("dd/MM/yyyy")</p>
+                        </div>
+                        <div class="friggy-weekly-plan-card__actions">
+                            <a href="weekly-plans/@plan.Id">Abrir calendario</a>
+                            <FriggyButton Variant="FriggyButtonVariant.Ghost"
+                                          Size="FriggyButtonSize.Compact"
+                                          DataAction="delete-weekly-plan"
+                                          OnClick="() => RequestDelete(plan)">
+                                Borrar
+                            </FriggyButton>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </PageSection>
+</div>
+
+@if (planToDelete is not null)
 {
-    <p>Cargando planes semanales…</p>
-}
-else if (plans.Count == 0)
-{
-    <p>No hay planes semanales. Crea el primero.</p>
-}
-else
-{
-    <table>
-        <thead>
-            <tr><th>Nombre</th><th>Semana</th><th>Acciones</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var plan in plans)
-            {
-                <tr @key="plan.Id">
-                    <td>@plan.Name</td>
-                    <td>@plan.StartDate.ToString("dd/MM/yyyy") – @plan.EndDate.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        <a href="weekly-plans/@plan.Id">Abrir calendario</a>
-                        <button type="button"
-                                data-action="delete-weekly-plan"
-                                @onclick="() => DeleteAsync(plan)">
-                            Borrar
-                        </button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <ConfirmDialog IsOpen="true"
+                   Title="Borrar plan semanal"
+                   Message="@($"¿Quieres borrar el plan {planToDelete.Name}? Esta acción no se puede deshacer.")"
+                   ConfirmText="Borrar plan"
+                   Busy="deleting"
+                   OnConfirm="DeleteAsync"
+                   OnCancel="CancelDelete" />
 }
 
 @code {
     private readonly CancellationTokenSource cancellation = new();
     private WeeklyPlanFormModel model = new();
     private IReadOnlyList<WeeklyPlanListItemResponse> plans = [];
+    private WeeklyPlanListItemResponse? planToDelete;
     private string? error;
     private bool loading = true;
     private bool saving;
+    private bool deleting;
 
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
@@ -121,24 +148,40 @@ else
         }
     }
 
-    private async Task DeleteAsync(WeeklyPlanListItemResponse plan)
+    private void RequestDelete(WeeklyPlanListItemResponse plan)
     {
-        if (!await JavaScript.InvokeAsync<bool>(
-            "confirm",
-            $"¿Borrar el plan {plan.Name}?"))
+        if (!deleting)
+        {
+            planToDelete = plan;
+        }
+    }
+
+    private void CancelDelete() => planToDelete = null;
+
+    private async Task DeleteAsync()
+    {
+        var plan = planToDelete;
+        if (plan is null || deleting)
         {
             return;
         }
 
+        deleting = true;
+
         try
         {
             await Api.DeleteAsync(plan.Id, cancellation.Token);
-            await ReloadAsync();
+            plans = plans.Where(item => item.Id != plan.Id).ToArray();
         }
         catch (Exception exception) when (
             exception is HttpRequestException or ApiProblemException)
         {
             error = exception.Message;
+        }
+        finally
+        {
+            deleting = false;
+            planToDelete = null;
         }
     }
 

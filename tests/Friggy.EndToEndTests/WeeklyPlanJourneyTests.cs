@@ -32,7 +32,7 @@ public sealed class WeeklyPlanJourneyTests(FullStackFixture fixture) : FriggyPag
                 .ToContainTextAsync("Lunes, 7 de enero");
             var lunch = MealSlot(monday, "Comida").GetByLabel("Receta", new() { Exact = true });
             await lunch.SelectOptionAsync(new SelectOptionValue { Label = recipeName });
-            await Expect(Page.GetByRole(AriaRole.Status))
+            await Expect(Page.Locator(".friggy-weekly-plan-details__status"))
                 .ToHaveTextAsync("Asignación guardada.");
 
             var planPath = new Uri(Page.Url).PathAndQuery;
@@ -95,6 +95,7 @@ public sealed class WeeklyPlanJourneyTests(FullStackFixture fixture) : FriggyPag
             await tuesdayLunch.GetByLabel("Hora prevista", new() { Exact = true }).FillAsync("14:30");
             await tuesdayLunch.GetByLabel("Hora prevista", new() { Exact = true }).PressAsync("Tab");
 
+            await mondayLunch.GetByText("Omitir esta comida", new() { Exact = true }).ClickAsync();
             await mondayLunch.GetByLabel("Motivo para omitir", new() { Exact = true })
                 .FillAsync("Viaje");
             await mondayLunch.GetByLabel("Alternativa", new() { Exact = true })
@@ -109,7 +110,7 @@ public sealed class WeeklyPlanJourneyTests(FullStackFixture fixture) : FriggyPag
             await Page.GetByLabel(new System.Text.RegularExpressions.Regex(ingredientName)).FillAsync("1");
             await Page.GetByRole(AriaRole.Button, new() { Name = "Confirmar finalización", Exact = true })
                 .ClickAsync();
-            await Expect(Page.GetByRole(AriaRole.Status))
+            await Expect(Page.Locator(".friggy-weekly-plan-details__status"))
                 .ToHaveTextAsync("Comida completada e inventario actualizado.");
 
             await NavigateToInteractivePageAsync("/inventory");

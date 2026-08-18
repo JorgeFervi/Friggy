@@ -70,6 +70,18 @@ internal sealed class FullStackRuntime : IFullStackRuntime
             cancellationToken);
     }
 
+    public async Task ResetPlanningDataAsync(CancellationToken cancellationToken)
+    {
+        var options = new DbContextOptionsBuilder<FriggyDbContext>()
+            .UseNpgsql(database.GetConnectionString())
+            .Options;
+
+        await using var context = new FriggyDbContext(options);
+        await context.Database.ExecuteSqlRawAsync(
+            "TRUNCATE TABLE weekly_plans CASCADE;",
+            cancellationToken);
+    }
+
     public Task StartApiAsync(CancellationToken cancellationToken)
     {
         apiProcess = StartProcess(
