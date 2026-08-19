@@ -1,5 +1,10 @@
 namespace Friggy.Domain.Catalogs;
 
+/// <summary>
+/// Value object <see cref="CatalogSeedIds"/> que contiene los valores "Guid"
+/// de inicio para algunos valores de las entidades catálogo: Tipos de unidades,
+/// tipos de comidas, etc.
+/// </summary>
 public static class CatalogSeedIds
 {
     public static readonly Guid Gram = Guid.Parse("10000000-0000-0000-0000-000000000001");
