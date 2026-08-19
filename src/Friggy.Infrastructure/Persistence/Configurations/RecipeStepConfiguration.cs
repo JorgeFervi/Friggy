@@ -4,8 +4,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de los pasos de las recetas.
+/// </summary>
 internal sealed class RecipeStepConfiguration : IEntityTypeConfiguration<RecipeStep>
 {
+    /// <summary>
+    /// Configura descripción, tiempos, posición y asociaciones de ingredientes
+    /// de los pasos.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<RecipeStep> builder)
     {
         builder.ToTable(

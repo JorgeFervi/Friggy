@@ -5,9 +5,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de las líneas de ingrediente de las recetas.
+/// </summary>
 internal sealed class RecipeIngredientConfiguration
     : IEntityTypeConfiguration<RecipeIngredient>
 {
+    /// <summary>
+    /// Configura cantidades, posiciones y referencias de las líneas de ingrediente.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<RecipeIngredient> builder)
     {
         builder.ToTable(

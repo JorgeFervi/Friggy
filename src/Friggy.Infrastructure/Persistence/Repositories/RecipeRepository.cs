@@ -5,14 +5,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Friggy.Infrastructure.Persistence.Repositories;
 
+/// <summary>
+/// Repositorio EF Core para consultar y persistir recetas con sus asociaciones.
+/// </summary>
 public sealed class RecipeRepository(FriggyDbContext context) : IRecipeRepository
 {
+    /// <summary>
+    /// Obtiene todas las recetas completas con sus relaciones.
+    /// </summary>
     public async Task<IReadOnlyList<Recipe>> ListAsync(
         CancellationToken cancellationToken) =>
         await CompleteQuery()
             .AsNoTrackingWithIdentityResolution()
             .ToListAsync(cancellationToken);
 
+    /// <summary>
+    /// Obtiene los resúmenes de recetas para listados.
+    /// </summary>
     public async Task<IReadOnlyList<RecipeListItemResponse>> ListSummariesAsync(
         CancellationToken cancellationToken)
     {
@@ -35,9 +44,15 @@ public sealed class RecipeRepository(FriggyDbContext context) : IRecipeRepositor
             .ToArray();
     }
 
+    /// <summary>
+    /// Busca una receta completa por su identificador.
+    /// </summary>
     public Task<Recipe?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         CompleteQuery().SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
 
+    /// <summary>
+    /// Comprueba si existe una receta con el nombre normalizado indicado.
+    /// </summary>
     public Task<bool> ExistsByNormalizedNameAsync(
         string normalizedName,
         Guid? excludingId,
@@ -47,11 +62,20 @@ public sealed class RecipeRepository(FriggyDbContext context) : IRecipeRepositor
                 (!excludingId.HasValue || item.Id != excludingId.Value),
             cancellationToken);
 
+    /// <summary>
+    /// Añade una receta al contexto.
+    /// </summary>
     public async Task AddAsync(Recipe recipe, CancellationToken cancellationToken) =>
         await context.Recipes.AddAsync(recipe, cancellationToken);
 
+    /// <summary>
+    /// Marca una receta para eliminarla.
+    /// </summary>
     public void Remove(Recipe recipe) => context.Recipes.Remove(recipe);
 
+    /// <summary>
+    /// Persiste los cambios pendientes.
+    /// </summary>
     public async Task SaveChangesAsync(CancellationToken cancellationToken) =>
         await context.SaveChangesAsync(cancellationToken);
 

@@ -13,8 +13,31 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Friggy.Infrastructure;
 
+/// <summary>
+/// Clase que contiene el registro de persistencia y servicios de infraestructura.
+/// </summary>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Método que registra Entity Framework Core, PostgreSQL y los adaptadores
+    /// de persistencia de la aplicación.
+    /// </summary>
+    /// <param name="services">
+    /// Colección de servicios donde se registrarán las implementaciones.
+    /// </param>
+    /// <param name="configuration">
+    /// Configuración que contiene la cadena de conexión de Friggy.
+    /// </param>
+    /// <returns>
+    /// La misma colección de servicios para continuar con la configuración.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Excepción lanzada cuando la colección de servicios o la configuración
+    /// son nulas.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Excepción lanzada cuando no se ha configurado la cadena de conexión.
+    /// </exception>
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)

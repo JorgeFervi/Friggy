@@ -5,9 +5,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de los huecos de comida del plan semanal.
+/// </summary>
 internal sealed class MealPlanSlotConfiguration
     : IEntityTypeConfiguration<MealPlanSlot>
 {
+    /// <summary>
+    /// Configura el orden, horario, claves alternativas y relaciones de los huecos.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<MealPlanSlot> builder)
     {
         builder.ToTable(

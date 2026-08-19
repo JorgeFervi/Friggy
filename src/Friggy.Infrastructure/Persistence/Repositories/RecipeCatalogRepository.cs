@@ -3,9 +3,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Friggy.Infrastructure.Persistence.Repositories;
 
+/// <summary>
+/// Repositorio EF Core que comprueba la existencia de referencias de catálogo
+/// usadas por las recetas.
+/// </summary>
 public sealed class RecipeCatalogRepository(FriggyDbContext context)
     : IRecipeCatalogRepository
 {
+    /// <summary>
+    /// Comprueba que existan todos los ingredientes indicados.
+    /// </summary>
     public Task<bool> IngredientsExistAsync(
         IReadOnlyCollection<Guid> ids,
         CancellationToken cancellationToken) =>
@@ -14,6 +21,9 @@ public sealed class RecipeCatalogRepository(FriggyDbContext context)
             ids,
             cancellationToken);
 
+    /// <summary>
+    /// Comprueba que existan todas las unidades indicadas.
+    /// </summary>
     public Task<bool> UnitTypesExistAsync(
         IReadOnlyCollection<Guid> ids,
         CancellationToken cancellationToken) =>
@@ -22,6 +32,9 @@ public sealed class RecipeCatalogRepository(FriggyDbContext context)
             ids,
             cancellationToken);
 
+    /// <summary>
+    /// Comprueba que existan todas las etiquetas indicadas.
+    /// </summary>
     public Task<bool> TagsExistAsync(
         IReadOnlyCollection<Guid> ids,
         CancellationToken cancellationToken) =>
@@ -30,6 +43,9 @@ public sealed class RecipeCatalogRepository(FriggyDbContext context)
             ids,
             cancellationToken);
 
+    /// <summary>
+    /// Comprueba que existan todos los tipos de comida indicados.
+    /// </summary>
     public Task<bool> MealTypesExistAsync(
         IReadOnlyCollection<Guid> ids,
         CancellationToken cancellationToken) =>

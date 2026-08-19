@@ -5,9 +5,20 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de los movimientos de inventario y sus
+/// restricciones de cantidad.
+/// </summary>
 internal sealed class InventoryMovementConfiguration
     : IEntityTypeConfiguration<InventoryMovement>
 {
+    /// <summary>
+    /// Configura la tabla, variaciones, cantidades resultantes y relaciones de
+    /// los movimientos.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<InventoryMovement> builder)
     {
         builder.ToTable(

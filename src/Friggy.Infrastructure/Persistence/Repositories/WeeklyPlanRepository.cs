@@ -5,14 +5,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Friggy.Infrastructure.Persistence.Repositories;
 
+/// <summary>
+/// Repositorio EF Core para consultar y persistir planes semanales con sus
+/// comidas y huecos.
+/// </summary>
 public sealed class WeeklyPlanRepository(FriggyDbContext context) : IWeeklyPlanRepository
 {
+    /// <summary>
+    /// Obtiene todos los planes completos con sus relaciones.
+    /// </summary>
     public async Task<IReadOnlyList<WeeklyPlan>> ListAsync(
         CancellationToken cancellationToken) =>
         await CompleteQuery()
             .AsNoTrackingWithIdentityResolution()
             .ToListAsync(cancellationToken);
 
+    /// <summary>
+    /// Obtiene los resúmenes de planes para listados.
+    /// </summary>
     public async Task<IReadOnlyList<WeeklyPlanListItemResponse>> ListSummariesAsync(
         CancellationToken cancellationToken)
     {
@@ -37,9 +47,15 @@ public sealed class WeeklyPlanRepository(FriggyDbContext context) : IWeeklyPlanR
             .ToArray();
     }
 
+    /// <summary>
+    /// Busca un plan completo por su identificador.
+    /// </summary>
     public Task<WeeklyPlan?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         CompleteQuery().SingleOrDefaultAsync(plan => plan.Id == id, cancellationToken);
 
+    /// <summary>
+    /// Comprueba si existe un plan con el nombre normalizado indicado.
+    /// </summary>
     public Task<bool> ExistsByNormalizedNameAsync(
         string normalizedName,
         Guid? excludingId,
@@ -49,11 +65,21 @@ public sealed class WeeklyPlanRepository(FriggyDbContext context) : IWeeklyPlanR
                 (!excludingId.HasValue || plan.Id != excludingId.Value),
             cancellationToken);
 
+    /// <summary>
+    /// Añade un plan al contexto.
+    /// </summary>
     public async Task AddAsync(WeeklyPlan plan, CancellationToken cancellationToken) =>
         await context.WeeklyPlans.AddAsync(plan, cancellationToken);
 
+    /// <summary>
+    /// Marca un plan para eliminarlo.
+    /// </summary>
     public void Remove(WeeklyPlan plan) => context.WeeklyPlans.Remove(plan);
 
+    /// <summary>
+    /// Persiste los cambios y gestiona las reordenaciones de huecos para evitar
+    /// colisiones temporales de unicidad.
+    /// </summary>
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         var reorderedSlots = context.ChangeTracker

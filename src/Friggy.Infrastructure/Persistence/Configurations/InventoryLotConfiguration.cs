@@ -5,8 +5,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de los lotes de inventario y sus relaciones.
+/// </summary>
 internal sealed class InventoryLotConfiguration : IEntityTypeConfiguration<InventoryLot>
 {
+    /// <summary>
+    /// Configura la tabla, cantidades, caducidad, concurrencia y movimientos
+    /// de los lotes.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<InventoryLot> builder)
     {
         builder.ToTable(

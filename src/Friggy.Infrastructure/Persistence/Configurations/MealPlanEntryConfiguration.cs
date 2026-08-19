@@ -6,9 +6,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de las asignaciones de comidas del plan semanal.
+/// </summary>
 internal sealed class MealPlanEntryConfiguration
     : IEntityTypeConfiguration<MealPlanEntry>
 {
+    /// <summary>
+    /// Configura estados, restricciones, claves y relaciones de las asignaciones.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<MealPlanEntry> builder)
     {
         builder.ToTable("meal_plan_entries", table =>

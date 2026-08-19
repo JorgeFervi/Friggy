@@ -4,8 +4,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de los planes semanales y sus colecciones.
+/// </summary>
 internal sealed class WeeklyPlanConfiguration : IEntityTypeConfiguration<WeeklyPlan>
 {
+    /// <summary>
+    /// Configura el nombre, las fechas, la descripción y las colecciones del plan.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<WeeklyPlan> builder)
     {
         builder.ToTable("weekly_plans");

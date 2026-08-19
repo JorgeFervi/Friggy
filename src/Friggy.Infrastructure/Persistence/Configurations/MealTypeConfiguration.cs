@@ -4,8 +4,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de la entidad MealType.
+/// </summary>
 internal sealed class MealTypeConfiguration : IEntityTypeConfiguration<MealType>
 {
+    /// <summary>
+    /// Configura la tabla, el orden y el nombre del tipo de comida.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<MealType> builder)
     {
         builder.ToTable("meal_types", table =>

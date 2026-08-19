@@ -4,8 +4,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de la entidad Ingredient.
+/// </summary>
 internal sealed class IngredientConfiguration : IEntityTypeConfiguration<Ingredient>
 {
+    /// <summary>
+    /// Configura la tabla, la clave y el nombre de los ingredientes.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<Ingredient> builder)
     {
         builder.ToTable("ingredients");

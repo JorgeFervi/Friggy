@@ -5,9 +5,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de la asociación entre recetas y tipos de comida.
+/// </summary>
 internal sealed class RecipeMealTypeLinkConfiguration
     : IEntityTypeConfiguration<RecipeMealTypeLink>
 {
+    /// <summary>
+    /// Configura la tabla, la clave compuesta y las relaciones de la asociación.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<RecipeMealTypeLink> builder)
     {
         builder.ToTable("recipe_meal_types");

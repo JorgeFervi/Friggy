@@ -4,8 +4,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de las recetas y sus colecciones agregadas.
+/// </summary>
 internal sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
 {
+    /// <summary>
+    /// Configura la tabla, el tiempo estimado, el nombre y el acceso a las
+    /// colecciones de la receta.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<Recipe> builder)
     {
         builder.ToTable(

@@ -4,8 +4,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configuración de persistencia de la entidad UnitType.
+/// </summary>
 internal sealed class UnitTypeConfiguration : IEntityTypeConfiguration<UnitType>
 {
+    /// <summary>
+    /// Configura la tabla, el símbolo y el nombre de las unidades de medida.
+    /// </summary>
+    /// <param name="builder">
+    /// Constructor de configuración de la entidad.
+    /// </param>
     public void Configure(EntityTypeBuilder<UnitType> builder)
     {
         builder.ToTable("unit_types");
