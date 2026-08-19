@@ -11,6 +11,10 @@ using Friggy.Domain.WeeklyPlans;
 
 namespace Friggy.Application.Inventory.Services;
 
+/// <summary>
+/// Servicio de aplicación que calcula las necesidades de inventario de un plan
+/// y coordina la finalización de sus comidas.
+/// </summary>
 public sealed class WeeklyPlanInventoryService(
     IWeeklyPlanRepository plans,
     IRecipeRepository recipes,
@@ -19,6 +23,10 @@ public sealed class WeeklyPlanInventoryService(
     IInventoryUnitOfWork unitOfWork,
     TimeProvider timeProvider)
 {
+    /// <summary>
+    /// Calcula las necesidades de ingredientes de un plan semanal y las compara
+    /// con las existencias disponibles.
+    /// </summary>
     public async Task<IReadOnlyList<InventoryRequirementResponse>> GetRequirementsAsync(
         Guid planId,
         CancellationToken cancellationToken)
@@ -36,6 +44,10 @@ public sealed class WeeklyPlanInventoryService(
         return await MapRequirementsAsync(requirements, available, cancellationToken);
     }
 
+    /// <summary>
+    /// Completa una comida, consume las cantidades asignadas de los lotes y
+    /// devuelve las necesidades que permanecen pendientes.
+    /// </summary>
     public async Task<MealCompletionResponse> CompleteMealAsync(
         Guid planId,
         DateOnly date,

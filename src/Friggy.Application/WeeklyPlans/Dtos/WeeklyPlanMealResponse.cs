@@ -1,5 +1,8 @@
 namespace Friggy.Application.WeeklyPlans.Dtos;
 
+/// <summary>
+/// Datos de respuesta de una comida dentro de un día del plan semanal.
+/// </summary>
 public sealed record WeeklyPlanMealResponse(
     Guid MealTypeId,
     string MealTypeName,

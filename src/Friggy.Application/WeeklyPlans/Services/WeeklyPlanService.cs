@@ -7,10 +7,17 @@ using Friggy.Domain.WeeklyPlans;
 
 namespace Friggy.Application.WeeklyPlans.Services;
 
+/// <summary>
+/// Servicio de aplicación que coordina la gestión de planes semanales,
+/// asignaciones y huecos de comida.
+/// </summary>
 public sealed class WeeklyPlanService(
     IWeeklyPlanRepository plans,
     IWeeklyPlanReferenceRepository references)
 {
+    /// <summary>
+    /// Obtiene los resúmenes de los planes ordenados por fecha y nombre.
+    /// </summary>
     public async Task<IReadOnlyList<WeeklyPlanListItemResponse>> ListAsync(
         CancellationToken cancellationToken) =>
         (await plans.ListSummariesAsync(cancellationToken))
@@ -18,11 +25,17 @@ public sealed class WeeklyPlanService(
             .ThenBy(plan => plan.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
 
+    /// <summary>
+    /// Obtiene un plan semanal completo por su identificador.
+    /// </summary>
     public async Task<WeeklyPlanResponse> GetAsync(
         Guid id,
         CancellationToken cancellationToken) =>
         await MapAsync(await FindAsync(id, cancellationToken), cancellationToken);
 
+    /// <summary>
+    /// Crea un plan semanal con sus huecos de comida iniciales.
+    /// </summary>
     public async Task<WeeklyPlanResponse> CreateAsync(
         CreateWeeklyPlanRequest request,
         CancellationToken cancellationToken)
@@ -37,6 +50,9 @@ public sealed class WeeklyPlanService(
         return await MapAsync(plan, cancellationToken);
     }
 
+    /// <summary>
+    /// Actualiza los detalles de un plan semanal.
+    /// </summary>
     public async Task<WeeklyPlanResponse> UpdateAsync(
         Guid id,
         UpdateWeeklyPlanRequest request,
@@ -52,6 +68,9 @@ public sealed class WeeklyPlanService(
         return await MapAsync(plan, cancellationToken);
     }
 
+    /// <summary>
+    /// Elimina un plan semanal.
+    /// </summary>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var plan = await FindAsync(id, cancellationToken);
@@ -59,6 +78,9 @@ public sealed class WeeklyPlanService(
         await plans.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Asigna o reemplaza una receta en una comida del plan.
+    /// </summary>
     public async Task<WeeklyPlanResponse> SetEntryAsync(
         Guid planId,
         DateOnly date,
@@ -75,6 +97,9 @@ public sealed class WeeklyPlanService(
         return await MapAsync(plan, cancellationToken);
     }
 
+    /// <summary>
+    /// Retira una asignación de receta de una comida del plan.
+    /// </summary>
     public async Task<WeeklyPlanResponse> RemoveEntryAsync(
         Guid planId,
         DateOnly date,
@@ -91,6 +116,9 @@ public sealed class WeeklyPlanService(
         return await MapAsync(plan, cancellationToken);
     }
 
+    /// <summary>
+    /// Establece la hora prevista de un hueco de comida.
+    /// </summary>
     public async Task<MealPlanSlotScheduleResponse> SetSlotTimeAsync(
         Guid planId,
         Guid slotId,
@@ -120,6 +148,9 @@ public sealed class WeeklyPlanService(
             slot.GetPreparationStartsAt(estimatedTime));
     }
 
+    /// <summary>
+    /// Añade un hueco de comida a un día del plan.
+    /// </summary>
     public async Task<WeeklyPlanResponse> AddSlotAsync(
         Guid planId,
         DateOnly date,
@@ -135,6 +166,9 @@ public sealed class WeeklyPlanService(
         return await MapAsync(plan, cancellationToken);
     }
 
+    /// <summary>
+    /// Reordena los huecos de comida de un día.
+    /// </summary>
     public async Task<WeeklyPlanResponse> ReorderSlotsAsync(
         Guid planId,
         DateOnly date,
@@ -150,6 +184,9 @@ public sealed class WeeklyPlanService(
         return await MapAsync(plan, cancellationToken);
     }
 
+    /// <summary>
+    /// Retira un hueco de comida del plan.
+    /// </summary>
     public async Task<WeeklyPlanResponse> RemoveSlotAsync(
         Guid planId,
         Guid slotId,
@@ -164,6 +201,9 @@ public sealed class WeeklyPlanService(
         return await MapAsync(plan, cancellationToken);
     }
 
+    /// <summary>
+    /// Omite una comida y registra el motivo y la alternativa indicada.
+    /// </summary>
     public async Task<MealPlanEntryStateResponse> SkipEntryAsync(
         Guid planId,
         DateOnly date,

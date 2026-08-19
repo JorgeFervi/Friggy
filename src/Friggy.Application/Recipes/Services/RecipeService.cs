@@ -5,21 +5,34 @@ using Friggy.Domain.Recipes;
 
 namespace Friggy.Application.Recipes.Services;
 
+/// <summary>
+/// Servicio de aplicación que coordina la creación, consulta, actualización
+/// y eliminación de recetas.
+/// </summary>
 public sealed class RecipeService(
     IRecipeRepository recipes,
     IRecipeCatalogRepository catalogs)
 {
+    /// <summary>
+    /// Obtiene los resúmenes de las recetas ordenados por nombre.
+    /// </summary>
     public async Task<IReadOnlyList<RecipeListItemResponse>> ListAsync(
         CancellationToken cancellationToken) =>
         (await recipes.ListSummariesAsync(cancellationToken))
             .OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
 
+    /// <summary>
+    /// Obtiene una receta completa por su identificador.
+    /// </summary>
     public async Task<RecipeResponse> GetAsync(
         Guid id,
         CancellationToken cancellationToken) =>
         Map(await FindAsync(id, cancellationToken));
 
+    /// <summary>
+    /// Crea una receta, comprueba sus referencias y persiste sus cambios.
+    /// </summary>
     public async Task<RecipeResponse> CreateAsync(
         CreateRecipeRequest request,
         CancellationToken cancellationToken)
@@ -41,6 +54,9 @@ public sealed class RecipeService(
         return Map(recipe);
     }
 
+    /// <summary>
+    /// Actualiza una receta, comprueba sus referencias y persiste sus cambios.
+    /// </summary>
     public async Task<RecipeResponse> UpdateAsync(
         Guid id,
         UpdateRecipeRequest request,
@@ -64,6 +80,9 @@ public sealed class RecipeService(
         return Map(existing);
     }
 
+    /// <summary>
+    /// Elimina una receta y persiste sus cambios.
+    /// </summary>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var recipe = await FindAsync(id, cancellationToken);

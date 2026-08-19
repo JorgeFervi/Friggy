@@ -6,11 +6,18 @@ using Friggy.Domain.Inventory;
 
 namespace Friggy.Application.Inventory.Services;
 
+/// <summary>
+/// Servicio de aplicación que gestiona las operaciones sobre lotes de inventario.
+/// </summary>
 public sealed class InventoryLotService(
     IInventoryLotRepository lots,
     IInventoryReferenceRepository references,
     TimeProvider timeProvider)
 {
+    /// <summary>
+    /// Obtiene los lotes de inventario, con la posibilidad de incluir los que
+    /// ya no están disponibles.
+    /// </summary>
     public async Task<IReadOnlyList<InventoryLotResponse>> ListAsync(
         bool includeUnavailable,
         CancellationToken cancellationToken)
@@ -26,11 +33,17 @@ public sealed class InventoryLotService(
         return await MapAsync(selected, cancellationToken);
     }
 
+    /// <summary>
+    /// Obtiene un lote de inventario por su identificador.
+    /// </summary>
     public async Task<InventoryLotResponse> GetAsync(
         Guid id,
         CancellationToken cancellationToken) =>
         await MapAsync(await FindAsync(id, cancellationToken), cancellationToken);
 
+    /// <summary>
+    /// Crea un lote de inventario y registra sus existencias iniciales.
+    /// </summary>
     public async Task<InventoryLotResponse> CreateAsync(
         CreateInventoryLotRequest request,
         CancellationToken cancellationToken)
@@ -51,6 +64,9 @@ public sealed class InventoryLotService(
         return await MapAsync(lot, cancellationToken);
     }
 
+    /// <summary>
+    /// Corrige la fecha de caducidad de un lote.
+    /// </summary>
     public async Task<InventoryLotResponse> CorrectExpirationAsync(
         Guid id,
         CorrectInventoryExpirationRequest request,
@@ -63,18 +79,27 @@ public sealed class InventoryLotService(
         return await MapAsync(lot, cancellationToken);
     }
 
+    /// <summary>
+    /// Consume una cantidad de un lote de inventario.
+    /// </summary>
     public Task<InventoryOperationResponse> ConsumeAsync(
         Guid id,
         InventoryQuantityRequest request,
         CancellationToken cancellationToken) =>
         ReduceAsync(id, request, InventoryMovementType.Consumption, cancellationToken);
 
+    /// <summary>
+    /// Descarta una cantidad de un lote de inventario.
+    /// </summary>
     public Task<InventoryOperationResponse> DiscardAsync(
         Guid id,
         InventoryQuantityRequest request,
         CancellationToken cancellationToken) =>
         ReduceAsync(id, request, InventoryMovementType.Discard, cancellationToken);
 
+    /// <summary>
+    /// Ajusta un lote a la cantidad real disponible.
+    /// </summary>
     public async Task<InventoryLotResponse> AdjustAsync(
         Guid id,
         AdjustInventoryLotRequest request,

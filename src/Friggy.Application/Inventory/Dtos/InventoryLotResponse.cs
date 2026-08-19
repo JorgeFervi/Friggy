@@ -1,5 +1,8 @@
 namespace Friggy.Application.Inventory.Dtos;
 
+/// <summary>
+/// Datos de respuesta de un lote de inventario, incluidos sus movimientos.
+/// </summary>
 public sealed record InventoryLotResponse(
     Guid Id,
     Guid IngredientId,

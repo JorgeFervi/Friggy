@@ -4,13 +4,25 @@ using Friggy.Domain.Catalogs;
 
 namespace Friggy.Application.Catalogs.UnitTypes.Services;
 
+/// <summary>
+/// Servicio de aplicación que gestiona el ciclo de vida de las unidades de medida.
+/// </summary>
 public sealed class UnitTypeService(IUnitTypeRepository repository)
 {
+    /// <summary>
+    /// Obtiene las unidades ordenadas por nombre.
+    /// </summary>
     public async Task<IReadOnlyList<UnitTypeResponse>> ListAsync(CancellationToken cancellationToken) =>
         (await repository.ListAsync(cancellationToken)).OrderBy(x => x.Name.Value, StringComparer.CurrentCultureIgnoreCase).Select(Map).ToArray();
 
+    /// <summary>
+    /// Obtiene una unidad de medida por su identificador.
+    /// </summary>
     public async Task<UnitTypeResponse> GetAsync(Guid id, CancellationToken cancellationToken) => Map(await FindAsync(id, cancellationToken));
 
+    /// <summary>
+    /// Crea una unidad de medida y persiste sus cambios.
+    /// </summary>
     public async Task<UnitTypeResponse> CreateAsync(CreateUnitTypeRequest request, CancellationToken cancellationToken)
     {
         var item = UnitType.Create(request.Name, request.Symbol);
@@ -20,6 +32,9 @@ public sealed class UnitTypeService(IUnitTypeRepository repository)
         return Map(item);
     }
 
+    /// <summary>
+    /// Actualiza una unidad de medida y persiste sus cambios.
+    /// </summary>
     public async Task<UnitTypeResponse> UpdateAsync(Guid id, UpdateUnitTypeRequest request, CancellationToken cancellationToken)
     {
         var item = await FindAsync(id, cancellationToken);
@@ -29,6 +44,9 @@ public sealed class UnitTypeService(IUnitTypeRepository repository)
         return Map(item);
     }
 
+    /// <summary>
+    /// Elimina una unidad de medida y persiste sus cambios.
+    /// </summary>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var item = await FindAsync(id, cancellationToken);

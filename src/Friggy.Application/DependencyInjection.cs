@@ -9,8 +9,23 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Friggy.Application;
 
+/// <summary>
+/// Clase que contiene el registro de servicios de la capa de aplicación.
+/// </summary>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Método que registra los servicios de aplicación y sus dependencias.
+    /// </summary>
+    /// <param name="services">
+    /// Colección de servicios donde se registrarán las implementaciones.
+    /// </param>
+    /// <returns>
+    /// La misma colección de servicios para continuar con la configuración.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Excepción lanzada cuando la colección de servicios es nula.
+    /// </exception>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
