@@ -5,7 +5,7 @@
 
 La fase es una migración de presentación. No modifica Domain, Application, Infrastructure ni Api. Todo comportamiento de componentes comienza con un test bUnit/xUnit v3 fallido; los baseline iniciales se generan únicamente después de que la semántica y el diseño de cada incremento estén aprobados.
 
-> **Progreso:** 11.1, 11.2, 11.3, 11.4, 11.5, 11.6 y 11.7 completadas. La siguiente unidad ejecutable es **11.8 — Auditoría responsive, accesibilidad y gate**.
+> **Progreso:** Fase 11 completada. Las subfases 11.1 a 11.8 están cerradas con el gate completo en verde.
 
 ## Reglas transversales
 
@@ -212,7 +212,7 @@ bUnit parametriza los estados poblado, vacío, edición y error de los cuatro ca
 
 El gate final completó build Release con 0 warnings, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 434/434 pruebas: 115 Domain, 71 Application, 85 Integration, 136 Component y 27 E2E.
 
-## 11.8 — Auditoría responsive, accesibilidad y gate
+## 11.8 — Auditoría responsive, accesibilidad y gate — Completada
 
 1. Recorrer todas las rutas a 360×800, 768×1024 y 1440×1000; probar zoom 200 %, texto largo, vacío, error y busy.
 2. Corregir overflow, orden de foco, contraste, labels, landmarks, nombres accesibles y reduced motion antes de ajustar cualquier baseline.
@@ -221,6 +221,14 @@ El gate final completó build Release con 0 warnings, formato limpio, auditoría
 5. Ejecutar `scripts/quality-gate.ps1`, incluyendo Component, E2E, comparación visual, `pnpm audit --audit-level high` y la auditoría NuGet existente.
 6. Actualizar README con dirección visual, breakpoints, comando de baseline y reglas para crear componentes nuevos.
 7. Mover ambos documentos de fase a `completed/` solo con todas las rutas migradas y el gate completo en verde.
+
+La auditoría transversal recorre once rutas públicas en 360×800, 768×1024 y 1440×1000, además de comprobar el formulario de receta con reflow al 200 %. En cada ruta valida idioma español, un único landmark principal, un `h1`, nombres accesibles en controles y ausencia de overflow horizontal. Un segundo recorrido observa las peticiones de fuentes, imágenes, estilos y scripts y confirma que todos los recursos visuales de runtime permanecen locales.
+
+El contrato estático se amplió a todas las hojas CSS de `Friggy.Web`: prohíbe recursos HTTP externos y colores hexadecimales fuera de `tokens.css`. Esto permitió retirar restos sin uso de la plantilla original de Blazor. La paleta cuenta además con un contrato WCAG AA calculado; el acento cobre pasó de `#B7794C` a `#9F633F`, elevando su contraste sobre blanco de 3,59:1 a 4,85:1 para el texto pequeño de las cards.
+
+La matriz visual completa de cinco recorridos quedó verde con los baseline existentes, sin aceptar capturas nuevas ni ampliar umbrales. El README documenta dirección visual, breakpoints, reglas `Friggy*`/`friggy-`, tokens, CSS isolation, recursos locales, accesibilidad y proceso de baseline.
+
+El gate final completó build Release con 0 warnings y 0 errores, formato limpio, auditorías pnpm/NuGet sin vulnerabilidades y 443/443 pruebas: 115 Domain, 71 Application, 92 Integration, 136 Component y 29 E2E. Con todas las rutas migradas y la validación completa en verde, los documentos de la fase se trasladaron a `plans/completed/`.
 
 ## Matriz mínima de aceptación
 

@@ -25,12 +25,7 @@ Los documentos se organizan por estado:
 | 8 | [Inventario y finalización de comidas](completed/phases/08-inventory-and-meal-completion.md) | [Guía](completed/implementation/08-inventory-and-meal-completion-implementation.md) |
 | 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | [Guía](completed/implementation/09-advanced-weekly-planning-implementation.md) |
 | 10 | [Ingredientes asociados a pasos](completed/phases/10-recipe-step-ingredients.md) | [Guía](completed/implementation/10-recipe-step-ingredients-implementation.md) |
-
-## Fase en curso
-
-| Fase | Plan | Implementación | Dependencia clave |
-|---|---|---|---|
-| 11 | [Sistema visual y experiencia responsive](phases/11-visual-system-and-responsive-ui.md) | [Guía](implementation/11-visual-system-and-responsive-ui-implementation.md) | Fases 1–10 |
+| 11 | [Sistema visual y experiencia responsive](completed/phases/11-visual-system-and-responsive-ui.md) | [Guía](completed/implementation/11-visual-system-and-responsive-ui-implementation.md) |
 
 ## Reglas de uso
 
@@ -43,4 +38,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 10 y las subfases 11.1 a 11.6 están completadas. La siguiente unidad ejecutable es **11.7 — Catálogos y páginas secundarias**.
+Las fases 1 a 11 están completadas. No hay una fase en curso; el siguiente incremento debe comenzar con decisiones y plan propios.

@@ -1,6 +1,6 @@
 # Fase 11 — Sistema visual y experiencia responsive
 
-- **Estado:** En curso desde el 17 de agosto de 2026; subfases 11.1 a 11.6 completadas
+- **Estado:** Completada el 18 de agosto de 2026
 - **Estimación:** 12–18 días laborables
 - **Dependencias:** Fases 1–10 completadas y puerta de calidad verde
 - **Guía ejecutable:** [Implementación de la fase 11](../implementation/11-visual-system-and-responsive-ui-implementation.md)
@@ -36,7 +36,7 @@ La paleta se centraliza en tokens CSS y se ajusta durante implementación solo s
 | `--color-text` | `#1E2C33` | Texto principal |
 | `--color-text-muted` | `#5C6B73` | Metadatos y ayudas |
 | `--color-border` | `#CBD7DC` | Divisores y campos |
-| `--color-accent` | `#B7794C` | Acento cobre gastronómico de uso limitado |
+| `--color-accent` | `#9F633F` | Acento cobre gastronómico de uso limitado |
 | `--color-danger` | `#A63F46` | Errores y acciones destructivas |
 | `--color-success` | `#3E745F` | Confirmaciones y estados correctos |
 

@@ -1,10 +1,14 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Friggy.IntegrationTests.Tooling;
 
 public sealed class VisualFoundationContractTests
 {
+    private static readonly Regex HexColorPattern = new(
+        @"#[0-9a-fA-F]{3,8}\b",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private static readonly string RepositoryRoot = FindRepositoryRoot();
 
     [Fact]
@@ -54,13 +58,60 @@ public sealed class VisualFoundationContractTests
         Assert.Contains("--color-primary-700: #284e63", tokens, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("--color-primary-600: #356b85", tokens, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("--color-canvas: #f3f6f7", tokens, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--color-accent: #b7794c", tokens, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("--color-accent: #9f633f", tokens, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("--font-family-body", tokens, StringComparison.Ordinal);
         Assert.Contains("--font-family-display", tokens, StringComparison.Ordinal);
         Assert.Contains("--breakpoint-tablet: 48rem", tokens, StringComparison.Ordinal);
         Assert.Contains("--breakpoint-desktop: 75rem", tokens, StringComparison.Ordinal);
         Assert.Contains("prefers-reduced-motion: reduce", baseStyles, StringComparison.Ordinal);
         Assert.Contains(":focus-visible", baseStyles, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Tooling")]
+    public void RuntimeStyles_Always_KeepExternalResourcesAndHexColorsOutOfComponentStyles()
+    {
+        var webRoot = Path.Combine(RepositoryRoot, "src", "Friggy.Web");
+        var tokenPath = Path.Combine(webRoot, "wwwroot", "css", "tokens.css");
+        var stylePaths = Directory.EnumerateFiles(webRoot, "*.css", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.NotEmpty(stylePaths);
+
+        foreach (var stylePath in stylePaths)
+        {
+            var styles = File.ReadAllText(stylePath);
+            var relativePath = Path.GetRelativePath(RepositoryRoot, stylePath);
+
+            Assert.DoesNotContain("http://", styles, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("https://", styles, StringComparison.OrdinalIgnoreCase);
+
+            if (!string.Equals(stylePath, tokenPath, StringComparison.OrdinalIgnoreCase))
+            {
+                Assert.False(
+                    HexColorPattern.IsMatch(styles),
+                    $"La hoja '{relativePath}' contiene un color hexadecimal fuera de tokens.css.");
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("#284e63", "#ffffff")]
+    [InlineData("#356b85", "#ffffff")]
+    [InlineData("#9f633f", "#ffffff")]
+    [InlineData("#a63f46", "#ffffff")]
+    [InlineData("#3e745f", "#ffffff")]
+    [InlineData("#5c6b73", "#f3f6f7")]
+    [Trait("Category", "Tooling")]
+    public void TextPalette_Always_MeetsWcagAaContrast(string foreground, string background)
+    {
+        var ratio = ContrastRatio(foreground, background);
+
+        Assert.True(
+            ratio >= 4.5,
+            $"La combinación {foreground} sobre {background} solo alcanza {ratio:F2}:1.");
     }
 
     [Fact]
@@ -131,6 +182,27 @@ public sealed class VisualFoundationContractTests
 
     private static int CountOccurrences(string content, string value) =>
         content.Split(value, StringSplitOptions.None).Length - 1;
+
+    private static double ContrastRatio(string foreground, string background)
+    {
+        var foregroundLuminance = RelativeLuminance(foreground);
+        var backgroundLuminance = RelativeLuminance(background);
+
+        return (Math.Max(foregroundLuminance, backgroundLuminance) + 0.05) /
+            (Math.Min(foregroundLuminance, backgroundLuminance) + 0.05);
+    }
+
+    private static double RelativeLuminance(string color)
+    {
+        var channels = Enumerable.Range(0, 3)
+            .Select(index => Convert.ToInt32(color.Substring(1 + (index * 2), 2), 16) / 255d)
+            .Select(channel => channel <= 0.04045
+                ? channel / 12.92
+                : Math.Pow((channel + 0.055) / 1.055, 2.4))
+            .ToArray();
+
+        return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
+    }
 
     private static string FindRepositoryRoot()
     {

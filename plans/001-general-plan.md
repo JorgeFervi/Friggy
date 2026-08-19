@@ -25,7 +25,7 @@ El recorrido objetivo es:
 | 8 | [Inventario y finalización de comidas](completed/phases/08-inventory-and-meal-completion.md) | Fase 7 y decisiones de inventario | Lotes, movimientos, raciones, carencias y consumo al completar |
 | 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | Fase 8 | Tipos por día, horarios y registro explícito de comidas no realizadas |
 | 10 | [Ingredientes asociados a pasos](completed/phases/10-recipe-step-ingredients.md) | Fase 9 | Cada paso identifica qué líneas de ingrediente utiliza |
-| 11 | [Sistema visual y experiencia responsive](phases/11-visual-system-and-responsive-ui.md) | Fases 1–10 | Componentes propios, navegación adaptativa y migración visual completa |
+| 11 | [Sistema visual y experiencia responsive](completed/phases/11-visual-system-and-responsive-ui.md) | Fases 1–10 | Componentes propios, navegación adaptativa y migración visual completa |
 
 No se comienza una fase posterior para compensar una fase anterior incompleta. Los contratos públicos pueden ampliarse, pero no deben romper el recorrido ya publicado sin migración y regresión explícitas.
 
@@ -70,4 +70,4 @@ Una fase está terminada cuando su comportamiento está cubierto en la capa más
 
 ## Estado actual
 
-Las fases 1 a 10 y las subfases 11.1 a 11.6 están completadas. La Fase 11 está en curso y la siguiente unidad ejecutable es **11.7 — Catálogos y páginas secundarias**.
+Las fases 1 a 11 están completadas. La siguiente evolución del producto requiere definir una fase nueva.
