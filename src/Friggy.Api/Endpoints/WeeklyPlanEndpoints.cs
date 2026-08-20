@@ -5,8 +5,16 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Friggy.Api.Endpoints;
 
+/// <summary>
+/// Define los endpoints HTTP para gestionar planes semanales y sus huecos de comidas.
+/// </summary>
 public static class WeeklyPlanEndpoints
 {
+    /// <summary>
+    /// Registra las rutas de consulta, creación, actualización y gestión de la planificación semanal.
+    /// </summary>
+    /// <param name="routes">Constructor de rutas donde se registra el grupo de endpoints.</param>
+    /// <returns>Grupo de rutas configurado para los planes semanales.</returns>
     public static RouteGroupBuilder MapWeeklyPlanEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api/weekly-plans").WithTags("Weekly plans");

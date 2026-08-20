@@ -30,4 +30,7 @@ app.MapWeeklyPlanInventoryEndpoints();
 
 app.Run();
 
+/// <summary>
+/// Punto de entrada parcial de la aplicación ASP.NET Core.
+/// </summary>
 public partial class Program;

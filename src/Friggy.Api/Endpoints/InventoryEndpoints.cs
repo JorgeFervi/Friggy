@@ -5,8 +5,16 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Friggy.Api.Endpoints;
 
+/// <summary>
+/// Define los endpoints HTTP para consultar y operar sobre los lotes de inventario.
+/// </summary>
 public static class InventoryEndpoints
 {
+    /// <summary>
+    /// Registra las rutas de consulta, creación y operaciones sobre lotes de inventario.
+    /// </summary>
+    /// <param name="routes">Constructor de rutas donde se registra el grupo de endpoints.</param>
+    /// <returns>Grupo de rutas configurado para el inventario.</returns>
     public static RouteGroupBuilder MapInventoryEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api/inventory-lots").WithTags("Inventory");
@@ -51,6 +59,11 @@ public static class InventoryEndpoints
         return group;
     }
 
+    /// <summary>
+    /// Registra las rutas de requisitos de inventario y de finalización de comidas de un plan semanal.
+    /// </summary>
+    /// <param name="routes">Constructor de rutas donde se registra el grupo de endpoints.</param>
+    /// <returns>Grupo de rutas configurado para las operaciones de inventario de planes semanales.</returns>
     public static RouteGroupBuilder MapWeeklyPlanInventoryEndpoints(
         this IEndpointRouteBuilder routes)
     {

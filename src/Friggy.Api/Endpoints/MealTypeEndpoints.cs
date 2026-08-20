@@ -4,8 +4,16 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Friggy.Api.Endpoints;
 
+/// <summary>
+/// Define los endpoints HTTP para gestionar los tipos de comida del catálogo.
+/// </summary>
 public static class MealTypeEndpoints
 {
+    /// <summary>
+    /// Registra las rutas de consulta, creación, actualización y eliminación de tipos de comida.
+    /// </summary>
+    /// <param name="routes">Constructor de rutas donde se registra el grupo de endpoints.</param>
+    /// <returns>Grupo de rutas configurado para los tipos de comida.</returns>
     public static RouteGroupBuilder MapMealTypeEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api/meal-types").WithTags("Meal types");

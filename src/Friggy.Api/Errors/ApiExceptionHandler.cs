@@ -7,8 +7,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Friggy.Api.Errors;
 
+/// <summary>
+/// Manejador global que transforma las excepciones conocidas en respuestas HTTP Problem Details.
+/// </summary>
 public sealed class ApiExceptionHandler : IExceptionHandler
 {
+    /// <summary>
+    /// Clasifica una excepción y escribe la respuesta HTTP correspondiente cuando puede manejarla.
+    /// </summary>
+    /// <param name="httpContext">Contexto HTTP de la petición que produjo el error.</param>
+    /// <param name="exception">Excepción que debe traducirse a una respuesta de API.</param>
+    /// <param name="cancellationToken">Token para cancelar la escritura de la respuesta.</param>
+    /// <returns><see langword="true"/> si la excepción fue manejada; en caso contrario, <see langword="false"/>.</returns>
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,

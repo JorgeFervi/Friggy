@@ -4,8 +4,16 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Friggy.Api.Endpoints;
 
+/// <summary>
+/// Define los endpoints HTTP para gestionar los ingredientes del catálogo.
+/// </summary>
 public static class IngredientEndpoints
 {
+    /// <summary>
+    /// Registra las rutas de consulta, creación, actualización y eliminación de ingredientes.
+    /// </summary>
+    /// <param name="routes">Constructor de rutas donde se registra el grupo de endpoints.</param>
+    /// <returns>Grupo de rutas configurado para los ingredientes.</returns>
     public static RouteGroupBuilder MapIngredientEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api/ingredients").WithTags("Ingredients");
