@@ -60,7 +60,7 @@ El volumen de PostgreSQL conserva los datos entre ejecuciones. En los siguientes
 * **Frontend:** Blazor Web App con interactividad en servidor.
 * **Persistencia:** PostgreSQL ejecutado localmente mediante Docker Compose.
 * **Acceso a datos:** Entity Framework Core con migraciones versionadas.
-* **Pruebas:** xUnit v3 sobre Microsoft Testing Platform, bUnit (para componentes visuales Blazor), Testcontainers y Playwright.
+* **Pruebas:** xUnit v3 sobre Microsoft Testing Platform, bUnit (para componentes visuales Blazor), Testcontainers y Playwright para pruebas E2E.
 
 ## Arquitectura
 
@@ -81,58 +81,6 @@ Para compilar una vez y ejecutar todas las suites en orden:
 ```
 
 El script usa la configuración `Release` para no interferir con los procesos locales `Debug` iniciados por `start.ps1`, y termina inmediatamente si falla cualquier comando o suite. El parámetro `-SkipBuild` permite reutilizar una compilación previa desde el gate completo.
-
-## Puerta de calidad
-
-Antes de incorporar cambios, ejecutar:
-
-```powershell
-./scripts/quality-gate.ps1
-```
-
-El gate restaura con `NuGet.Config` y `pnpm-lock.yaml`, compila Release, verifica formato, ejecuta las cinco suites mediante Microsoft Testing Platform y falla si las auditorías de NuGet o pnpm encuentran vulnerabilidades relevantes.
-
-## Fundamentos visuales y regresión
-
-La interfaz sigue una dirección cálida y gastronómica inspirada en una cocina moderna: superficies claras, tonos azules y grisáceos y un acento cobre limitado. Usa Inter para cuerpo y controles y Fraunces para títulos. Fuentes, licencias, iconos y hojas de diseño están versionados bajo `src/Friggy.Web/wwwroot`; la aplicación no solicita recursos visuales a CDN.
-
-Los rangos responsive aprobados son:
-
-| Rango | Composición |
-|---|---|
-| 360–767 px | Cabecera compacta, drawer y controles apilados |
-| 768–1199 px | Drawer y una o dos columnas según el contenido |
-| Desde 1200 px | Sidebar fija de 17 rem y contenido fluido |
-
-Al crear o modificar componentes visuales:
-
-* Usar componentes propios con nombres `Friggy*` y clases CSS con prefijo `friggy-`; no introducir bibliotecas UI ni el prefijo genérico `ui-`.
-* Consumir colores, espacios, tipografías, radios, sombras, movimiento y breakpoints desde `wwwroot/css/tokens.css`. Los estilos específicos permanecen junto al componente mediante CSS isolation; los patrones compartidos demostrados pueden vivir en una hoja global dedicada.
-* Mantener controles con nombre accesible, foco visible, objetivo táctil mínimo de 44×44 px, contraste WCAG 2.2 AA y soporte para `prefers-reduced-motion`.
-* Diseñar primero para 360 px y verificar 360×800, 768×1024, 1440×1000 y reflow con zoom al 200 %, sin scroll horizontal de página.
-* Servir fuentes, iconos, CSS y JavaScript desde el proyecto. Los componentes no deben llamar a la API ni almacenar reglas de negocio; reciben parámetros y emiten `EventCallback`.
-
-Los E2E visuales capturan Chromium de forma determinista en 360×800, 768×1024 y 1440×1000. Los baseline aprobados son parte del repositorio; las capturas actuales y los diff se guardan bajo `TestResults/visual` y permanecen sin versionar.
-
-Una modificación visual intencionada debe ejecutarse primero para producir `actual` y `diff`. Solo después de revisarlos se aceptan los nuevos baseline mediante:
-
-```powershell
-./scripts/update-visual-baselines.ps1 -Accept
-```
-
-El gate nunca actualiza baseline automáticamente. El comparador Pixelmatch es tooling de pruebas y no se carga en la aplicación.
-
-Para ejecutar únicamente las reglas arquitectónicas con xUnit v3 sobre MTP:
-
-```powershell
-dotnet test --project tests/Friggy.IntegrationTests/Friggy.IntegrationTests.csproj --configuration Release --no-build --no-restore --filter-trait "Category=Architecture"
-```
-
-## Catálogos iniciales
-
-La aplicación permite administrar ingredientes, unidades, etiquetas de receta y tipos de comida desde Blazor y mediante las rutas `/api/ingredients`, `/api/unit-types`, `/api/recipe-tags` y `/api/meal-types`.
-
-La migración `AddCatalogs` incorpora unidades y tipos de comida iniciales con identificadores estables. Los identificadores públicos se encuentran en `Friggy.Domain.Catalogs.CatalogSeedIds`; incluyen gramo, kilogramo, mililitro, litro, unidad, cucharadita, cucharada, desayuno, comida y cena.
 
 ## Futuros cambios
 
