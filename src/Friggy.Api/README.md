@@ -1,5 +1,7 @@
 # Friggy.Api
 
+> **Estado:** vigente · Consulta también [API HTTP](../../docs/development/api.md).
+
 La capa Friggy.Api expone los casos de uso de Friggy mediante una API HTTP
 con ASP.NET Core y Minimal APIs. Actúa como composition root de la aplicación:
 registra las capas de aplicación e infraestructura, configura el pipeline HTTP

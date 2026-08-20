@@ -46,3 +46,5 @@ Las referencias se protegerán mediante pruebas arquitectónicas. No se introduc
 ## Validación del piloto
 
 El piloto técnico local del 10 de agosto de 2026 recorrió la aplicación mediante `Friggy.Web`, verificó las llamadas HTTP a `Friggy.Api` y confirmó la persistencia PostgreSQL tras reiniciar los servicios. No se introdujeron referencias nuevas ni capas adicionales; el registro está en el [cierre ejecutable de la Fase 6](../../plans/completed/implementation/06-stabilization-and-pilot-implementation.md#67--piloto-y-cierre--completada).
+
+Las fases posteriores incorporaron inventario, planificación avanzada y un sistema visual sin alterar estos límites. La descripción operativa vigente está en [Arquitectura para contribuidores](../development/architecture.md).

@@ -25,3 +25,9 @@ La decisión se fundamenta en las siguientes restricciones y realidades:
 * **Positivo:** Alta velocidad de desarrollo inicial y alineación total con mis capacidades actuales. Facilidad para empaquetar en contenedores Docker ligeros.
 
 * **Negativo/Riesgo:** A medida que la aplicación crezca, el archivo `Program.cs` puede volverse inmanejable si no aplico patrones de diseño adecuados.
+
+## Validación actual
+
+La implementación mantiene `Program.cs` como composition root reducido. Cada capacidad registra sus rutas mediante métodos de extensión y grupos independientes para catálogos, recetas, planificación e inventario. La API publica además OpenAPI, `ProblemDetails` y health checks.
+
+El riesgo de crecimiento del punto de entrada se controla sin introducir controladores ni capas adicionales. Consulta [API HTTP](../development/api.md) para el mapa vigente de rutas y responsabilidades.

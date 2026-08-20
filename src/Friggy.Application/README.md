@@ -1,5 +1,7 @@
 # Friggy.Application
 
+> **Estado:** vigente · Consulta también [Arquitectura para contribuidores](../../docs/development/architecture.md).
+
 La capa Friggy.Application coordina los casos de uso de Friggy. Recibe
 peticiones mediante sus DTOs, aplica el flujo de aplicación sobre las
 entidades del dominio y utiliza contratos de repositorio para consultar o

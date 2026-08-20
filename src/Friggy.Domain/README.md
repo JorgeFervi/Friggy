@@ -1,5 +1,7 @@
 # Friggy.Domain
 
+> **Estado:** vigente · Consulta también [Arquitectura para contribuidores](../../docs/development/architecture.md).
+
 La capa `Friggy.Domain` contiene las reglas de negocio y los modelos propios
 del dominio de Friggy. No depende de la infraestructura, de la API ni de la
 interfaz web. Sus clases protegen las invariantes de catálogos, recetas,
@@ -39,7 +41,7 @@ inventario y planificación semanal.
 
 | Tipo | Representación |
 |---|---|
-| [`Recipe`](Recipes/Recipe.cs) | Entidad principal de una receta que relaciona todas las demas clases que representan los pasos a seguir de una receta, los ingredientes, etiquetas y tipos de comida. Gestiona su nombre, tiempo estimado, ingredientes, pasos, etiquetas y tipos de comida. |
+| [`Recipe`](Recipes/Recipe.cs) | Agregado que gestiona nombre, tiempo estimado, líneas de ingredientes, pasos, etiquetas y tipos de comida de una receta. |
 | [`RecipeConflictException`](Recipes/RecipeConflictException.cs) | Excepción que indica un conflicto de identidad o unicidad dentro de una receta. |
 | [`RecipeIngredient`](Recipes/RecipeIngredient.cs) | Línea de ingrediente de una receta, con ingrediente, unidad de medida, cantidad y posición. |
 | [`RecipeMealTypeLink`](Recipes/RecipeMealTypeLink.cs) | Asociación entre una receta y un tipo de comida. |
@@ -52,7 +54,7 @@ inventario y planificación semanal.
 | Tipo | Representación |
 |---|---|
 | [`WeeklyPlan`](WeeklyPlans/WeeklyPlan.cs) | Entidad principal que representa una semana completa y gestiona sus fechas, huecos y asignaciones de recetas. |
-| [`MealPlanSlot`](WeeklyPlans/MealPlanSlot.cs) | Hueco de comida disponible en un día del plan, con tipo de comida, orden y hora prevista de preparación. |
+| [`MealPlanSlot`](WeeklyPlans/MealPlanSlot.cs) | Hueco de comida disponible en un día del plan, con tipo de comida, orden y hora prevista. |
 | [`MealPlanEntry`](WeeklyPlans/MealPlanEntry.cs) | Receta asignada a un tipo de comida y un día del plan, con sus raciones y estado de ejecución. |
 | [`MealPlanEntryStatus`](WeeklyPlans/MealPlanEntryStatus.cs) | Enumeración que indica si una asignación está planificada, completada u omitida. |
 
@@ -61,7 +63,7 @@ inventario y planificación semanal.
 - `Recipe` contiene `RecipeIngredient` y `RecipeStep`, y se puede clasificar usando sus asociaciones con `RecipeTagLink` y `RecipeMealTypeLink`.
 - `RecipeStep` relaciona sus pasos con las líneas de ingredientes mediante `RecipeStepIngredientLink`.
 - `InventoryLot` registra cada cambio de existencias mediante `InventoryMovement`.
-- `WeeklyPlan` contiene `MealPlanSlot` y `MealPlanEntry` para representar la estructura del plan semanal (si se hacen 3 comidas o 5) y el estado por cada comida para indicar si se ha cumplido con el objetivo de la planificación de la semana.
+- `WeeklyPlan` contiene `MealPlanSlot` y `MealPlanEntry` para representar la estructura diaria del plan y el estado planificado, omitido o completado de cada asignación.
 - `CatalogName` se utiliza como value object para mantener válidos los nombres de las entidades de catálogo.
 
 Las clases del dominio crean y modifican sus entidades mediante métodos que validan

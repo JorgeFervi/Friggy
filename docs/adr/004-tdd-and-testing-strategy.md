@@ -6,7 +6,7 @@
 
 ## Contexto
 
-El MVP debe construirse en un plazo corto sin sacrificar la capacidad de cambiar reglas, persistencia, API o interfaz con seguridad. La base de datos elegida es PostgreSQL y el frontend es una aplicación Blazor separada, por lo que las pruebas deben cubrir tanto los límites de cada capa como el recorrido real por HTTP.
+Friggy debe evolucionar sin sacrificar la capacidad de cambiar reglas, persistencia, API o interfaz con seguridad. La base de datos es PostgreSQL y el frontend es una aplicación Blazor separada, por lo que las pruebas deben cubrir tanto los límites de cada capa como el recorrido real por HTTP.
 
 ## Decisión
 
@@ -22,6 +22,8 @@ xUnit v3 se ejecutará sobre Microsoft Testing Platform con `dotnet test`. La es
 * `Friggy.ComponentTests`: componentes Blazor con bUnit sobre xUnit v3, un `BunitContext` por test y dobles HTTP escritos a mano.
 * `Friggy.EndToEndTests`: recorrido completo con Playwright para .NET y Chromium. Cada test dispone de un `BrowserContext` aislado y conserva trace, captura, vídeo y logs cuando falla.
 
+Los E2E visuales compararán capturas deterministas mediante Pixelmatch con baselines versionados. Las capturas actuales y los diff permanecerán fuera del repositorio. Un baseline solo podrá actualizarse después de revisar el resultado mediante el comando explícito `scripts/update-visual-baselines.ps1 -Accept`; el gate nunca aceptará imágenes automáticamente.
+
 No se usará EF Core InMemory como sustituto de PostgreSQL. No se impondrá un porcentaje arbitrario de cobertura: toda regla y comportamiento público deberá estar probado. No se admitirán tests omitidos, tautológicos, dependientes del orden, de esperas temporales fijas o de datos mutables compartidos.
 
 El scaffold, las migraciones generadas y la configuración declarativa quedan fuera del TDD estricto, pero estarán protegidos mediante pruebas arquitectónicas, de integración, de contrato o smoke tests. Los comandos de filtrado seguirán la sintaxis de MTP en .NET 10 (`--filter-class`, `--filter-method` y `--filter-trait`) sin el separador `--`.
@@ -34,3 +36,7 @@ El scaffold, las migraciones generadas y la configuración declarativa quedan fu
 * **Negativo/Riesgo:** Testcontainers, la API, Blazor y Chromium incrementan el tiempo y los requisitos de las suites externas.
 * **Negativo/Riesgo:** Observar y conservar la secuencia rojo-verde exige cambios pequeños y disciplina durante todo el desarrollo.
 * **Negativo/Riesgo:** Los tests E2E se reservarán para recorridos críticos; duplicar en ellos todas las combinaciones cubiertas por niveles inferiores haría la suite lenta y frágil.
+
+## Validación actual
+
+La estrategia continúa aplicada en las cinco suites y en `scripts/quality-gate.ps1`, que añade compilación Release, formato y auditorías de NuGet y pnpm. Los comandos vigentes, filtros MTP y procedimiento visual se documentan en [Estrategia y ejecución de pruebas](../development/testing.md).

@@ -1,5 +1,7 @@
 # Friggy.Infrastructure
 
+> **Estado:** vigente · Consulta también [Persistencia y migraciones](../../docs/development/database.md).
+
 La capa Friggy.Infrastructure contiene las implementaciones técnicas que
 permiten a Friggy persistir y consultar los datos del dominio. Configura
 Entity Framework Core con PostgreSQL, implementa los contratos definidos por
