@@ -1,8 +1,8 @@
 # Estado y hoja de ruta
 
-> **Estado:** vigente · **Última revisión:** 20 de agosto de 2026
+> **Estado:** vigente · **Última revisión:** 21 de agosto de 2026
 
-Las fases 1 a 11 están completadas. No existe una fase activa; cualquier incremento nuevo debe comenzar con una decisión funcional y un plan TDD propios. El detalle histórico se conserva en [planes](../../plans/README.md).
+Las fases 1 a 11 están completadas. Las fases 12 a 14 están planificadas, pero todavía no han comenzado. El detalle histórico y futuro se conserva en [planes](../../plans/README.md).
 
 ## Capacidades entregadas
 
@@ -15,12 +15,21 @@ Las fases 1 a 11 están completadas. No existe una fase activa; cualquier increm
 
 La descripción funcional vigente está en [Funcionalidades actuales](current-capabilities.md).
 
+## Incrementos planificados
+
+Estos planes describen trabajo futuro y no cambian todavía las funcionalidades actuales:
+
+* [Fase 12: sustituir la planificación semanal por planes diarios](../../plans/phases/12-daily-planning.md).
+* [Fase 13: crear y aplicar plantillas de planes diarios](../../plans/phases/13-daily-plan-templates.md).
+* [Fase 14: calcular una lista de la compra por intervalo](../../plans/phases/14-shopping-list.md).
+
+La Fase 12 es la base obligatoria. Una vez estable, plantillas y lista de la compra son incrementos independientes.
+
 ## Posibles evoluciones
 
 Las siguientes ideas no constituyen un compromiso ni tienen orden o fecha asignados:
 
 * Cuentas de usuario, autenticación y aislamiento de datos.
-* Lista de la compra a partir de carencias revisadas por el usuario.
 * Conversiones controladas entre unidades compatibles.
 * Imágenes de recetas, pasos o ingredientes.
 * Información nutricional.
