@@ -84,7 +84,11 @@
                         <p class="friggy-meal-slot__preparation">Empezar preparación: @meal.PreparationStartsAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
                     }
 
-                    @if (meal.RecipeId.HasValue)
+                    @if (!meal.RecipeId.HasValue)
+                    {
+                        <p class="friggy-meal-slot__empty-state" data-testid="meal-pending">Pendiente de asignar</p>
+                    }
+                    else
                     {
                         <div class="friggy-meal-slot__field friggy-meal-slot__servings">
                             <label for="@($"{selectId}-servings")">Raciones</label>
@@ -109,14 +113,31 @@
                         }
                         else
                         {
-                            <FriggyButton Size="FriggyButtonSize.Compact"
-                                          Disabled="IsSaving"
-                                          OnClick="() => OnComplete.InvokeAsync(new(day.Date, meal.MealTypeId, meal.RecipeId, meal.Servings))">
-                                Completar
-                            </FriggyButton>
-                            <details class="friggy-meal-slot__skip">
-                                <summary>Omitir esta comida</summary>
-                                <div class="friggy-meal-slot__skip-fields">
+                            <div class="friggy-meal-slot__actions" data-testid="meal-actions">
+                                <FriggyButton Variant="FriggyButtonVariant.Secondary"
+                                              Size="FriggyButtonSize.Compact"
+                                              DataAction="toggle-skip"
+                                              Disabled="IsSaving"
+                                              OnClick="() => ToggleSkipDraft(meal.SlotId)">
+                                    Omitir
+                                </FriggyButton>
+                                <FriggyButton Size="FriggyButtonSize.Compact"
+                                              Disabled="IsSaving"
+                                              OnClick="() => OnComplete.InvokeAsync(new(day.Date, meal.MealTypeId, meal.RecipeId, meal.Servings))">
+                                    Completar
+                                </FriggyButton>
+                                <button class="friggy-meal-slot__action friggy-meal-slot__action--withdraw" type="button"
+                                        data-date="@day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                                        data-meal-type-id="@meal.MealTypeId"
+                                        disabled="@(IsSaving || isLocked)"
+                                        aria-label="Retirar receta de @meal.MealTypeName del @DayLabel(day.Date)"
+                                        @onclick="() => OnChanged.InvokeAsync(new(day.Date, meal.MealTypeId, null, meal.Servings))">
+                                    Retirar
+                                </button>
+                            </div>
+                            @if (skipDraftsOpen.Contains(meal.SlotId))
+                            {
+                                <div class="friggy-meal-slot__skip-fields" data-testid="skip-fields">
                                     <label for="@($"{selectId}-skip-reason")">Motivo para omitir</label>
                                     <input id="@($"{selectId}-skip-reason")"
                                            value="@Draft(meal.SlotId).Reason"
@@ -128,18 +149,10 @@
                                     <FriggyButton Variant="FriggyButtonVariant.Secondary"
                                                   Size="FriggyButtonSize.Compact"
                                                   Disabled="IsSaving"
-                                                  OnClick="() => SkipAsync(day.Date, meal)">Omitir</FriggyButton>
+                                                  OnClick="() => SkipAsync(day.Date, meal)">Confirmar omisión</FriggyButton>
                                 </div>
-                            </details>
+                            }
                         }
-                        <button class="friggy-meal-slot__withdraw" type="button"
-                                data-date="@day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
-                                data-meal-type-id="@meal.MealTypeId"
-                                disabled="@(IsSaving || isLocked)"
-                                aria-label="Retirar receta de @meal.MealTypeName del @DayLabel(day.Date)"
-                                @onclick="() => OnChanged.InvokeAsync(new(day.Date, meal.MealTypeId, null, meal.Servings))">
-                            Retirar
-                        </button>
                     }
                 </article>
             }
@@ -147,18 +160,26 @@
 
             <div class="friggy-weekly-calendar__add-slot">
             <label for="@($"add-slot-{day.Date:yyyyMMdd}")">Añadir tipo de comida</label>
-            <select id="@($"add-slot-{day.Date:yyyyMMdd}")"
-                    data-testid="add-meal-slot"
-                    disabled="@IsSaving"
-                    @onchange="args => AddSlotAsync(day.Date, args)">
-                <option value="">Selecciona un tipo</option>
-                @foreach (var mealType in MealTypes
-                    .Where(item => day.Meals.All(meal => meal.MealTypeId != item.Id))
-                    .OrderBy(item => item.Order))
-                {
-                    <option value="@mealType.Id">@mealType.Name</option>
-                }
-            </select>
+            <div class="friggy-weekly-calendar__add-slot-controls">
+                <select id="@($"add-slot-{day.Date:yyyyMMdd}")"
+                        data-testid="add-meal-slot"
+                        value="@PendingMealTypeValue(day.Date)"
+                        disabled="@IsSaving"
+                        @onchange="args => SelectMealTypeToAdd(day.Date, args)">
+                    <option value="">Selecciona un tipo</option>
+                    @foreach (var mealType in MealTypes
+                        .Where(item => day.Meals.All(meal => meal.MealTypeId != item.Id))
+                        .OrderBy(item => item.Order))
+                    {
+                        <option value="@mealType.Id">@mealType.Name</option>
+                    }
+                </select>
+                <FriggyButton Variant="FriggyButtonVariant.Secondary"
+                              Size="FriggyButtonSize.Compact"
+                              DataAction="add-meal-slot"
+                              Disabled="@(IsSaving || !pendingMealTypes.ContainsKey(day.Date))"
+                              OnClick="() => AddSlotAsync(day.Date)">Añadir</FriggyButton>
+            </div>
             </div>
         </section>
     }
@@ -167,6 +188,8 @@
 @code {
     private static readonly CultureInfo SpanishCulture = CultureInfo.GetCultureInfo("es-ES");
     private readonly Dictionary<Guid, SkipDraft> skipDrafts = [];
+    private readonly HashSet<Guid> skipDraftsOpen = [];
+    private readonly Dictionary<DateOnly, Guid> pendingMealTypes = [];
 
     [Parameter, EditorRequired] public WeeklyPlanResponse Model { get; set; } = default!;
     [Parameter, EditorRequired] public IReadOnlyList<RecipeListItemResponse> Recipes { get; set; } = [];
@@ -194,11 +217,34 @@
         await OnChanged.InvokeAsync(new(date, meal.MealTypeId, meal.RecipeId, servings));
     }
 
-    private async Task AddSlotAsync(DateOnly date, ChangeEventArgs args)
+    private void SelectMealTypeToAdd(DateOnly date, ChangeEventArgs args)
     {
         if (Guid.TryParse(args.Value?.ToString(), out var mealTypeId))
         {
+            pendingMealTypes[date] = mealTypeId;
+        }
+        else
+        {
+            pendingMealTypes.Remove(date);
+        }
+    }
+
+    private async Task AddSlotAsync(DateOnly date)
+    {
+        if (pendingMealTypes.Remove(date, out var mealTypeId))
+        {
             await OnSlotAdded.InvokeAsync(new(date, mealTypeId));
+        }
+    }
+
+    private string PendingMealTypeValue(DateOnly date) =>
+        pendingMealTypes.TryGetValue(date, out var mealTypeId) ? mealTypeId.ToString() : string.Empty;
+
+    private void ToggleSkipDraft(Guid slotId)
+    {
+        if (!skipDraftsOpen.Add(slotId))
+        {
+            skipDraftsOpen.Remove(slotId);
         }
     }
 

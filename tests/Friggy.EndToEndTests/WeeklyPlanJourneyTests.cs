@@ -95,12 +95,12 @@ public sealed class WeeklyPlanJourneyTests(FullStackFixture fixture) : FriggyPag
             await tuesdayLunch.GetByLabel("Hora prevista", new() { Exact = true }).FillAsync("14:30");
             await tuesdayLunch.GetByLabel("Hora prevista", new() { Exact = true }).PressAsync("Tab");
 
-            await mondayLunch.GetByText("Omitir esta comida", new() { Exact = true }).ClickAsync();
+            await mondayLunch.GetByRole(AriaRole.Button, new() { Name = "Omitir", Exact = true }).ClickAsync();
             await mondayLunch.GetByLabel("Motivo para omitir", new() { Exact = true })
                 .FillAsync("Viaje");
             await mondayLunch.GetByLabel("Alternativa", new() { Exact = true })
                 .FillAsync("Bocadillo");
-            await mondayLunch.GetByRole(AriaRole.Button, new() { Name = "Omitir", Exact = true })
+            await mondayLunch.GetByRole(AriaRole.Button, new() { Name = "Confirmar omisión", Exact = true })
                 .ClickAsync();
             await Expect(mondayLunch.GetByText("Omitida: Viaje", new() { Exact = true }))
                 .ToBeVisibleAsync();

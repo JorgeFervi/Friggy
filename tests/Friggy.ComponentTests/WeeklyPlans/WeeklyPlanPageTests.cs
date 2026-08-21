@@ -124,7 +124,50 @@ public sealed class WeeklyPlanPageTests : ComponentTest
                 component.FindAll("[data-testid='meal-slot'] select"),
                 select => Assert.Equal(string.Empty, select.GetAttribute("value")));
             Assert.Contains("Sin receta", component.Markup, StringComparison.Ordinal);
+            Assert.Contains("Pendiente de asignar", component.Markup, StringComparison.Ordinal);
         });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void WeeklyPlanDetails_AddMealType_SelectionRequiresExplicitConfirmation()
+    {
+        var initial = EmptyPlan();
+        var firstDay = initial.Days[0] with { Meals = initial.Days[0].Meals.Take(2).ToArray() };
+        var api = new StubWeeklyPlansApiClient
+        {
+            Plan = initial with { Days = [firstDay, .. initial.Days.Skip(1)] },
+        };
+        RegisterApis(api);
+        var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
+            parameters.Add(page => page.Id, PlanId));
+        var day = component.WaitForElements("section[data-testid='weekly-plan-day']")[0];
+        var selector = day.QuerySelector("select[data-testid='add-meal-slot']")!;
+
+        selector.Change(DinnerId.ToString());
+
+        Assert.Empty(api.AddedSlots);
+        Assert.NotNull(day.QuerySelector("button[data-action='add-meal-slot']"));
+
+        day.QuerySelector("button[data-action='add-meal-slot']")!.Click();
+
+        component.WaitForAssertion(() => Assert.Single(api.AddedSlots));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void WeeklyPlanDetails_ActiveMeal_ShowsAlignedActions()
+    {
+        var assigned = ReplaceRecipe(EmptyPlan(), WeekStart, LunchId, FirstRecipeId);
+        RegisterApis(new StubWeeklyPlansApiClient { Plan = assigned });
+        var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
+            parameters.Add(page => page.Id, PlanId));
+
+        var actions = component.Find("[data-testid='meal-actions']");
+
+        Assert.Equal(
+            ["Omitir", "Completar", "Retirar"],
+            actions.QuerySelectorAll("button").Select(button => button.TextContent.Trim()));
     }
 
     [Fact]
@@ -300,6 +343,7 @@ public sealed class WeeklyPlanPageTests : ComponentTest
         var firstSection = component.WaitForElements("section[data-testid='weekly-plan-day']")[0];
 
         firstSection.QuerySelector("select[data-testid='add-meal-slot']")!.Change(DinnerId.ToString());
+        firstSection.QuerySelector("button[data-action='add-meal-slot']")!.Click();
         component.WaitForAssertion(() =>
             Assert.Equal(3, component.FindAll("section[data-testid='weekly-plan-day']")[0]
                 .QuerySelectorAll("[data-testid='meal-slot']").Length));
@@ -334,12 +378,16 @@ public sealed class WeeklyPlanPageTests : ComponentTest
         var component = Render<global::Friggy.Web.Components.Pages.WeeklyPlanDetails>(parameters =>
             parameters.Add(page => page.Id, PlanId));
         var prefix = $"meal-{WeekStart:yyyyMMdd}-{LunchId:N}";
+        component.FindAll("[data-testid='meal-slot']")
+            .Single(slot => slot.QuerySelector("button[data-action='toggle-skip']") is not null)
+            .QuerySelector("button[data-action='toggle-skip']")!
+            .Click();
         var reason = component.WaitForElement($"#{prefix}-skip-reason");
         var alternative = component.Find($"#{prefix}-alternative");
 
         reason.Input("Cambio de planes");
         alternative.Input("Bocadillo");
-        component.FindAll("button").Single(button => button.TextContent.Trim() == "Omitir").Click();
+        component.FindAll("button").Single(button => button.TextContent.Trim() == "Confirmar omisión").Click();
 
         component.WaitForAssertion(() =>
         {
@@ -474,6 +522,7 @@ public sealed class WeeklyPlanPageTests : ComponentTest
         public List<Guid> Deleted { get; } = [];
         public List<(DateOnly Date, Guid MealTypeId, Guid RecipeId)> SetEntries { get; } = [];
         public List<(DateOnly Date, Guid MealTypeId)> RemovedEntries { get; } = [];
+        public List<(DateOnly Date, Guid MealTypeId)> AddedSlots { get; } = [];
 
         public Task<IReadOnlyList<WeeklyPlanListItemResponse>> ListAsync(CancellationToken cancellationToken)
         {
@@ -566,6 +615,7 @@ public sealed class WeeklyPlanPageTests : ComponentTest
             CancellationToken cancellationToken)
         {
             ThrowIfConfigured();
+            AddedSlots.Add((mealDate, request.MealTypeId));
             var current = Plan ?? throw new InvalidOperationException("Falta configurar el plan semanal.");
             Plan = current with
             {
