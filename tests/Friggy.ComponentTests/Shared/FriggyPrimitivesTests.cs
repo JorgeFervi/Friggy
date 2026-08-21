@@ -270,6 +270,48 @@ public sealed class FriggyPrimitivesTests : ComponentTest
         module.VerifyInvoke("close", 2);
     }
 
+    [Fact]
+    [Trait("Category", "Component")]
+    public void ConfirmDialog_Confirm_ClosesBeforeNotifyingParent()
+    {
+        var module = JavaScript.SetupModule("./js/confirm-dialog.js");
+        module.SetupVoid("show", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
+        var closedBeforeConfirmation = false;
+        var component = Render<ConfirmDialog>(parameters => parameters
+            .Add(p => p.IsOpen, true)
+            .Add(p => p.Title, "Borrar receta")
+            .Add(p => p.Message, "Esta acción no se puede deshacer.")
+            .Add(
+                p => p.OnConfirm,
+                () => closedBeforeConfirmation = module.Invocations.Identifiers.Contains("close")));
+
+        component.Find(".confirm-dialog__actions button.friggy-button--danger").Click();
+
+        Assert.True(closedBeforeConfirmation);
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void ConfirmDialog_Cancel_ClosesBeforeNotifyingParent()
+    {
+        var module = JavaScript.SetupModule("./js/confirm-dialog.js");
+        module.SetupVoid("show", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
+        var closedBeforeCancellation = false;
+        var component = Render<ConfirmDialog>(parameters => parameters
+            .Add(p => p.IsOpen, true)
+            .Add(p => p.Title, "Borrar receta")
+            .Add(p => p.Message, "Esta acción no se puede deshacer.")
+            .Add(
+                p => p.OnCancel,
+                () => closedBeforeCancellation = module.Invocations.Identifiers.Contains("close")));
+
+        component.Find(".confirm-dialog__actions button.friggy-button--secondary").Click();
+
+        Assert.True(closedBeforeCancellation);
+    }
+
     private IRenderedComponent<FormField> RenderField(string label, string? help, string? error) =>
         Render<FormField>(parameters => parameters
             .Add(p => p.Label, label)

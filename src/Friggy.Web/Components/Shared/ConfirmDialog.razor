@@ -113,8 +113,8 @@
         }
 
         actionHandled = true;
-        await OnConfirm.InvokeAsync();
         await CloseAndNotifyAsync();
+        await OnConfirm.InvokeAsync();
     }
 
     private async Task CancelAsync()
@@ -125,8 +125,8 @@
         }
 
         actionHandled = true;
-        await OnCancel.InvokeAsync();
         await CloseAndNotifyAsync();
+        await OnCancel.InvokeAsync();
     }
 
     private async Task CloseAndNotifyAsync()
