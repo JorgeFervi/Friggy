@@ -1,22 +1,52 @@
 .friggy-recipe-step-row {
-    background: var(--color-canvas); border: 0.0625rem solid var(--color-border); border-radius: var(--radius-medium);
-    display: grid; gap: var(--space-3); margin: 0; padding: var(--space-4);
+    align-items: stretch; background: var(--color-canvas); border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-medium); display: flex; min-width: 0; overflow: hidden;
 }
-.friggy-recipe-step-row > legend { color: var(--color-primary-700); font-weight: 700; padding-inline: var(--space-2); }
-.friggy-recipe-step-row > label { font-size: var(--font-size-small); font-weight: 700; }
-.friggy-recipe-step-row ::deep textarea, .friggy-recipe-step-row ::deep input[type="number"] {
+.friggy-recipe-step-row--expanded { display: block; overflow: visible; }
+.friggy-recipe-step-row__editor {
+    border: 0; display: grid; gap: var(--space-3); margin: 0; padding: var(--space-4);
+}
+.friggy-recipe-step-row__editor > legend { color: var(--color-primary-700); font-weight: 700; padding-inline: var(--space-2); }
+.friggy-recipe-step-row__editor > label { font-size: var(--font-size-small); font-weight: 700; }
+.friggy-recipe-step-row__editor ::deep textarea, .friggy-recipe-step-row__editor ::deep input[type="number"] {
     background: var(--color-surface); border: 0.0625rem solid var(--color-border); border-radius: var(--radius-small);
     min-height: var(--control-min-size); padding: var(--space-2); width: 100%;
 }
-.friggy-recipe-step-row ::deep textarea { min-height: 7rem; resize: vertical; }
+.friggy-recipe-step-row__editor ::deep textarea { min-height: 7rem; resize: vertical; }
 .friggy-recipe-step-row__ingredients { border: 0; display: grid; gap: var(--space-2); margin: 0; padding: 0; }
 .friggy-recipe-step-row__ingredients legend { font-weight: 700; margin-bottom: var(--space-2); }
 .friggy-recipe-step-row__ingredients label { align-items: flex-start; display: flex; gap: var(--space-2); }
-.friggy-recipe-step-row__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.friggy-recipe-step-row__actions button {
+.friggy-recipe-step-row__summary {
+    align-items: center; background: transparent; border: 0; color: var(--color-text); cursor: pointer; display: grid; flex: 1;
+    gap: var(--space-3); grid-template-columns: auto minmax(0, 1fr) auto; min-height: 4.5rem; min-width: 0;
+    padding: var(--space-2) var(--space-3); text-align: left;
+}
+.friggy-recipe-step-row__summary:hover { background: var(--color-surface-muted); }
+.friggy-recipe-step-row__position {
+    align-items: center; background: var(--color-primary-100); border-radius: 999px; color: var(--color-primary-700);
+    display: inline-flex; font-size: var(--font-size-small); font-weight: 700; height: 2rem; justify-content: center; width: 2rem;
+}
+.friggy-recipe-step-row__description { display: flex; gap: var(--space-2); min-width: 0; }
+.friggy-recipe-step-row__description strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.friggy-recipe-step-row__description span { color: var(--color-text-muted); white-space: nowrap; }
+.friggy-recipe-step-row__edit-text { color: var(--color-primary-700); font-size: var(--font-size-small); font-weight: 700; }
+.friggy-recipe-step-row__compact-actions, .friggy-recipe-step-row__actions { display: flex; gap: var(--space-2); }
+.friggy-recipe-step-row__compact-actions { align-items: center; border-left: 0.0625rem solid var(--color-border); padding: var(--space-2); }
+.friggy-recipe-step-row__compact-actions button, .friggy-recipe-step-row__actions button {
     background: var(--color-surface); border: 0.0625rem solid var(--color-border); border-radius: var(--radius-small);
     color: var(--color-primary-700); cursor: pointer; min-height: var(--control-min-size); padding: var(--space-2) var(--space-3);
 }
-.friggy-recipe-step-row__actions button:last-child { color: var(--color-danger); margin-left: auto; }
-.friggy-recipe-step-row__actions button:disabled { cursor: not-allowed; opacity: 0.55; }
-@media (max-width: 47.99rem) { .friggy-recipe-step-row__actions button:last-child { margin-left: 0; width: 100%; } }
+.friggy-recipe-step-row__compact-actions button { min-width: var(--control-min-size); padding: var(--space-2); }
+.friggy-recipe-step-row__compact-actions button:last-child, .friggy-recipe-step-row__actions button:nth-last-child(2) { color: var(--color-danger); }
+.friggy-recipe-step-row__compact-actions button:disabled, .friggy-recipe-step-row__actions button:disabled { cursor: not-allowed; opacity: 0.55; }
+.friggy-recipe-step-row__actions { flex-wrap: wrap; }
+.friggy-recipe-step-row__done { margin-left: auto; }
+@media (max-width: 47.99rem) {
+    .friggy-recipe-step-row { flex-wrap: wrap; }
+    .friggy-recipe-step-row__summary { flex-basis: 100%; }
+    .friggy-recipe-step-row__description { flex-direction: column; gap: 0; }
+    .friggy-recipe-step-row__compact-actions {
+        border-left: 0; border-top: 0.0625rem solid var(--color-border); justify-content: flex-end; padding-block: var(--space-1); width: 100%;
+    }
+    .friggy-recipe-step-row__done { margin-left: auto; }
+}

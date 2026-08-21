@@ -40,6 +40,78 @@ public sealed class RecipeFormTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void ExistingIngredients_RenderAsCompactSummaries()
+    {
+        var model = ValidModel();
+        model.Ingredients.Add(new(IngredientOneId, UnitTypeId, 1.5m, 0));
+        model.Ingredients.Add(new(IngredientTwoId, UnitTypeId, 2m, 1));
+
+        var component = RenderForm(model);
+
+        Assert.Contains("Ingredientes (2)", component.Markup, StringComparison.Ordinal);
+        Assert.Empty(component.FindAll("[data-testid='ingredient-row'] select"));
+        Assert.Contains("Tomate", component.FindAll("[data-testid='ingredient-row']")[0].TextContent);
+        Assert.Contains("1,50 Gramo", component.FindAll("[data-testid='ingredient-row']")[0].TextContent);
+        Assert.Contains("Pepino", component.FindAll("[data-testid='ingredient-row']")[1].TextContent);
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void EditIngredient_AnotherRowSelected_ExpandsOnlySelectedRow()
+    {
+        var model = ValidModel();
+        model.Ingredients.Add(new(IngredientOneId, UnitTypeId, 1m, 0));
+        model.Ingredients.Add(new(IngredientTwoId, UnitTypeId, 2m, 1));
+        var component = RenderForm(model);
+
+        component.Find("button[aria-label='Editar ingrediente 1']").Click();
+        Assert.Single(component.FindAll("[data-testid='ingredient-row'] select[data-field='ingredient']"));
+
+        component.Find("button[aria-label='Editar ingrediente 2']").Click();
+
+        var editor = Assert.Single(component.FindAll("[data-testid='ingredient-editor']"));
+        Assert.Equal(
+            IngredientTwoId.ToString(),
+            editor.QuerySelector("select[data-field='ingredient']")?.GetAttribute("value"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void AddIngredient_NewRow_ExpandsItAndCollapsesPreviousEditor()
+    {
+        var model = ValidModel();
+        model.Ingredients.Add(new(IngredientOneId, UnitTypeId, 1m, 0));
+        var component = RenderForm(model);
+        component.Find("button[aria-label='Editar ingrediente 1']").Click();
+
+        component.Find("button[data-action='add-ingredient']").Click();
+
+        Assert.Equal(2, model.Ingredients.Count);
+        var editor = Assert.Single(component.FindAll("[data-testid='ingredient-editor']"));
+        Assert.Equal(
+            Guid.Empty.ToString(),
+            editor.QuerySelector("select[data-field='ingredient']")?.GetAttribute("value"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void FinishIngredient_AfterChangingValues_CollapsesAndPreservesSummary()
+    {
+        var model = ValidModel();
+        model.Ingredients.Add(new(IngredientOneId, UnitTypeId, 1m, 0));
+        var component = RenderForm(model);
+        component.Find("button[aria-label='Editar ingrediente 1']").Click();
+
+        component.Find("[data-testid='ingredient-editor'] input[data-field='quantity']").Change("2.5");
+        component.Find("button[aria-label='Terminar edición del ingrediente 1']").Click();
+
+        Assert.Empty(component.FindAll("[data-testid='ingredient-editor']"));
+        Assert.Contains("2,50 Gramo", component.Find("[data-testid='ingredient-row']").TextContent);
+        Assert.Equal(2.5m, model.Ingredients[0].Quantity);
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void MoveStep_SecondRowUp_PreservesStableKeysAndUpdatesOrder()
     {
         var first = new RecipeStepFormModel("Triturar", null, 0);
@@ -49,14 +121,83 @@ public sealed class RecipeFormTests : ComponentTest
         model.Steps.Add(second);
         var component = RenderForm(model);
 
+        component.Find("button[aria-label='Editar paso 1']").Click();
         component.Find("button[aria-label='Mover paso 2 arriba']").Click();
 
         Assert.Equal([second.ClientId, first.ClientId], model.Steps.Select(item => item.ClientId));
         Assert.Equal([0, 1], model.Steps.Select(item => item.Order));
         Assert.Equal(
             ["Servir", "Triturar"],
-            component.FindAll("[data-testid='step-row'] textarea")
-                .Select(element => element.GetAttribute("value") ?? element.TextContent));
+            component.FindAll("[data-testid='step-row']")
+                .Select(element => element.TextContent.Contains("Servir", StringComparison.Ordinal) ? "Servir" : "Triturar"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void ExistingSteps_RenderAsCompactSummaries()
+    {
+        var model = ValidModel();
+        model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
+        model.Steps.Add(new RecipeStepFormModel("Servir", 5, 1));
+
+        var component = RenderForm(model);
+
+        Assert.Contains("Pasos (2)", component.Markup, StringComparison.Ordinal);
+        Assert.Empty(component.FindAll("[data-testid='step-row'] textarea"));
+        Assert.Contains("Triturar", component.FindAll("[data-testid='step-row']")[0].TextContent);
+        Assert.Contains("Servir", component.FindAll("[data-testid='step-row']")[1].TextContent);
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void EditStep_AnotherRowSelected_ExpandsOnlySelectedRow()
+    {
+        var model = ValidModel();
+        model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
+        model.Steps.Add(new RecipeStepFormModel("Servir", 5, 1));
+        var component = RenderForm(model);
+
+        component.Find("button[aria-label='Editar paso 1']").Click();
+        Assert.Single(component.FindAll("[data-testid='step-row'] textarea"));
+
+        component.Find("button[aria-label='Editar paso 2']").Click();
+
+        var editor = Assert.Single(component.FindAll("[data-testid='step-editor']"));
+        Assert.Equal("Servir", editor.QuerySelector("textarea")?.GetAttribute("value"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void AddStep_NewRow_ExpandsItAndCollapsesPreviousEditor()
+    {
+        var model = ValidModel();
+        model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
+        var component = RenderForm(model);
+        component.Find("button[aria-label='Editar paso 1']").Click();
+
+        component.Find("button[data-action='add-step']").Click();
+
+        Assert.Equal(2, model.Steps.Count);
+        Assert.Single(component.FindAll("[data-testid='step-editor']"));
+        Assert.Contains("Paso 2", component.Find("[data-testid='step-editor']").TextContent);
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void StepIngredients_UsesIngredientsHeadingWithoutLinePrefix()
+    {
+        var model = ValidModel();
+        model.Ingredients.Add(new RecipeIngredientFormModel(IngredientOneId, UnitTypeId, 1m, 0));
+        model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
+        var component = RenderForm(model);
+        component.Find("button[aria-label='Editar paso 1']").Click();
+
+        var ingredients = component.Find("[data-testid='step-ingredients']");
+
+        Assert.Contains("Ingredientes", ingredients.TextContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("Ingredientes utilizados", ingredients.TextContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("Línea 1:", ingredients.TextContent, StringComparison.Ordinal);
+        Assert.Contains("1 Gramo (g) de Tomate", ingredients.TextContent, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -70,6 +211,7 @@ public sealed class RecipeFormTests : ComponentTest
             new RecipeIngredientFormModel(IngredientTwoId, UnitTypeId, 2m, 1, LineTwoId));
         model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
         var component = RenderForm(model);
+        component.Find("button[aria-label='Editar paso 1']").Click();
 
         component.Find($"input[data-recipe-ingredient-id='{LineOneId}']").Change(true);
         component.Find("button[aria-label='Mover ingrediente 2 arriba']").Click();
@@ -95,6 +237,7 @@ public sealed class RecipeFormTests : ComponentTest
         model.Steps.Add(
             new RecipeStepFormModel("Triturar", null, 0, [LineOneId, LineTwoId]));
         var component = RenderForm(model);
+        component.Find("button[aria-label='Editar paso 1']").Click();
 
         component.Find("button[aria-label='Eliminar ingrediente 1']").Click();
 
@@ -111,6 +254,7 @@ public sealed class RecipeFormTests : ComponentTest
         model.Steps.Add(new RecipeStepFormModel("Triturar", null, 0));
 
         var component = RenderForm(model);
+        component.Find("button[aria-label='Editar paso 1']").Click();
 
         var associations = component.Find("[data-testid='step-ingredients']");
         Assert.Contains(
@@ -129,6 +273,7 @@ public sealed class RecipeFormTests : ComponentTest
         var component = RenderForm(model);
 
         component.Find("button[data-action='add-ingredient']").Click();
+        component.Find("button[aria-label='Editar paso 1']").Click();
 
         var ingredient = Assert.Single(model.Ingredients);
         Assert.Single(

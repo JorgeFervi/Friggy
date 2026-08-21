@@ -25,7 +25,7 @@
     </section>
 
     <section class="friggy-recipe-form__surface" aria-labelledby="recipe-ingredients-heading">
-        <header><h2 id="recipe-ingredients-heading">Ingredientes</h2><p>Añade las cantidades y ordénalas como aparecerán en la receta.</p></header>
+        <header><h2 id="recipe-ingredients-heading">Ingredientes (@Model.Ingredients.Count)</h2><p>Añade las cantidades y ordénalas como aparecerán en la receta.</p></header>
         @for (var index = 0; index < Model.Ingredients.Count; index++)
         {
             var currentIndex = index;
@@ -36,6 +36,9 @@
                                  UnitTypes="UnitTypes"
                                  Index="currentIndex"
                                  Count="Model.Ingredients.Count"
+                                 IsExpanded="@(expandedIngredientClientId == ingredient.ClientId)"
+                                 Edit="() => ExpandIngredient(ingredient.ClientId)"
+                                 Collapse="CollapseIngredient"
                                  MoveUp="() => MoveIngredient(currentIndex, -1)"
                                  MoveDown="() => MoveIngredient(currentIndex, 1)"
                                  Remove="() => RemoveIngredient(currentIndex)" />
@@ -44,7 +47,7 @@
     </section>
 
     <section class="friggy-recipe-form__surface" aria-labelledby="recipe-steps-heading">
-        <header><h2 id="recipe-steps-heading">Pasos</h2><p>Describe la preparación en el orden en que debe realizarse.</p></header>
+        <header><h2 id="recipe-steps-heading">Pasos (@Model.Steps.Count)</h2><p>Describe la preparación en el orden en que debe realizarse.</p></header>
         @for (var index = 0; index < Model.Steps.Count; index++)
         {
             var currentIndex = index;
@@ -56,6 +59,9 @@
                            UnitTypes="UnitTypes"
                            Index="currentIndex"
                            Count="Model.Steps.Count"
+                           IsExpanded="@(expandedStepClientId == step.ClientId)"
+                           Edit="() => ExpandStep(step.ClientId)"
+                           Collapse="CollapseStep"
                            MoveUp="() => MoveStep(currentIndex, -1)"
                            MoveDown="() => MoveStep(currentIndex, 1)"
                            Remove="() => RemoveStep(currentIndex)" />
@@ -112,18 +118,29 @@
     [Parameter]
     public EventCallback OnValidSubmit { get; set; }
 
+    private Guid? expandedIngredientClientId;
+    private Guid? expandedStepClientId;
+
     private void AddIngredient()
     {
-        Model.Ingredients.Add(new RecipeIngredientFormModel
+        var ingredient = new RecipeIngredientFormModel
         {
             Order = Model.Ingredients.Count,
-        });
+        };
+        Model.Ingredients.Add(ingredient);
+        expandedIngredientClientId = ingredient.ClientId;
     }
 
     private void RemoveIngredient(int index)
     {
+        var removedClientId = Model.Ingredients[index].ClientId;
         var removedId = Model.Ingredients[index].Id;
         Model.Ingredients.RemoveAt(index);
+        if (expandedIngredientClientId == removedClientId)
+        {
+            expandedIngredientClientId = null;
+        }
+
         foreach (var step in Model.Steps)
         {
             step.RecipeIngredientIds.Remove(removedId);
@@ -131,6 +148,10 @@
 
         Reindex(Model.Ingredients, (item, order) => item.Order = order);
     }
+
+    private void ExpandIngredient(Guid clientId) => expandedIngredientClientId = clientId;
+
+    private void CollapseIngredient() => expandedIngredientClientId = null;
 
     private void MoveIngredient(int index, int offset)
     {
@@ -140,14 +161,26 @@
 
     private void AddStep()
     {
-        Model.Steps.Add(new RecipeStepFormModel { Order = Model.Steps.Count });
+        var step = new RecipeStepFormModel { Order = Model.Steps.Count };
+        Model.Steps.Add(step);
+        expandedStepClientId = step.ClientId;
     }
 
     private void RemoveStep(int index)
     {
+        var removedClientId = Model.Steps[index].ClientId;
         Model.Steps.RemoveAt(index);
+        if (expandedStepClientId == removedClientId)
+        {
+            expandedStepClientId = null;
+        }
+
         Reindex(Model.Steps, (item, order) => item.Order = order);
     }
+
+    private void ExpandStep(Guid clientId) => expandedStepClientId = clientId;
+
+    private void CollapseStep() => expandedStepClientId = null;
 
     private void MoveStep(int index, int offset)
     {

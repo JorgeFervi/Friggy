@@ -2,56 +2,74 @@
 @using Friggy.Application.Catalogs.UnitTypes.Dtos
 @using Friggy.Web.Recipes
 
-<fieldset class="friggy-recipe-step-row" data-testid="step-row">
-    <legend>Paso @(Index + 1)</legend>
+<article class="friggy-recipe-step-row @(IsExpanded ? "friggy-recipe-step-row--expanded" : null)"
+         data-testid="step-row">
+    @if (IsExpanded)
+    {
+        <fieldset class="friggy-recipe-step-row__editor" data-testid="step-editor">
+            <legend>Paso @(Index + 1)</legend>
 
-    <label for="step-description-@Model.ClientId">Descripción</label>
-    <InputTextArea id="@($"step-description-{Model.ClientId}")"
-                   @bind-Value="Model.Description" />
+            <label for="step-description-@Model.ClientId">Descripción</label>
+            <InputTextArea id="@($"step-description-{Model.ClientId}")" @bind-Value="Model.Description" />
 
-    <label for="step-time-@Model.ClientId">Tiempo opcional (minutos)</label>
-    <InputNumber id="@($"step-time-{Model.ClientId}")"
-                 min="0"
-                 @bind-Value="Model.EstimatedMinutes" />
+            <label for="step-time-@Model.ClientId">Tiempo opcional (minutos)</label>
+            <InputNumber id="@($"step-time-{Model.ClientId}")" min="0" @bind-Value="Model.EstimatedMinutes" />
 
-    <fieldset class="friggy-recipe-step-row__ingredients" data-testid="step-ingredients">
-        <legend>Ingredientes utilizados</legend>
-        @if (RecipeIngredients.Count == 0)
-        {
-            <p>Añade ingredientes a la receta para poder asociarlos.</p>
-        }
-        else
-        {
-            @for (var ingredientIndex = 0; ingredientIndex < RecipeIngredients.Count; ingredientIndex++)
-            {
-                var recipeIngredient = RecipeIngredients[ingredientIndex];
-                var checkboxId = $"step-{Model.ClientId}-ingredient-{recipeIngredient.Id}";
-                <label for="@checkboxId">
-                    <input id="@checkboxId"
-                           type="checkbox"
-                           data-recipe-ingredient-id="@recipeIngredient.Id"
-                           checked="@Model.RecipeIngredientIds.Contains(recipeIngredient.Id)"
-                           @onchange="eventArgs => ToggleIngredient(recipeIngredient.Id, eventArgs)" />
-                    Línea @(ingredientIndex + 1): @IngredientLabel(recipeIngredient)
-                </label>
-            }
-        }
-    </fieldset>
+            <fieldset class="friggy-recipe-step-row__ingredients" data-testid="step-ingredients">
+                <legend>Ingredientes</legend>
+                @if (RecipeIngredients.Count == 0)
+                {
+                    <p>Añade ingredientes a la receta para poder asociarlos.</p>
+                }
+                else
+                {
+                    @foreach (var recipeIngredient in RecipeIngredients)
+                    {
+                        var checkboxId = $"step-{Model.ClientId}-ingredient-{recipeIngredient.Id}";
+                        <label for="@checkboxId">
+                            <input id="@checkboxId"
+                                   type="checkbox"
+                                   data-recipe-ingredient-id="@recipeIngredient.Id"
+                                   checked="@Model.RecipeIngredientIds.Contains(recipeIngredient.Id)"
+                                   @onchange="eventArgs => ToggleIngredient(recipeIngredient.Id, eventArgs)" />
+                            @IngredientLabel(recipeIngredient)
+                        </label>
+                    }
+                }
+            </fieldset>
 
-    <div class="friggy-recipe-step-row__actions">
-    <button type="button"
-            aria-label="Mover paso @(Index + 1) arriba"
-            disabled="@(Index == 0)"
-            @onclick="MoveUp">Subir</button>
-    <button type="button"
-            aria-label="Mover paso @(Index + 1) abajo"
-            disabled="@(Index == Count - 1)"
-            @onclick="MoveDown">Bajar</button>
-    <button type="button"
-            aria-label="Eliminar paso @(Index + 1)"
-            @onclick="Remove">Eliminar</button>
-    </div>
-</fieldset>
+            <div class="friggy-recipe-step-row__actions">
+                <button type="button" aria-label="Mover paso @(Index + 1) arriba" disabled="@(Index == 0)" @onclick="MoveUp">Subir</button>
+                <button type="button" aria-label="Mover paso @(Index + 1) abajo" disabled="@(Index == Count - 1)" @onclick="MoveDown">Bajar</button>
+                <button type="button" aria-label="Eliminar paso @(Index + 1)" @onclick="Remove">Eliminar</button>
+                <button type="button" class="friggy-recipe-step-row__done" aria-label="Terminar edición del paso @(Index + 1)" @onclick="Collapse">Listo</button>
+            </div>
+        </fieldset>
+    }
+    else
+    {
+        <button type="button"
+                class="friggy-recipe-step-row__summary"
+                aria-label="Editar paso @(Index + 1)"
+                aria-expanded="false"
+                @onclick="Edit">
+            <span class="friggy-recipe-step-row__position">@(Index + 1)</span>
+            <span class="friggy-recipe-step-row__description">
+                <strong>@StepDescription</strong>
+                @if (Model.EstimatedMinutes.HasValue)
+                {
+                    <span>@Model.EstimatedMinutes.Value min</span>
+                }
+            </span>
+            <span class="friggy-recipe-step-row__edit-text" aria-hidden="true">Editar</span>
+        </button>
+        <div class="friggy-recipe-step-row__compact-actions">
+            <button type="button" aria-label="Mover paso @(Index + 1) arriba" title="Subir" disabled="@(Index == 0)" @onclick="MoveUp">↑</button>
+            <button type="button" aria-label="Mover paso @(Index + 1) abajo" title="Bajar" disabled="@(Index == Count - 1)" @onclick="MoveDown">↓</button>
+            <button type="button" aria-label="Eliminar paso @(Index + 1)" title="Eliminar" @onclick="Remove">×</button>
+        </div>
+    }
+</article>
 
 @code {
     [Parameter, EditorRequired]
@@ -73,6 +91,15 @@
     public int Count { get; set; }
 
     [Parameter]
+    public bool IsExpanded { get; set; }
+
+    [Parameter]
+    public EventCallback Edit { get; set; }
+
+    [Parameter]
+    public EventCallback Collapse { get; set; }
+
+    [Parameter]
     public EventCallback MoveUp { get; set; }
 
     [Parameter]
@@ -80,6 +107,9 @@
 
     [Parameter]
     public EventCallback Remove { get; set; }
+
+    private string StepDescription =>
+        string.IsNullOrWhiteSpace(Model.Description) ? "Paso sin descripción" : Model.Description;
 
     private string IngredientLabel(RecipeIngredientFormModel recipeIngredient)
     {

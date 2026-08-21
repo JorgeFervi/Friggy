@@ -54,6 +54,7 @@ public sealed class RecipeJourneyTests : FriggyPageTest
                 new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
 
             step = Page.Locator("[data-testid='step-row']").First;
+            await step.GetByRole(AriaRole.Button, new() { Name = "Editar paso 1", Exact = true }).ClickAsync();
             await Expect(step.Locator("[data-testid='step-ingredients'] input[type='checkbox']").First)
                 .ToBeCheckedAsync();
 

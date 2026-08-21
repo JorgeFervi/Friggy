@@ -68,6 +68,32 @@ public sealed class RecipeVisualJourneyTests(FullStackFixture fixture) : FriggyP
                 await Page.SetViewportSizeAsync(Mobile.Width, Mobile.Height);
                 await CaptureAsync("recipe-detail-mobile-360x800", visualFailures);
 
+                await Page.GetByRole(AriaRole.Link, new() { Name = "Editar receta", Exact = true }).ClickAsync();
+                await Page.Locator("[data-testid='interactive-ready']").WaitForAsync(
+                    new LocatorWaitForOptions { State = WaitForSelectorState.Attached });
+                for (var index = 2; index <= 8; index++)
+                {
+                    await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir ingrediente", Exact = true }).ClickAsync();
+                    var ingredientRow = Page.Locator("[data-testid='ingredient-row']").Nth(index - 1);
+                    await ingredientRow.GetByLabel("Ingrediente", new() { Exact = true })
+                        .SelectOptionAsync(new SelectOptionValue { Label = ingredientName });
+                    await ingredientRow.GetByLabel("Unidad", new() { Exact = true })
+                        .SelectOptionAsync(new SelectOptionValue { Label = "Gramo (g)" });
+                    await ingredientRow.GetByLabel("Cantidad", new() { Exact = true })
+                        .FillAsync(index.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    await ingredientRow.GetByRole(
+                            AriaRole.Button,
+                            new() { Name = $"Terminar edición del ingrediente {index}", Exact = true })
+                        .ClickAsync();
+                }
+
+                await Page.SetViewportSizeAsync(Desktop.Width, Desktop.Height);
+                await Page.EvaluateAsync("() => window.scrollTo(0, 0)");
+                await CaptureAsync("recipe-edit-eight-ingredients-desktop-1440x1000", visualFailures);
+                await Page.SetViewportSizeAsync(Mobile.Width, Mobile.Height);
+                await Page.EvaluateAsync("() => window.scrollTo(0, 0)");
+                await CaptureAsync("recipe-edit-eight-ingredients-mobile-360x800", visualFailures);
+
                 await NavigateToInteractivePageAsync("/");
                 await CaptureAsync("home-recipes-mobile-360x800", visualFailures);
                 await Page.SetViewportSizeAsync(Desktop.Width, Desktop.Height);

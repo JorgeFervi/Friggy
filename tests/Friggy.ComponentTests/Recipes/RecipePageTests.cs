@@ -206,6 +206,7 @@ public sealed class RecipePageTests : ComponentTest
             Assert.Contains("Vegano", component.Markup, StringComparison.Ordinal);
             Assert.Contains("Comida", component.Markup, StringComparison.Ordinal);
             Assert.Contains("Triturar", component.Markup, StringComparison.Ordinal);
+            Assert.Contains("Ingredientes", component.FindAll("h3").Select(item => item.TextContent.Trim()));
             Assert.Contains(
                 "1,50 Gramo de Tomate",
                 component.Find("[data-testid='step-associated-ingredients']").TextContent,
@@ -330,6 +331,7 @@ public sealed class RecipePageTests : ComponentTest
         Assert.Equal("Gazpacho", component.Find("#recipe-name").GetAttribute("value"));
         Assert.Single(component.FindAll("[data-testid='ingredient-row']"));
         Assert.Single(component.FindAll("[data-testid='step-row']"));
+        component.Find("button[aria-label='Editar paso 1']").Click();
         Assert.True(
             component.Find($"input[data-recipe-ingredient-id='{RecipeIngredientId}']")
                 .HasAttribute("checked"));
