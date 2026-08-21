@@ -47,7 +47,7 @@ public sealed class RecipeJourneyTests : FriggyPageTest
             await Expect(Page.GetByText("Triturar y servir", new() { Exact = false })).ToBeVisibleAsync();
             var associatedIngredients = Page.Locator("[data-testid='step-associated-ingredients']");
             await Expect(associatedIngredients).ToContainTextAsync(ingredientName);
-            await Expect(associatedIngredients).ToContainTextAsync("Gramo (g)");
+            await Expect(associatedIngredients).ToContainTextAsync($"1,50 Gramo de {ingredientName}");
 
             await Page.GetByRole(AriaRole.Link, new() { Name = "Editar receta", Exact = true }).ClickAsync();
             await Page.Locator("[data-testid='interactive-ready']").WaitForAsync(
@@ -75,8 +75,8 @@ public sealed class RecipeJourneyTests : FriggyPageTest
             await Expect(Page.GetByText("Triturar, mezclar y servir", new() { Exact = false }))
                 .ToBeVisibleAsync();
             associatedIngredients = Page.Locator("[data-testid='step-associated-ingredients']");
-            await Expect(associatedIngredients).ToContainTextAsync("Gramo (g)");
-            await Expect(associatedIngredients).ToContainTextAsync("Unidad (ud)");
+            await Expect(associatedIngredients).ToContainTextAsync($"1,50 Gramo de {ingredientName}");
+            await Expect(associatedIngredients).ToContainTextAsync($"2,00 Unidad de {ingredientName}");
 
             await Page.ReloadAsync();
             await Page.Locator("[data-testid='interactive-ready']").WaitForAsync(
@@ -84,8 +84,8 @@ public sealed class RecipeJourneyTests : FriggyPageTest
             await Expect(Page.GetByText("Triturar, mezclar y servir", new() { Exact = false }))
                 .ToBeVisibleAsync();
             associatedIngredients = Page.Locator("[data-testid='step-associated-ingredients']");
-            await Expect(associatedIngredients).ToContainTextAsync("Gramo (g)");
-            await Expect(associatedIngredients).ToContainTextAsync("Unidad (ud)");
+            await Expect(associatedIngredients).ToContainTextAsync($"1,50 Gramo de {ingredientName}");
+            await Expect(associatedIngredients).ToContainTextAsync($"2,00 Unidad de {ingredientName}");
 
             await Page.GetByRole(AriaRole.Navigation, new() { Name = "Principal", Exact = true })
                 .GetByRole(AriaRole.Link, new() { Name = "Recetas", Exact = true })

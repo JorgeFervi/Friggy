@@ -43,9 +43,26 @@ public sealed class RecipeVisualJourneyTests(FullStackFixture fixture) : FriggyP
                 await Page.GetByLabel("Cantidad", new() { Exact = true }).FillAsync("1.5");
                 await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir paso", Exact = true }).ClickAsync();
                 await Page.GetByLabel("Descripción", new() { Exact = true }).FillAsync("Triturar y servir frío");
+                await Page.GetByLabel("Comida", new() { Exact = true }).CheckAsync();
                 await Page.GetByRole(AriaRole.Button, new() { Name = "Guardar receta", Exact = true }).ClickAsync();
                 await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = recipeName, Exact = true })).ToBeVisibleAsync();
                 recipeCreated = true;
+
+                var ingredientsSection = Page.GetByRole(
+                    AriaRole.Region,
+                    new() { Name = "Ingredientes", Exact = true });
+                var stepsSection = Page.GetByRole(
+                    AriaRole.Region,
+                    new() { Name = "Pasos", Exact = true });
+                var ingredientsBox = await ingredientsSection
+                    .GetByRole(AriaRole.Heading, new() { Name = "Ingredientes", Exact = true })
+                    .BoundingBoxAsync();
+                var stepsBox = await stepsSection
+                    .GetByRole(AriaRole.Heading, new() { Name = "Pasos", Exact = true })
+                    .BoundingBoxAsync();
+                Assert.NotNull(ingredientsBox);
+                Assert.NotNull(stepsBox);
+                Assert.InRange(Math.Abs(ingredientsBox.Y - stepsBox.Y), 0, 1);
 
                 await CaptureAsync("recipe-detail-desktop-1440x1000", visualFailures);
                 await Page.SetViewportSizeAsync(Mobile.Width, Mobile.Height);

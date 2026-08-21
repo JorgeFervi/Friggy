@@ -201,14 +201,33 @@ public sealed class RecipePageTests : ComponentTest
         component.WaitForAssertion(() =>
         {
             Assert.Contains("Tomate", component.Markup, StringComparison.Ordinal);
-            Assert.Contains("Gramo (g)", component.Markup, StringComparison.Ordinal);
+            Assert.Contains("Gramo", component.Markup, StringComparison.Ordinal);
+            Assert.DoesNotContain("(g)", component.Markup, StringComparison.Ordinal);
             Assert.Contains("Vegano", component.Markup, StringComparison.Ordinal);
             Assert.Contains("Comida", component.Markup, StringComparison.Ordinal);
             Assert.Contains("Triturar", component.Markup, StringComparison.Ordinal);
             Assert.Contains(
-                "1,5 Gramo (g) de Tomate",
+                "1,50 Gramo de Tomate",
                 component.Find("[data-testid='step-associated-ingredients']").TextContent,
                 StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void RecipeDetails_Classification_RendersImmediatelyBelowTitle()
+    {
+        RegisterApis(new StubRecipesApiClient { Recipe = CompleteRecipe() });
+
+        var component = Render<global::Friggy.Web.Components.Pages.RecipeDetails>(parameters =>
+            parameters.Add(page => page.Id, RecipeId));
+
+        component.WaitForAssertion(() =>
+        {
+            var title = component.Find(".page-header__copy h1");
+            var badges = component.Find(".friggy-recipe-details__badges");
+            Assert.Equal(title.ParentElement, badges.ParentElement);
+            Assert.Equal(badges, title.NextElementSibling);
         });
     }
 
@@ -252,8 +271,10 @@ public sealed class RecipePageTests : ComponentTest
         component.WaitForAssertion(() =>
         {
             var associations = component.Find("[data-testid='step-associated-ingredients']");
-            Assert.Contains("Gramo (g) de Tomate", associations.TextContent, StringComparison.Ordinal);
-            Assert.Contains("Unidad (ud) de Tomate", associations.TextContent, StringComparison.Ordinal);
+            Assert.Contains("1,50 Gramo de Tomate", associations.TextContent, StringComparison.Ordinal);
+            Assert.Contains("2,00 Unidad de Tomate", associations.TextContent, StringComparison.Ordinal);
+            Assert.DoesNotContain("(g)", associations.TextContent, StringComparison.Ordinal);
+            Assert.DoesNotContain("(ud)", associations.TextContent, StringComparison.Ordinal);
         });
     }
 

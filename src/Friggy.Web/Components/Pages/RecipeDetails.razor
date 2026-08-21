@@ -27,74 +27,75 @@ else if (error is not null)
 else if (recipe is not null)
 {
     <div class="friggy-recipe-details">
-    <PageHeader Title="@recipe.Name" Eyebrow="Recetario" Description="@($"Tiempo estimado: {recipe.EstimatedMinutes} minutos")">
-        <Breadcrumb><a href="recipes">Recetas</a><span aria-hidden="true"> / </span><span>@recipe.Name</span></Breadcrumb>
-        <Actions><a class="friggy-recipe-details__edit" href="recipes/@recipe.Id/edit">Editar receta</a></Actions>
-    </PageHeader>
-
-    <div class="friggy-recipe-details__columns">
-    <PageSection Heading="Ingredientes" Description="Todo lo necesario antes de empezar.">
-        <ul class="friggy-recipe-details__ingredients">
-            @foreach (var item in recipe.Ingredients.OrderBy(item => item.Order))
-            {
-                <li @key="item.Id">@RecipeIngredientLabel(item)</li>
-            }
-        </ul>
-    </PageSection>
-
-    <PageSection Heading="Pasos" Description="Sigue el orden para completar la preparación.">
-    <ol class="friggy-recipe-details__steps">
-        @foreach (var step in recipe.Steps.OrderBy(item => item.Order))
-        {
-            var associatedIngredients = recipe.Ingredients
-                .Where(item => step.RecipeIngredientIds.Contains(item.Id))
-                .OrderBy(item => item.Order)
-                .ToArray();
-            <li @key="step.Id">
-                <div class="friggy-recipe-details__step-copy">
-                <p>@step.Description</p>
-                @if (step.EstimatedMinutes.HasValue)
+        <PageHeader Title="@recipe.Name" Eyebrow="Recetario"
+                    Description="@($"Tiempo estimado: {recipe.EstimatedMinutes} minutos")">
+            <Breadcrumb><a href="recipes">Recetas</a><span aria-hidden="true"> / </span><span>@recipe.Name</span>
+            </Breadcrumb>
+            <Actions><a class="friggy-recipe-details__edit" href="recipes/@recipe.Id/edit">Editar receta</a></Actions>
+            <Metadata>
+                @if (recipe.TagIds.Count > 0 || recipe.MealTypeIds.Count > 0)
                 {
-                    <span class="friggy-recipe-details__step-time">@step.EstimatedMinutes min</span>
-                }
-                </div>
-                <h3>Ingredientes utilizados</h3>
-                @if (associatedIngredients.Length == 0)
-                {
-                    <p data-testid="step-associated-ingredients-empty">
-                        Sin ingredientes asociados.
-                    </p>
-                }
-                else
-                {
-                    <ul data-testid="step-associated-ingredients">
-                        @foreach (var ingredient in associatedIngredients)
+                    <div class="friggy-recipe-details__badges" role="group" aria-label="Clasificación de la receta">
+                        @foreach (var tagId in recipe.TagIds)
                         {
-                            <li @key="ingredient.Id">@RecipeIngredientLabel(ingredient)</li>
+                            <StatusBadge Tone="FriggyTone.Info">@TagName(tagId)</StatusBadge>
                         }
-                    </ul>
+                        @foreach (var mealTypeId in recipe.MealTypeIds)
+                        {
+                            <StatusBadge Tone="FriggyTone.Neutral">@MealTypeName(mealTypeId)</StatusBadge>
+                        }
+                    </div>
                 }
-            </li>
-        }
-    </ol>
-    </PageSection>
-    </div>
+            </Metadata>
+        </PageHeader>
 
-    @if (recipe.TagIds.Count > 0 || recipe.MealTypeIds.Count > 0)
-    {
-        <PageSection Heading="Clasificación">
-            <div class="friggy-recipe-details__badges">
-                @foreach (var tagId in recipe.TagIds)
-                {
-                    <StatusBadge Tone="FriggyTone.Info">@TagName(tagId)</StatusBadge>
-                }
-                @foreach (var mealTypeId in recipe.MealTypeIds)
-                {
-                    <StatusBadge Tone="FriggyTone.Neutral">@MealTypeName(mealTypeId)</StatusBadge>
-                }
-            </div>
-        </PageSection>
-    }
+        <div class="friggy-recipe-details__columns">
+            <PageSection Heading="Ingredientes" Description="Todo lo necesario antes de empezar.">
+                <ul class="friggy-recipe-details__ingredients">
+                    @foreach (var item in recipe.Ingredients.OrderBy(item => item.Order))
+                    {
+                        <li @key="item.Id">@RecipeIngredientLabel(item)</li>
+                    }
+                </ul>
+            </PageSection>
+
+            <PageSection Heading="Pasos" Description="Sigue el orden para completar la preparación.">
+                <ol class="friggy-recipe-details__steps">
+                    @foreach (var step in recipe.Steps.OrderBy(item => item.Order))
+                    {
+                        var associatedIngredients = recipe.Ingredients
+                            .Where(item => step.RecipeIngredientIds.Contains(item.Id))
+                            .OrderBy(item => item.Order)
+                            .ToArray();
+                        <li @key="step.Id">
+                            <div class="friggy-recipe-details__step-copy">
+                                <p>@step.Description</p>
+                                @if (step.EstimatedMinutes.HasValue)
+                                {
+                                    <span class="friggy-recipe-details__step-time">@step.EstimatedMinutes min</span>
+                                }
+                            </div>
+                            <h3>Ingredientes utilizados</h3>
+                            @if (associatedIngredients.Length == 0)
+                            {
+                                <p data-testid="step-associated-ingredients-empty">
+                                    Sin ingredientes asociados.
+                                </p>
+                            }
+                            else
+                            {
+                                <ul data-testid="step-associated-ingredients">
+                                    @foreach (var ingredient in associatedIngredients)
+                                    {
+                                        <li @key="ingredient.Id">@RecipeIngredientLabel(ingredient)</li>
+                                    }
+                                </ul>
+                            }
+                        </li>
+                    }
+                </ol>
+            </PageSection>
+        </div>
     </div>
 }
 
@@ -148,11 +149,11 @@ else if (recipe is not null)
 
     private string UnitName(Guid id) =>
         unitTypes.TryGetValue(id, out var unitType)
-            ? $"{unitType.Name} ({unitType.Symbol})"
+            ? unitType.Name
             : "Unidad desconocida";
 
     private string RecipeIngredientLabel(RecipeIngredientResponse item) =>
-        $"{item.Quantity} {UnitName(item.UnitTypeId)} de {IngredientName(item.IngredientId)}";
+        $"{item.Quantity:N2} {UnitName(item.UnitTypeId)} de {IngredientName(item.IngredientId)}";
 
     private string TagName(Guid id) =>
         tags.TryGetValue(id, out var tag) ? tag.Name : "Etiqueta desconocida";
