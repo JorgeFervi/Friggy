@@ -6,6 +6,7 @@ using Friggy.Application.DailyPlans.Interfaces;
 using Friggy.Application.DailyPlanTemplates.Interfaces;
 using Friggy.Application.Inventory.Interfaces;
 using Friggy.Application.Recipes.Interfaces;
+using Friggy.Application.ShoppingLists.Interfaces;
 using Friggy.Infrastructure.Persistence;
 using Friggy.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -70,6 +71,7 @@ public static class DependencyInjection
         services.AddScoped<IInventoryLotRepository, InventoryLotRepository>();
         services.AddScoped<IInventoryReferenceRepository, InventoryReferenceRepository>();
         services.AddScoped<IInventoryUnitOfWork, InventoryUnitOfWork>();
+        services.AddScoped<IShoppingListReadRepository, ShoppingListReadRepository>();
 
         return services;
     }

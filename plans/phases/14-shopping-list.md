@@ -1,6 +1,6 @@
 # Fase 14 — Lista de la compra calculada
 
-- **Estado:** Planificada
+- **Estado:** En curso
 - **Estimación:** 3–5 días
 - **Dependencias:** [Fase 12](../completed/phases/12-daily-planning.md); puede ejecutarse independientemente de la Fase 13
 - **Guía ejecutable:** [Implementación de la fase 14](../implementation/14-shopping-list-implementation.md)

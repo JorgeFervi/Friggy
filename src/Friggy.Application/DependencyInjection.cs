@@ -6,6 +6,7 @@ using Friggy.Application.DailyPlans.Services;
 using Friggy.Application.DailyPlanTemplates.Services;
 using Friggy.Application.Inventory.Services;
 using Friggy.Application.Recipes.Services;
+using Friggy.Application.ShoppingLists.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Friggy.Application;
@@ -40,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<DailyPlanTemplateService>();
         services.AddScoped<InventoryLotService>();
         services.AddScoped<DailyPlanInventoryService>();
+        services.AddScoped<ShoppingListService>();
         services.AddSingleton(TimeProvider.System);
 
         return services;

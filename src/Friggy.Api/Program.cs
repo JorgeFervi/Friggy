@@ -26,6 +26,7 @@ app.MapMealTypeEndpoints();
 app.MapRecipeEndpoints();
 app.MapDailyPlanEndpoints();
 app.MapDailyPlanTemplateEndpoints();
+app.MapShoppingListEndpoints();
 app.MapInventoryEndpoints();
 
 app.Run();
