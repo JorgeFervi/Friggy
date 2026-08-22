@@ -1,19 +1,19 @@
+using Friggy.Application.DailyPlans.Dtos;
+using Friggy.Application.DailyPlans.Interfaces;
 using Friggy.Application.Inventory.Dtos;
 using Friggy.Application.Inventory.Exceptions;
 using Friggy.Application.Inventory.Interfaces;
 using Friggy.Application.Inventory.Services;
 using Friggy.Application.Recipes.Dtos;
 using Friggy.Application.Recipes.Interfaces;
-using Friggy.Application.WeeklyPlans.Dtos;
-using Friggy.Application.WeeklyPlans.Interfaces;
 using Friggy.Domain.Catalogs;
+using Friggy.Domain.DailyPlans;
 using Friggy.Domain.Inventory;
 using Friggy.Domain.Recipes;
-using Friggy.Domain.WeeklyPlans;
 
 namespace Friggy.Application.Tests.Inventory;
 
-public sealed class WeeklyPlanInventoryServiceTests
+public sealed class DailyPlanInventoryServiceTests
 {
     private static readonly DateTimeOffset Now =
         new(2026, 8, 12, 12, 0, 0, TimeSpan.Zero);
@@ -31,7 +31,7 @@ public sealed class WeeklyPlanInventoryServiceTests
         scenario.AddLot(100m, new DateOnly(2026, 8, 11));
 
         var result = await scenario.Service.GetRequirementsAsync(
-            scenario.Plan.Id,
+            scenario.Plan.Date,
             TestContext.Current.CancellationToken);
 
         var requirement = Assert.Single(result);
@@ -51,7 +51,7 @@ public sealed class WeeklyPlanInventoryServiceTests
             1);
 
         var beforeAssociations = await scenario.Service.GetRequirementsAsync(
-            scenario.Plan.Id,
+            scenario.Plan.Date,
             TestContext.Current.CancellationToken);
 
         var step = Assert.Single(scenario.Recipe.Steps);
@@ -61,7 +61,7 @@ public sealed class WeeklyPlanInventoryServiceTests
         scenario.Recipe.AssignIngredientToStep(step.Id, secondLine.Id);
 
         var afterAssociations = await scenario.Service.GetRequirementsAsync(
-            scenario.Plan.Id,
+            scenario.Plan.Date,
             TestContext.Current.CancellationToken);
 
         Assert.Equal(beforeAssociations.ToArray(), afterAssociations.ToArray());
@@ -77,7 +77,7 @@ public sealed class WeeklyPlanInventoryServiceTests
         scenario.AddLot(0.5m, new DateOnly(2026, 8, 13));
 
         var result = await scenario.Service.GetRequirementsAsync(
-            scenario.Plan.Id,
+            scenario.Plan.Date,
             TestContext.Current.CancellationToken);
 
         var requirement = Assert.Single(result);
@@ -93,7 +93,7 @@ public sealed class WeeklyPlanInventoryServiceTests
         await cancellation.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            scenario.Service.GetRequirementsAsync(scenario.Plan.Id, cancellation.Token));
+            scenario.Service.GetRequirementsAsync(scenario.Plan.Date, cancellation.Token));
     }
 
     [Fact]
@@ -104,8 +104,7 @@ public sealed class WeeklyPlanInventoryServiceTests
         var second = scenario.AddLot(2m, new DateOnly(2026, 8, 20));
 
         var result = await scenario.Service.CompleteMealAsync(
-            scenario.Plan.Id,
-            scenario.Plan.StartDate,
+            scenario.Plan.Date,
             scenario.MealType.Id,
             new CompleteMealRequest(
                 [new(first.Id, 1m), new(second.Id, 1m)]),
@@ -128,8 +127,7 @@ public sealed class WeeklyPlanInventoryServiceTests
         var lot = scenario.AddLot(0.25m, new DateOnly(2026, 8, 20));
 
         var result = await scenario.Service.CompleteMealAsync(
-            scenario.Plan.Id,
-            scenario.Plan.StartDate,
+            scenario.Plan.Date,
             scenario.MealType.Id,
             new CompleteMealRequest([new(lot.Id, 1m)]),
             TestContext.Current.CancellationToken);
@@ -149,15 +147,13 @@ public sealed class WeeklyPlanInventoryServiceTests
         var lot = scenario.AddLot(2m, new DateOnly(2026, 8, 20));
         var request = new CompleteMealRequest([new(lot.Id, 1m)]);
         await scenario.Service.CompleteMealAsync(
-            scenario.Plan.Id,
-            scenario.Plan.StartDate,
+            scenario.Plan.Date,
             scenario.MealType.Id,
             request,
             TestContext.Current.CancellationToken);
 
         var retry = await scenario.Service.CompleteMealAsync(
-            scenario.Plan.Id,
-            scenario.Plan.StartDate,
+            scenario.Plan.Date,
             scenario.MealType.Id,
             request,
             TestContext.Current.CancellationToken);
@@ -184,8 +180,7 @@ public sealed class WeeklyPlanInventoryServiceTests
 
         var exception = await Assert.ThrowsAsync<InventoryConflictException>(() =>
             scenario.Service.CompleteMealAsync(
-                scenario.Plan.Id,
-                scenario.Plan.StartDate,
+                scenario.Plan.Date,
                 scenario.MealType.Id,
                 new CompleteMealRequest([new(lot.Id, 1m)]),
                 TestContext.Current.CancellationToken));
@@ -201,13 +196,12 @@ public sealed class WeeklyPlanInventoryServiceTests
     {
         var scenario = Scenario.Create(servings: 2);
         scenario.Plan.SkipEntry(
-            scenario.Plan.StartDate,
             scenario.MealType.Id,
             "Comida fuera de casa",
             null);
 
         var result = await scenario.Service.GetRequirementsAsync(
-            scenario.Plan.Id,
+            scenario.Plan.Date,
             TestContext.Current.CancellationToken);
 
         Assert.Empty(result);
@@ -219,15 +213,13 @@ public sealed class WeeklyPlanInventoryServiceTests
         var scenario = Scenario.Create(servings: 1);
         var lot = scenario.AddLot(2m, new DateOnly(2026, 8, 20));
         scenario.Plan.SkipEntry(
-            scenario.Plan.StartDate,
             scenario.MealType.Id,
             "Sin hambre",
             "Fruta");
 
         var exception = await Assert.ThrowsAsync<InventoryConflictException>(() =>
             scenario.Service.CompleteMealAsync(
-                scenario.Plan.Id,
-                scenario.Plan.StartDate,
+                scenario.Plan.Date,
                 scenario.MealType.Id,
                 new CompleteMealRequest([new(lot.Id, 1m)]),
                 TestContext.Current.CancellationToken));
@@ -249,13 +241,13 @@ public sealed class WeeklyPlanInventoryServiceTests
             Recipe = Recipe.Create("Ensalada", TimeSpan.Zero);
             Recipe.AddIngredient(Ingredient.Id, Unit.Id, 1m, 0);
             Recipe.AddStep("Servir", null, 0);
-            Plan = WeeklyPlan.Create("Semana", new DateOnly(2026, 8, 10), null);
-            Plan.Assign(Plan.StartDate, MealType.Id, Recipe.Id, servings);
+            Plan = DailyPlan.Create(new DateOnly(2026, 8, 10));
+            Plan.Assign(MealType.Id, Recipe.Id, servings);
             Plans.Items.Add(Plan);
             Recipes.Items.Add(Recipe);
             References.Ingredients.Add(Ingredient);
             References.UnitTypes.Add(Unit);
-            Service = new WeeklyPlanInventoryService(
+            Service = new DailyPlanInventoryService(
                 Plans,
                 Recipes,
                 Lots,
@@ -264,7 +256,7 @@ public sealed class WeeklyPlanInventoryServiceTests
                 new FixedTimeProvider(Now));
         }
 
-        public FakeWeeklyPlanRepository Plans { get; } = new();
+        public FakeDailyPlanRepository Plans { get; } = new();
         public FakeRecipeRepository Recipes { get; } = new();
         public FakeInventoryLotRepository Lots { get; } = new();
         public FakeInventoryReferenceRepository References { get; } = new();
@@ -273,8 +265,8 @@ public sealed class WeeklyPlanInventoryServiceTests
         public UnitType Unit { get; }
         public MealType MealType { get; }
         public Recipe Recipe { get; }
-        public WeeklyPlan Plan { get; }
-        public WeeklyPlanInventoryService Service { get; }
+        public DailyPlan Plan { get; }
+        public DailyPlanInventoryService Service { get; }
 
         public static Scenario Create(int servings) => new(servings);
 
@@ -330,22 +322,24 @@ public sealed class WeeklyPlanInventoryServiceTests
             Task.FromResult<IReadOnlyList<UnitType>>(UnitTypes);
     }
 
-    private sealed class FakeWeeklyPlanRepository : IWeeklyPlanRepository
+    private sealed class FakeDailyPlanRepository : IDailyPlanRepository
     {
-        public List<WeeklyPlan> Items { get; } = [];
-        public Task<IReadOnlyList<WeeklyPlan>> ListAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<WeeklyPlan>>(Items);
-        public Task<IReadOnlyList<WeeklyPlanListItemResponse>> ListSummariesAsync(CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<WeeklyPlan?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        public List<DailyPlan> Items { get; } = [];
+        public Task<IReadOnlyList<DailyPlan>> ListBetweenAsync(
+            DateOnly startDate,
+            DateOnly endDate,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<DailyPlan>>(
+                Items.Where(item => item.Date >= startDate && item.Date <= endDate).ToArray());
+        public Task<DailyPlan?> GetByDateAsync(
+            DateOnly plannedDate,
+            CancellationToken cancellationToken) =>
             cancellationToken.IsCancellationRequested
-                ? Task.FromCanceled<WeeklyPlan?>(cancellationToken)
-                : Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
-        public Task<bool> ExistsByNormalizedNameAsync(string normalizedName, Guid? excludingId, CancellationToken cancellationToken) =>
+                ? Task.FromCanceled<DailyPlan?>(cancellationToken)
+                : Task.FromResult(Items.SingleOrDefault(item => item.Date == plannedDate));
+        public Task AddAsync(DailyPlan plan, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
-        public Task AddAsync(WeeklyPlan plan, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public void Remove(WeeklyPlan plan) => throw new NotSupportedException();
+        public void Remove(DailyPlan plan) => throw new NotSupportedException();
         public Task SaveChangesAsync(CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }

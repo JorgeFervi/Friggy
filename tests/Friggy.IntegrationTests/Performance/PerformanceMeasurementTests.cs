@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.Text.Json;
 using Friggy.Application.Inventory.Services;
 using Friggy.Domain.Catalogs;
+using Friggy.Domain.DailyPlans;
 using Friggy.Domain.Inventory;
 using Friggy.Domain.Recipes;
-using Friggy.Domain.WeeklyPlans;
 using Friggy.Infrastructure.Persistence;
 using Friggy.Infrastructure.Persistence.Repositories;
 using Friggy.IntegrationTests.Testing;
@@ -78,52 +78,33 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             Assert.All(recipeSummaryMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 
-        var weeklyPlanInterceptor = new SqlCaptureInterceptor();
-        await using (var weeklyPlanContext = CreateMeasuredContext(weeklyPlanInterceptor))
+        var dailyPlanInterceptor = new SqlCaptureInterceptor();
+        await using (var dailyPlanContext = CreateMeasuredContext(dailyPlanInterceptor))
         {
             var stopwatch = Stopwatch.StartNew();
-            var plans = await new WeeklyPlanRepository(weeklyPlanContext)
-                .ListAsync(TestContext.Current.CancellationToken);
+            var plans = await new DailyPlanRepository(dailyPlanContext)
+                .ListBetweenAsync(
+                    scenario.FirstPlanDate,
+                    scenario.FirstPlanDate.AddDays(scenario.DailyPlanCount - 1),
+                    TestContext.Current.CancellationToken);
             stopwatch.Stop();
 
-            var weeklyPlanMeasurement = new ScenarioMeasurement(
-                "weekly-plans.list.aggregate-baseline",
+            var dailyPlanMeasurement = new ScenarioMeasurement(
+                "daily-plans.list.range",
                 stopwatch.Elapsed.TotalMilliseconds,
                 plans.Count,
                 plans.Sum(plan => plan.Entries.Count),
-                weeklyPlanInterceptor.Commands.Count,
-                weeklyPlanInterceptor.Commands);
-            measurements.Add(weeklyPlanMeasurement);
+                dailyPlanInterceptor.Commands.Count,
+                dailyPlanInterceptor.Commands);
+            measurements.Add(dailyPlanMeasurement);
 
-            Assert.Equal(scenario.WeeklyPlanCount, weeklyPlanMeasurement.RootRows);
-            Assert.Equal(scenario.WeeklyPlanCount * scenario.EntriesPerPlan, weeklyPlanMeasurement.RelatedRows);
-            Assert.Equal(3, weeklyPlanMeasurement.CommandCount);
-            Assert.All(weeklyPlanMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
-        }
-
-        var weeklyPlanSummaryInterceptor = new SqlCaptureInterceptor();
-        await using (var weeklyPlanSummaryContext = CreateMeasuredContext(weeklyPlanSummaryInterceptor))
-        {
-            var stopwatch = Stopwatch.StartNew();
-            var plans = await new WeeklyPlanRepository(weeklyPlanSummaryContext)
-                .ListSummariesAsync(TestContext.Current.CancellationToken);
-            stopwatch.Stop();
-
-            var weeklyPlanSummaryMeasurement = new ScenarioMeasurement(
-                "weekly-plans.list.summary",
-                stopwatch.Elapsed.TotalMilliseconds,
-                plans.Count,
-                0,
-                weeklyPlanSummaryInterceptor.Commands.Count,
-                weeklyPlanSummaryInterceptor.Commands);
-            measurements.Add(weeklyPlanSummaryMeasurement);
-
-            Assert.Equal(scenario.WeeklyPlanCount, weeklyPlanSummaryMeasurement.RootRows);
-            var firstPlan = plans.Single(item => item.Name == "Medición plan 00");
-            Assert.Equal(new DateOnly(2026, 8, 9), firstPlan.EndDate);
-            Assert.Equal(0, weeklyPlanSummaryMeasurement.RelatedRows);
-            Assert.Equal(1, weeklyPlanSummaryMeasurement.CommandCount);
-            Assert.All(weeklyPlanSummaryMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
+            Assert.Equal(scenario.DailyPlanCount, dailyPlanMeasurement.RootRows);
+            Assert.Equal(
+                scenario.DailyPlanCount * scenario.EntriesPerPlan,
+                dailyPlanMeasurement.RelatedRows);
+            Assert.Equal(3, dailyPlanMeasurement.CommandCount);
+            Assert.All(dailyPlanMeasurement.Sql, sql =>
+                Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 
         var inventoryInterceptor = new SqlCaptureInterceptor();
@@ -156,20 +137,20 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
         await using (var requirementsContext = CreateMeasuredContext(requirementsInterceptor))
         {
             var stopwatch = Stopwatch.StartNew();
-            var requirements = await new WeeklyPlanInventoryService(
-                    new WeeklyPlanRepository(requirementsContext),
+            var requirements = await new DailyPlanInventoryService(
+                    new DailyPlanRepository(requirementsContext),
                     new RecipeRepository(requirementsContext),
                     new InventoryLotRepository(requirementsContext),
                     new InventoryReferenceRepository(requirementsContext),
                     new InventoryUnitOfWork(requirementsContext),
                     new FixedTimeProvider())
                 .GetRequirementsAsync(
-                    scenario.WeeklyPlanId,
+                    scenario.FirstPlanDate,
                     TestContext.Current.CancellationToken);
             stopwatch.Stop();
 
             var requirementsMeasurement = new ScenarioMeasurement(
-                "weekly-plans.inventory-requirements",
+                "daily-plans.inventory-requirements",
                 stopwatch.Elapsed.TotalMilliseconds,
                 requirements.Count,
                 0,
@@ -198,7 +179,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
                     dataset = new
                     {
                         scenario.RecipeCount,
-                        scenario.WeeklyPlanCount,
+                        scenario.DailyPlanCount,
                         scenario.EntriesPerPlan,
                         scenario.InventoryLotCount,
                     },
@@ -223,7 +204,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             .Select(index => MealType.Create($"Medición comida {index}", index - 1))
             .ToArray();
         var recipes = new List<Recipe>();
-        var plans = new List<WeeklyPlan>();
+        var plans = new List<DailyPlan>();
 
         for (var recipeIndex = 0; recipeIndex < 12; recipeIndex++)
         {
@@ -264,23 +245,17 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             recipes.Add(recipe);
         }
 
-        const int weeklyPlanCount = 8;
-        const int entriesPerPlan = 21;
-        for (var planIndex = 0; planIndex < weeklyPlanCount; planIndex++)
+        const int dailyPlanCount = 8;
+        const int entriesPerPlan = 3;
+        var firstPlanDate = new DateOnly(2026, 8, 3);
+        for (var planIndex = 0; planIndex < dailyPlanCount; planIndex++)
         {
-            var plan = WeeklyPlan.Create(
-                $"Medición plan {planIndex:00}",
-                new DateOnly(2026, 8, 3).AddDays(planIndex * 7),
-                "Escenario de rendimiento");
-            foreach (var date in plan.Dates)
+            var plan = DailyPlan.Create(firstPlanDate.AddDays(planIndex));
+            foreach (var mealType in mealTypes)
             {
-                foreach (var mealType in mealTypes)
-                {
-                    plan.Assign(
-                        date,
-                        mealType.Id,
-                        recipes[(planIndex + date.DayNumber + mealType.Order) % recipes.Count].Id);
-                }
+                plan.Assign(
+                    mealType.Id,
+                    recipes[(planIndex + mealType.Order) % recipes.Count].Id);
             }
 
             plans.Add(plan);
@@ -309,7 +284,7 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             plans.Count,
             entriesPerPlan,
             lots.Length,
-            plans[0].Id);
+            firstPlanDate);
     }
 
     private FriggyDbContext CreateMeasuredContext(SqlCaptureInterceptor interceptor)
@@ -365,10 +340,10 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
 
     private sealed record MeasurementScenario(
         int RecipeCount,
-        int WeeklyPlanCount,
+        int DailyPlanCount,
         int EntriesPerPlan,
         int InventoryLotCount,
-        Guid WeeklyPlanId);
+        DateOnly FirstPlanDate);
 
     private sealed class FixedTimeProvider : TimeProvider
     {

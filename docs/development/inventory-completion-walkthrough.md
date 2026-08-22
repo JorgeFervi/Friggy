@@ -7,16 +7,16 @@
 La finalización une planificación e inventario y debe conservar atomicidad, idempotencia y trazabilidad.
 
 ```text
-WeeklyPlanDetails -> InventoryApiClient -> InventoryEndpoints
-    -> WeeklyPlanInventoryService
-    -> WeeklyPlan + InventoryLot
+DailyPlanDetails -> DailyPlanApiClient -> DailyPlanEndpoints
+    -> DailyPlanInventoryService
+    -> DailyPlan + InventoryLot
     -> IInventoryUnitOfWork -> FriggyDbContext -> PostgreSQL
 ```
 
-## Calcular necesidades de ingredientes de un plan semanal
+## Calcular necesidades de ingredientes de un plan diario
 
-1. `WeeklyPlanDetails` solicita `GET /api/weekly-plans/{planId}/inventory-requirements`.
-2. `WeeklyPlanInventoryService.GetRequirementsAsync` carga el plan y las recetas asignadas.
+1. `DailyPlanDetails` solicita `GET /api/daily-plans/{date}/inventory-requirements`.
+2. `DailyPlanInventoryService.GetRequirementsAsync` carga el plan de la fecha y las recetas asignadas.
 3. Application agrupa líneas por `(IngredientId, UnitTypeId)` y multiplica por raciones.
 4. Los lotes con cantidad positiva y caducidad igual o posterior a hoy se agrupan por la misma clave.
 5. El servicio devuelve la cantidad de ingredientes requerido, disponible y faltante sin persistir el cálculo.
@@ -24,11 +24,11 @@ WeeklyPlanDetails -> InventoryApiClient -> InventoryEndpoints
 ## Completar una comida
 
 1. Se presentan los lotes inventariados compatibles y se construye `CompleteMealRequest` con cantidades explícitas.
-2. `InventoryApiClient` envía `POST /api/weekly-plans/{planId}/days/{date}/meal-types/{mealTypeId}/complete`.
+2. `DailyPlanApiClient` envía `POST /api/daily-plans/{date}/meal-types/{mealTypeId}/complete`.
 3. `Application` Carga la receta, calcula sus necesidades y obtiene los lotes compatibles para su uso y actualización con la receta seleccionada.
 5. Valida cantidades positivas, existencia, caducidad, coincidencia exacta de ingrediente/unidad y que no se supere lo requerido.
 6. Cada `InventoryLot.Consume` crea un movimiento enlazado con la entrada de la receta finalizada y evita cantidad negativa.
-7. `WeeklyPlan.CompleteEntry` cierra la asignación.
+7. `DailyPlan.CompleteEntry` cierra la asignación.
 8. `InventoryUnitOfWork.SaveChangesAsync` persiste movimientos, lotes y plan con el mismo `DbContext`; un conflicto de concurrencia se traduce a un error recuperable.
 9. La respuesta indica consumos aplicados y necesidades restantes.
 

@@ -7,7 +7,7 @@
 
 ## Contexto
 
-Friggy necesita una base de datos relacional para almacenar recetas, ingredientes, etiquetas, unidades y planes semanales. Aunque el MVP se ejecutará localmente, el modelo contiene relaciones de muchos a muchos y debe poder evolucionar hacia una aplicación desplegada sin sustituir el motor de persistencia.
+Friggy necesita una base de datos relacional para almacenar recetas, ingredientes, etiquetas, unidades y planes diarios. Aunque el MVP se ejecutará localmente, el modelo contiene relaciones de muchos a muchos y debe poder evolucionar hacia una aplicación desplegada sin sustituir el motor de persistencia.
 
 El entorno local también debe ser reproducible y sencillo de preparar durante el plazo de desarrollo.
 

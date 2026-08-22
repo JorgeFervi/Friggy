@@ -23,14 +23,14 @@ OpenAPI es la fuente de los cuerpos y respuestas actuales. Este documento resume
 | Etiquetas | `/api/recipe-tags` | CRUD |
 | Tipos de comida | `/api/meal-types` | CRUD |
 | Recetas | `/api/recipes` | CRUD con ingredientes, pasos y clasificación |
-| Planes | `/api/weekly-plans` | CRUD, asignaciones, huecos, orden, hora y omisión |
+| Planes | `/api/daily-plans` | Consulta por intervalo y CRUD por fecha, asignaciones, huecos, orden, hora y omisión |
 | Inventario | `/api/inventory-lots` | Lista, detalle, alta, consumo, descarte, ajuste y caducidad |
 
 Las operaciones relacionadas con inventario de un plan son:
 
 ```text
-GET  /api/weekly-plans/{planId}/inventory-requirements
-POST /api/weekly-plans/{planId}/days/{date}/meal-types/{mealTypeId}/complete
+GET  /api/daily-plans/{date}/inventory-requirements
+POST /api/daily-plans/{date}/meal-types/{mealTypeId}/complete
 ```
 
 ## Configuración web

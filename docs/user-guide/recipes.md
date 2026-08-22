@@ -33,4 +33,4 @@ Una receta asignada a otros datos puede estar protegida frente al borrado. Si la
 
 ## Relación con inventario y planificación
 
-Las cantidades se multiplican por las raciones asignadas en los planes semanales. Para que un lote cubra una necesidad, ingrediente y unidad deben coincidir exactamente; Friggy no convierte unidades.
+Las cantidades se multiplican por los comensales asignados en los planes diarios. Para que un lote cubra una necesidad, ingrediente y unidad deben coincidir exactamente; Friggy no convierte unidades.

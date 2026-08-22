@@ -59,6 +59,6 @@ public sealed class FriggyApiRegistrationTests
         Assert.IsType<CatalogApiClient>(host.Services.GetRequiredService<IRecipeTagsApiClient>());
         Assert.IsType<CatalogApiClient>(host.Services.GetRequiredService<IMealTypesApiClient>());
         Assert.IsType<RecipeApiClient>(host.Services.GetRequiredService<IRecipesApiClient>());
-        Assert.IsType<WeeklyPlanApiClient>(host.Services.GetRequiredService<IWeeklyPlansApiClient>());
+        Assert.IsType<DailyPlanApiClient>(host.Services.GetRequiredService<IDailyPlansApiClient>());
     }
 }

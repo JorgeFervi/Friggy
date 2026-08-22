@@ -1,6 +1,6 @@
 # Friggy
 
-Friggy es una aplicación web para organizar la cocina doméstica desde un único lugar: recetas, planificación semanal e inventario de alimentos. Su objetivo es facilitar la decisión de qué cocinar, aprovechar lo que ya hay disponible y reducir el desperdicio.
+Friggy es una aplicación web para organizar la cocina doméstica desde un único lugar: recetas, planificación diaria e inventario de alimentos. Su objetivo es facilitar la decisión de qué cocinar, aprovechar lo que ya hay disponible y reducir el desperdicio.
 
 Actualmente se ejecuta de forma local y está orientada a un único usuario. La autenticación, la inteligencia artificial, la información nutricional, las imágenes, las conversiones entre unidades, la lista de la compra y el despliegue público no forman parte de la versión actual.
 
@@ -9,11 +9,11 @@ Actualmente se ejecuta de forma local y está orientada a un único usuario. La 
 * Administrar ingredientes, unidades, etiquetas y tipos de comida.
 * Crear, editar y eliminar recetas con cantidades, unidades, etiquetas, tipos de comida y pasos ordenados.
 * Asociar las líneas de ingredientes de una receta con los pasos en los que se utilizan.
-* Crear planes semanales y configurar, para cada día, sus comidas, orden, horario, receta y número de raciones.
+* Crear un plan independiente por fecha y configurar sus comidas, orden, horario, receta y comensales.
 * Omitir una comida con un motivo o completarla seleccionando los lotes que se consumen del inventario.
 * Registrar existencias por lotes con cantidad, unidad y fecha de caducidad.
 * Consumir, descartar o ajustar un lote, corregir su caducidad y consultar su historial de movimientos.
-* Comparar las necesidades de un plan semanal con el inventario disponible y detectar cantidades faltantes.
+* Comparar las necesidades de un día planificado con el inventario disponible y detectar cantidades faltantes.
 
 Consulta [Funcionalidades actuales](docs/product/current-capabilities.md) para conocer el alcance y las limitaciones con más detalle.
 
@@ -67,7 +67,7 @@ El recorrido recomendado es:
 1. Revisar los catálogos iniciales de ingredientes, unidades, etiquetas y tipos de comida.
 2. Crear una receta con sus ingredientes y pasos.
 3. Registrar las existencias disponibles en el inventario.
-4. Crear un plan semanal y asignar recetas y raciones.
+4. Crear planes para las fechas necesarias y asignar recetas y comensales.
 5. Revisar las cantidades faltantes y completar una comida seleccionando los lotes consumidos.
 
 Sigue el tutorial [Tu primera semana con Friggy](docs/user-guide/first-steps.md) para completar el recorrido desde la interfaz.

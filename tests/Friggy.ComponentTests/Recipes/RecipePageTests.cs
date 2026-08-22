@@ -180,7 +180,7 @@ public sealed class RecipePageTests : ComponentTest
         component.WaitForAssertion(() =>
         {
             Assert.Contains(
-                "asignada a un plan semanal",
+                "asignada a un plan diario",
                 component.Find("[role='alert']").TextContent,
                 StringComparison.Ordinal);
             Assert.Contains("Gazpacho", component.Markup, StringComparison.Ordinal);

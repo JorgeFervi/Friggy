@@ -7,7 +7,7 @@ Este índice separa la documentación vigente de los documentos históricos. Si 
 * [Instalación y primer arranque](user-guide/getting-started.md)
 * [Tu primera semana con Friggy](user-guide/first-steps.md)
 * [Recetas y catálogos](user-guide/recipes.md)
-* [Planificación semanal](user-guide/weekly-planning.md)
+* [Planificación diaria](user-guide/daily-planning.md)
 * [Inventario doméstico](user-guide/inventory.md)
 * [Persistencia y gestión de datos](user-guide/data-management.md)
 * [Resolución de problemas](user-guide/troubleshooting.md)
@@ -27,7 +27,7 @@ Este índice separa la documentación vigente de los documentos históricos. Si 
 * [API HTTP](development/api.md)
 * [Interfaz, accesibilidad y regresión visual](development/ui-guidelines.md)
 * [Recorrido técnico de creación de una receta](development/recipe-creation-walkthrough.md)
-* [Recorrido técnico de planificación semanal](development/weekly-planning-walkthrough.md)
+* [Recorrido técnico de planificación diaria](development/daily-planning-walkthrough.md)
 * [Recorrido técnico de finalización con inventario](development/inventory-completion-walkthrough.md)
 
 ## Decisiones arquitectónicas

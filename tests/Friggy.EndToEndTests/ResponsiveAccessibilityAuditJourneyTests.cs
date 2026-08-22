@@ -11,7 +11,7 @@ public sealed class ResponsiveAccessibilityAuditJourneyTests : FriggyPageTest
         "/",
         "/recipes",
         "/recipes/new",
-        "/weekly-plans",
+        "/daily-plans",
         "/inventory",
         "/ingredients",
         "/unit-types",

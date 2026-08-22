@@ -13,14 +13,17 @@ public sealed class ApiProblemExceptionTests : ComponentTest
         cancellation.Cancel();
         IIngredientsApiClient catalog = new CatalogApiClient(ApiClient);
         var recipes = new RecipeApiClient(ApiClient);
-        var weeklyPlans = new WeeklyPlanApiClient(ApiClient);
+        var dailyPlans = new DailyPlanApiClient(ApiClient);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => catalog.ListAsync(cancellation.Token));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => recipes.ListAsync(cancellation.Token));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => weeklyPlans.ListAsync(cancellation.Token));
+            () => dailyPlans.ListAsync(
+                new DateOnly(2026, 8, 4),
+                new DateOnly(2026, 8, 4),
+                cancellation.Token));
 
         Assert.Empty(Api.Requests);
     }
@@ -35,16 +38,19 @@ public sealed class ApiProblemExceptionTests : ComponentTest
         Api.RespondWith(HttpStatusCode.Conflict, "application/problem+json", problem);
         IIngredientsApiClient catalog = new CatalogApiClient(ApiClient);
         var recipes = new RecipeApiClient(ApiClient);
-        var weeklyPlans = new WeeklyPlanApiClient(ApiClient);
+        var dailyPlans = new DailyPlanApiClient(ApiClient);
 
         var catalogException = await Assert.ThrowsAsync<ApiProblemException>(
             () => catalog.ListAsync(TestContext.Current.CancellationToken));
         var recipeException = await Assert.ThrowsAsync<ApiProblemException>(
             () => recipes.ListAsync(TestContext.Current.CancellationToken));
-        var weeklyPlanException = await Assert.ThrowsAsync<ApiProblemException>(
-            () => weeklyPlans.ListAsync(TestContext.Current.CancellationToken));
+        var dailyPlanException = await Assert.ThrowsAsync<ApiProblemException>(
+            () => dailyPlans.ListAsync(
+                new DateOnly(2026, 8, 4),
+                new DateOnly(2026, 8, 4),
+                TestContext.Current.CancellationToken));
 
-        Assert.All([catalogException, recipeException, weeklyPlanException], exception =>
+        Assert.All([catalogException, recipeException, dailyPlanException], exception =>
         {
             Assert.Equal(HttpStatusCode.Conflict, exception.StatusCode);
             Assert.Equal("El nombre ya existe.", exception.Message);

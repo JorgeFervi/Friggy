@@ -1,6 +1,7 @@
 # Implementación ejecutable — Fase 12
 
 - **Fase relacionada:** [Fase 12 — Planificación diaria](../phases/12-daily-planning.md)
+- **Estado de ejecución:** implementación funcional completada; validación PostgreSQL/E2E y nuevos baselines visuales pendientes de un entorno Docker disponible
 - **Skills aplicables:** `architecture`, `modern-csharp`, `entity-framework-core`, `minimal-apis`, `blazor`, `run-tests`
 - **Plataforma de pruebas detectada:** .NET SDK 10.0.302, Microsoft Testing Platform y xUnit v3
 

@@ -1,6 +1,6 @@
+using Friggy.Application.DailyPlans.Interfaces;
 using Friggy.Application.Inventory.Interfaces;
 using Friggy.Application.Recipes.Interfaces;
-using Friggy.Application.WeeklyPlans.Interfaces;
 using Friggy.Infrastructure;
 using Friggy.Infrastructure.Persistence;
 using Friggy.Infrastructure.Persistence.Repositories;
@@ -54,13 +54,13 @@ public sealed class PersistenceConfigurationTests
                 service.Lifetime == ServiceLifetime.Scoped);
         Assert.Contains(
             services,
-            service => service.ServiceType == typeof(IWeeklyPlanRepository) &&
-                service.ImplementationType == typeof(WeeklyPlanRepository) &&
+            service => service.ServiceType == typeof(IDailyPlanRepository) &&
+                service.ImplementationType == typeof(DailyPlanRepository) &&
                 service.Lifetime == ServiceLifetime.Scoped);
         Assert.Contains(
             services,
-            service => service.ServiceType == typeof(IWeeklyPlanReferenceRepository) &&
-                service.ImplementationType == typeof(WeeklyPlanReferenceRepository) &&
+            service => service.ServiceType == typeof(IDailyPlanReferenceRepository) &&
+                service.ImplementationType == typeof(DailyPlanReferenceRepository) &&
                 service.Lifetime == ServiceLifetime.Scoped);
         Assert.Contains(
             services,
@@ -121,6 +121,10 @@ public sealed class PersistenceConfigurationTests
                 StringComparison.Ordinal),
             migration => Assert.EndsWith(
                 "_DeferRecipeIngredientOrderUniqueness",
+                migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_ReplaceWeeklyPlansWithDailyPlans",
                 migration,
                 StringComparison.Ordinal));
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", context.Database.ProviderName);

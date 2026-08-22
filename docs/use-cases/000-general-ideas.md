@@ -11,7 +11,7 @@ Este documento conserva las ideas que dieron origen a Friggy. No define el alcan
 | Registrar recetas con ingredientes, cantidades, unidades, tiempo y clasificación | Implementado |
 | Registrar y ordenar pasos de preparación | Implementado |
 | Asociar ingredientes concretos a cada paso | Implementado |
-| Crear un plan semanal y asignar comidas por día | Implementado |
+| Crear planes por fecha y asignar sus comidas | Implementado |
 | Configurar tipos de comida, raciones y horarios | Implementado |
 | Registrar existencias por lotes, cantidad y caducidad | Implementado |
 | Conservar el historial de movimientos de inventario | Implementado |

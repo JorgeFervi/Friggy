@@ -2,8 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Friggy.Application.Catalogs.Ingredients.Dtos;
+using Friggy.Application.DailyPlans.Dtos;
 using Friggy.Application.Recipes.Dtos;
-using Friggy.Application.WeeklyPlans.Dtos;
 using Friggy.Domain.Catalogs;
 using Friggy.IntegrationTests.Testing;
 using Microsoft.AspNetCore.Mvc;
@@ -247,7 +247,7 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
 
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task DeleteRecipe_AssignedToWeeklyPlan_ReturnsSafeConflictAndPreservesData()
+    public async Task DeleteRecipe_AssignedToDailyPlan_ReturnsSafeConflictAndPreservesData()
     {
         await using var factory = new FriggyApiFactory(Database.ConnectionString);
         using var client = factory.CreateClient();
@@ -260,16 +260,16 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
             TestContext.Current.CancellationToken);
         Assert.NotNull(recipe);
 
-        var weekStart = new DateOnly(2026, 8, 3);
+        var plannedDate = new DateOnly(2026, 8, 4);
         using var createPlanResponse = await client.PostAsJsonAsync(
-            "/api/weekly-plans",
-            new CreateWeeklyPlanRequest("Semana 32", weekStart, null),
+            "/api/daily-plans",
+            new CreateDailyPlanRequest(plannedDate),
             TestContext.Current.CancellationToken);
-        var plan = await createPlanResponse.Content.ReadFromJsonAsync<WeeklyPlanResponse>(
+        var plan = await createPlanResponse.Content.ReadFromJsonAsync<DailyPlanResponse>(
             TestContext.Current.CancellationToken);
         Assert.NotNull(plan);
         using var assignResponse = await client.PutAsJsonAsync(
-            $"/api/weekly-plans/{plan.Id}/days/{weekStart:yyyy-MM-dd}/meal-types/{CatalogSeedIds.Lunch}",
+            $"/api/daily-plans/{plannedDate:yyyy-MM-dd}/meal-types/{CatalogSeedIds.Lunch}",
             new SetMealPlanEntryRequest(recipe.Id),
             TestContext.Current.CancellationToken);
         assignResponse.EnsureSuccessStatusCode();
@@ -282,8 +282,8 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
         using var recipeResponse = await client.GetAsync(
             $"/api/recipes/{recipe.Id}",
             TestContext.Current.CancellationToken);
-        var preservedPlan = await client.GetFromJsonAsync<WeeklyPlanResponse>(
-            $"/api/weekly-plans/{plan.Id}",
+        var preservedPlan = await client.GetFromJsonAsync<DailyPlanResponse>(
+            $"/api/daily-plans/{plannedDate:yyyy-MM-dd}",
             TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
@@ -294,7 +294,7 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
             problem.Detail);
         Assert.Equal(HttpStatusCode.OK, recipeResponse.StatusCode);
         Assert.Contains(
-            preservedPlan?.Days.SelectMany(day => day.Meals) ?? [],
+            preservedPlan?.Meals ?? [],
             meal => meal.RecipeId == recipe.Id);
     }
 

@@ -2,7 +2,7 @@
 
 > **Estado:** vigente · **Última revisión:** 20 de agosto de 2026
 
-Friggy es una aplicación web local y monousuario para organizar recetas, planes semanales e inventario doméstico. Web y API se ejecutan como procesos separados y los datos se conservan en PostgreSQL.
+Friggy es una aplicación web local y monousuario para organizar recetas, planes diarios e inventario doméstico. Web y API se ejecutan como procesos separados y los datos se conservan en PostgreSQL.
 
 ## Catálogos
 
@@ -27,9 +27,9 @@ Cada receta puede incluir:
 
 Las recetas se pueden crear, editar, consultar y eliminar desde la interfaz.
 
-## Planificación semanal
+## Planificación diaria
 
-Un plan comienza en lunes, abarca siete días y contiene nombre y descripción opcional. En cada día se puede:
+Cada plan corresponde a una fecha y solo puede existir uno por día. Se puede consultar y planificar cualquier intervalo sin exigir semanas completas. En cada plan se puede:
 
 * Añadir, retirar y reordenar huecos de comida.
 * Asignar o retirar una receta.

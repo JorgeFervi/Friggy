@@ -61,5 +61,5 @@ El código se organiza alrededor de tres capacidades principales:
 Los recorridos técnicos muestran estas reglas sobre casos completos:
 
 * [Creación de una receta](recipe-creation-walkthrough.md)
-* [Planificación semanal](weekly-planning-walkthrough.md)
+* [Planificación diaria](daily-planning-walkthrough.md)
 * [Finalización con inventario](inventory-completion-walkthrough.md)

@@ -38,16 +38,16 @@ Ve a **Inventario** y añade un lote:
 
 Friggy compara ingrediente y unidad de forma exacta. Un lote en kilogramos no cubre automáticamente una necesidad expresada en gramos.
 
-## 4. Crear el plan semanal
+## 4. Crear planes diarios
 
-Ve a **Planes semanales**:
+Ve a **Planes diarios**:
 
-1. Escribe un nombre y selecciona un lunes como fecha de inicio.
-2. Crea el plan y abre su detalle.
+1. Selecciona el intervalo que quieres consultar.
+2. Pulsa **Planificar este día** en una fecha sin plan.
 3. En uno de los huecos de comida, selecciona `Arroz sencillo`.
-4. Mantén una ración y, opcionalmente, define una hora prevista.
+4. Mantén un comensal y, opcionalmente, define una hora prevista.
 
-Puedes añadir, retirar y reordenar tipos de comida de cada día. Si defines una hora, Friggy muestra cuándo debería comenzar la preparación según el tiempo estimado de la receta.
+Puedes añadir, retirar y reordenar tipos de comida de ese día. Si defines una hora, Friggy muestra cuándo debería comenzar la preparación según el tiempo estimado de la receta.
 
 ## 5. Revisar necesidades
 
@@ -74,5 +74,5 @@ Si una comida no se realiza, usa **Omitir esta comida** e indica un motivo. Una 
 ## Siguientes lecturas
 
 * [Recetas y catálogos](recipes.md)
-* [Planificación semanal](weekly-planning.md)
+* [Planificación diaria](daily-planning.md)
 * [Inventario doméstico](inventory.md)

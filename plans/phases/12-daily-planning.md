@@ -1,6 +1,6 @@
 # Fase 12 — Planificación diaria
 
-- **Estado:** Planificada
+- **Estado:** En implementación
 - **Estimación:** 5–7 días
 - **Dependencias:** Fases 1–11 completadas
 - **Guía ejecutable:** [Implementación de la fase 12](../implementation/12-daily-planning-implementation.md)

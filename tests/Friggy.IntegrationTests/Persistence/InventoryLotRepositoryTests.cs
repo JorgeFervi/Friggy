@@ -2,9 +2,9 @@ using Friggy.Application.Inventory.Dtos;
 using Friggy.Application.Inventory.Exceptions;
 using Friggy.Application.Inventory.Services;
 using Friggy.Domain.Catalogs;
+using Friggy.Domain.DailyPlans;
 using Friggy.Domain.Inventory;
 using Friggy.Domain.Recipes;
-using Friggy.Domain.WeeklyPlans;
 using Friggy.Infrastructure.Persistence;
 using Friggy.Infrastructure.Persistence.Repositories;
 using Friggy.IntegrationTests.Testing;
@@ -95,8 +95,8 @@ public sealed class InventoryLotRepositoryTests(PostgreSqlDatabaseFixture databa
         var recipe = Recipe.Create("Ensalada", TimeSpan.Zero);
         recipe.AddIngredient(ingredient.Id, CatalogSeedIds.Kilogram, 1m, 0);
         recipe.AddStep("Servir", null, 0);
-        var plan = WeeklyPlan.Create("Semana", new DateOnly(2026, 8, 10), null);
-        plan.Assign(plan.StartDate, CatalogSeedIds.Lunch, recipe.Id, 2);
+        var plan = DailyPlan.Create(new DateOnly(2026, 8, 10));
+        plan.Assign(CatalogSeedIds.Lunch, recipe.Id, 2);
         var lot = InventoryLot.Create(
             ingredient.Id,
             CatalogSeedIds.Kilogram,
@@ -111,8 +111,8 @@ public sealed class InventoryLotRepositoryTests(PostgreSqlDatabaseFixture databa
 
         await using (var context = Database.CreateDbContext())
         {
-            var service = new WeeklyPlanInventoryService(
-                new WeeklyPlanRepository(context),
+            var service = new DailyPlanInventoryService(
+                new DailyPlanRepository(context),
                 new RecipeRepository(context),
                 new InventoryLotRepository(context),
                 new InventoryReferenceRepository(context),
@@ -120,8 +120,7 @@ public sealed class InventoryLotRepositoryTests(PostgreSqlDatabaseFixture databa
                 new FixedTimeProvider(OccurredAt.AddHours(1)));
 
             await service.CompleteMealAsync(
-                plan.Id,
-                plan.StartDate,
+                plan.Date,
                 CatalogSeedIds.Lunch,
                 new CompleteMealRequest([new(lot.Id, 2m)]),
                 TestContext.Current.CancellationToken);
@@ -147,8 +146,8 @@ public sealed class InventoryLotRepositoryTests(PostgreSqlDatabaseFixture databa
         var recipe = Recipe.Create("Crema", TimeSpan.Zero);
         recipe.AddIngredient(ingredient.Id, CatalogSeedIds.Kilogram, 1m, 0);
         recipe.AddStep("Servir", null, 0);
-        var plan = WeeklyPlan.Create("Semana concurrente", new DateOnly(2026, 8, 10), null);
-        plan.Assign(plan.StartDate, CatalogSeedIds.Lunch, recipe.Id);
+        var plan = DailyPlan.Create(new DateOnly(2026, 8, 10));
+        plan.Assign(CatalogSeedIds.Lunch, recipe.Id);
         var firstLot = InventoryLot.Create(
             ingredient.Id,
             CatalogSeedIds.Kilogram,
@@ -169,11 +168,11 @@ public sealed class InventoryLotRepositoryTests(PostgreSqlDatabaseFixture databa
 
         await using var firstContext = Database.CreateDbContext();
         await using var secondContext = Database.CreateDbContext();
-        var firstPlan = await new WeeklyPlanRepository(firstContext).GetByIdAsync(
-            plan.Id,
+        var firstPlan = await new DailyPlanRepository(firstContext).GetByDateAsync(
+            plan.Date,
             TestContext.Current.CancellationToken);
-        var secondPlan = await new WeeklyPlanRepository(secondContext).GetByIdAsync(
-            plan.Id,
+        var secondPlan = await new DailyPlanRepository(secondContext).GetByDateAsync(
+            plan.Date,
             TestContext.Current.CancellationToken);
         var firstLots = await new InventoryLotRepository(firstContext).ListForUpdateAsync(
             TestContext.Current.CancellationToken);
@@ -187,8 +186,8 @@ public sealed class InventoryLotRepositoryTests(PostgreSqlDatabaseFixture databa
             .Consume(1m, OccurredAt.AddMinutes(1), firstEntry.Id);
         secondLots.Single(item => item.Id == secondLot.Id)
             .Consume(1m, OccurredAt.AddMinutes(2), secondEntry.Id);
-        firstPlan.CompleteEntry(plan.StartDate, CatalogSeedIds.Lunch, OccurredAt.AddMinutes(1));
-        secondPlan.CompleteEntry(plan.StartDate, CatalogSeedIds.Lunch, OccurredAt.AddMinutes(2));
+        firstPlan.CompleteEntry(CatalogSeedIds.Lunch, OccurredAt.AddMinutes(1));
+        secondPlan.CompleteEntry(CatalogSeedIds.Lunch, OccurredAt.AddMinutes(2));
 
         await new InventoryUnitOfWork(firstContext).SaveChangesAsync(
             TestContext.Current.CancellationToken);

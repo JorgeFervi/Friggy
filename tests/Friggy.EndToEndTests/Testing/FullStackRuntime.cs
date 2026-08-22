@@ -78,7 +78,7 @@ internal sealed class FullStackRuntime : IFullStackRuntime
 
         await using var context = new FriggyDbContext(options);
         await context.Database.ExecuteSqlRawAsync(
-            "TRUNCATE TABLE weekly_plans CASCADE;",
+            "TRUNCATE TABLE daily_plans CASCADE;",
             cancellationToken);
     }
 
