@@ -10,15 +10,19 @@
     <PageSection Heading="Intervalo a calcular">
         <EditForm Model="range" OnValidSubmit="CalculateAsync" FormName="shopping-list-range" class="friggy-shopping-list__form">
             <div class="friggy-shopping-list__fields">
-                <label for="shopping-list-from">Fecha inicial<InputDate id="shopping-list-from" @bind-Value="range.From" /></label>
-                <label for="shopping-list-to">Fecha final<InputDate id="shopping-list-to" @bind-Value="range.To" /></label>
+                <FormField Context="field" Label="Fecha inicial" ControlId="shopping-list-from" Error="@dateRangeError">
+                    <InputDate id="@field.ControlId" @bind-Value="range.From" aria-describedby="@field.DescribedBy" aria-invalid="@field.Invalid" />
+                </FormField>
+                <FormField Context="field" Label="Fecha final" ControlId="shopping-list-to" Error="@dateRangeError">
+                    <InputDate id="@field.ControlId" @bind-Value="range.To" aria-describedby="@field.DescribedBy" aria-invalid="@field.Invalid" />
+                </FormField>
             </div>
             <FormActions><FriggyButton Type="FriggyButtonType.Submit" Busy="loading" BusyLabel="Calculando lista">Calcular lista</FriggyButton></FormActions>
         </EditForm>
     </PageSection>
     @if (error is not null)
     {
-        <FeedbackPanel Title="No pudimos calcular la lista" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+        <FeedbackPanel Title="@error.Title" Tone="FriggyTone.Danger"><ChildContent>@error.Message</ChildContent><Actions>@if (error.CanRetry) { <FriggyButton Variant="FriggyButtonVariant.Secondary" OnClick="CalculateAsync">Reintentar</FriggyButton> }</Actions></FeedbackPanel>
     }
     else if (loading)
     {
@@ -31,14 +35,17 @@
             {
                 <FeedbackPanel Title="No hay comidas planificadas" Tone="FriggyTone.Neutral">No hay ingredientes que comprar para este intervalo.</FeedbackPanel>
             }
+            else if (VisibleItems.Count == 0)
+            {
+                <FeedbackPanel Title="Todo está cubierto" Tone="FriggyTone.Success">El inventario actual cubre todas las cantidades del intervalo.</FeedbackPanel>
+            }
             else
             {
-                <div class="friggy-shopping-list__table"><table><thead><tr><th>Ingrediente</th><th>Unidad</th><th>Necesario</th><th>Disponible</th><th>A comprar</th></tr></thead><tbody>
-                @foreach (var item in result.Items)
-                {
-                    <tr @key="(item.IngredientId, item.UnitTypeId)"><td>@item.IngredientName</td><td>@item.UnitTypeName (@item.UnitSymbol)</td><td>@item.RequiredQuantity @item.UnitSymbol</td><td>@item.AvailableQuantity @item.UnitSymbol</td><td>@if (item.QuantityToBuy == 0) { <StatusBadge Tone="FriggyTone.Success">Cubierto</StatusBadge> } else { <strong>@item.QuantityToBuy @item.UnitSymbol</strong> }</td></tr>
-                }
-                </tbody></table></div>
+                <div class="friggy-shopping-list__filter" role="group" aria-label="Filtrar comparación">
+                    <FriggyButton Variant="@(showPendingOnly ? FriggyButtonVariant.Primary : FriggyButtonVariant.Secondary)" OnClick="() => showPendingOnly = true">Pendientes</FriggyButton>
+                    <FriggyButton Variant="@(!showPendingOnly ? FriggyButtonVariant.Primary : FriggyButtonVariant.Secondary)" OnClick="() => showPendingOnly = false">Todos</FriggyButton>
+                </div>
+                <QuantityComparison Items="VisibleItems" />
             }
         </PageSection>
     }
@@ -49,13 +56,20 @@
     private readonly RangeDraft range = new() { From = DateOnly.FromDateTime(DateTime.Today), To = DateOnly.FromDateTime(DateTime.Today.AddDays(6)) };
     private ShoppingListResponse? result;
     private bool loading;
-    private string? error;
+    private UserFacingError? error;
+    private string? dateRangeError;
+    private bool showPendingOnly = true;
+    private IReadOnlyList<QuantityComparisonItem> VisibleItems => result?.Items
+        .Where(item => !showPendingOnly || item.QuantityToBuy > 0)
+        .Select(item => new QuantityComparisonItem(item.IngredientName, item.UnitSymbol, item.RequiredQuantity, item.AvailableQuantity, item.QuantityToBuy))
+        .ToArray() ?? [];
     private async Task CalculateAsync()
     {
-        if (range.From > range.To) { error = "La fecha inicial no puede ser posterior a la final."; return; }
+        if (range.From > range.To) { dateRangeError = "La fecha inicial no puede ser posterior a la final."; return; }
+        dateRangeError = null;
         loading = true; error = null;
         try { result = await Api.GetAsync(range.From, range.To, cancellation.Token); }
-        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { error = exception.Message; }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { error = UserFacingError.From(exception, "calcular la lista"); }
         finally { loading = false; }
     }
     public void Dispose() { cancellation.Cancel(); cancellation.Dispose(); GC.SuppressFinalize(this); }

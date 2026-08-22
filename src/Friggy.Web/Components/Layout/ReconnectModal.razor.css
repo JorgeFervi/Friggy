@@ -85,15 +85,15 @@
 .friggy-reconnect__eyebrow {
     color: var(--color-primary-700);
     font-size: var(--font-size-small);
-    font-weight: var(--font-weight-semibold);
+    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
 #components-reconnect-title {
-    color: var(--color-heading);
+    color: var(--color-text);
     font-family: var(--font-family-display);
-    font-size: var(--font-size-heading-2);
+    font-size: var(--font-size-section-title);
     margin: 0;
     text-align: center;
 }

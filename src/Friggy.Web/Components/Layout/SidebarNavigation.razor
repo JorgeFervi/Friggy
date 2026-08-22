@@ -6,10 +6,15 @@
     <nav class="friggy-sidebar-navigation__primary" aria-label="Principal">
         <NavLink href="/" Match="NavLinkMatch.All" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Home" /><span>Inicio</span></NavLink>
         <NavLink href="/recipes" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Recipe" /><span>Recetas</span></NavLink>
+        <section class="friggy-sidebar-navigation__planning" aria-labelledby="@PlanningHeadingId">
+            <h2 id="@PlanningHeadingId">Planificación</h2>
+            <nav aria-label="Planificación">
         <NavLink href="/daily-plans" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Calendar" /><span>Planes diarios</span></NavLink>
         <NavLink href="/daily-plan-templates" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Calendar" /><span>Plantillas</span></NavLink>
-        <NavLink href="/inventory" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Inventory" /><span>Inventario</span></NavLink>
         <NavLink href="/shopping-list" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Inventory" /><span>Lista de la compra</span></NavLink>
+            </nav>
+        </section>
+        <NavLink href="/inventory" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Inventory" /><span>Inventario</span></NavLink>
     </nav>
     <section class="friggy-sidebar-navigation__catalogs" data-navigation-group="catalogs" aria-labelledby="@CatalogsHeadingId">
         <h2 id="@CatalogsHeadingId">Catálogos</h2>
@@ -26,5 +31,6 @@
     [Parameter] public EventCallback OnNavigate { get; set; }
     [Parameter, EditorRequired] public string IdSuffix { get; set; } = string.Empty;
     private string CatalogsHeadingId => $"catalogs-heading-{IdSuffix}";
+    private string PlanningHeadingId => $"planning-heading-{IdSuffix}";
     private Task HandleNavigateAsync() => OnNavigate.InvokeAsync();
 }

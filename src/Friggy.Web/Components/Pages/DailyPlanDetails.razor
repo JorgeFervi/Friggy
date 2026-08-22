@@ -49,44 +49,11 @@ else
         {
             <FeedbackPanel Title="Sin ingredientes requeridos" Tone="FriggyTone.Neutral">Asigna recetas para calcular las necesidades.</FeedbackPanel>
         }
-        else
-        {
-            <table><thead><tr><th>Ingrediente</th><th>Requerido</th><th>Disponible</th><th>Faltante</th></tr></thead><tbody>
-            @foreach (var item in requirements)
-            {
-                <tr @key="@($"{item.IngredientId:N}-{item.UnitTypeId:N}")"><td>@item.IngredientName</td><td>@item.RequiredQuantity @item.UnitSymbol</td><td>@item.AvailableQuantity @item.UnitSymbol</td><td>@item.MissingQuantity @item.UnitSymbol</td></tr>
-            }
-            </tbody></table>
-        }
+        else { <QuantityComparison Items="RequirementItems" MissingLabel="Faltante" /> }
     </PageSection>
     @if (mealToComplete is not null)
     {
-        <div class="friggy-completion-dialog__backdrop">
-            <section class="friggy-completion-dialog" role="dialog" aria-modal="true"
-                     aria-labelledby="completion-title" aria-describedby="completion-description">
-                <header><p>Actualizar inventario</p><h2 id="completion-title">Selecciona los consumos</h2></header>
-                <p id="completion-description">Indica cuánto quieres consumir de cada lote compatible.</p>
-                @if (completionLots.Count == 0)
-                {
-                    <FeedbackPanel Title="No hay lotes compatibles" Tone="FriggyTone.Warning">Puedes completar la comida dejando toda la necesidad pendiente.</FeedbackPanel>
-                }
-                <div class="friggy-completion-dialog__lots">
-                    @foreach (var candidate in completionLots)
-                    {
-                        <div @key="candidate.Id">
-                            <label for="@($"completion-{candidate.Id:N}")">@candidate.IngredientName: @candidate.Quantity @candidate.UnitSymbol, caduca @candidate.ExpirationDate.ToString("dd/MM/yyyy")</label>
-                            <input id="@($"completion-{candidate.Id:N}")" type="number" min="0" step="0.001"
-                                   value="@completionQuantities.GetValueOrDefault(candidate.Id)"
-                                   @onchange="args => SetCompletionQuantity(candidate.Id, args)" />
-                        </div>
-                    }
-                </div>
-                <FormActions>
-                    <FriggyButton Variant="FriggyButtonVariant.Secondary" Disabled="saving" OnClick="CancelCompletion">Cancelar</FriggyButton>
-                    <FriggyButton Busy="saving" BusyLabel="Finalizando" OnClick="ConfirmCompletionAsync">Confirmar finalización</FriggyButton>
-                </FormActions>
-            </section>
-        </div>
+        <MealCompletionDialog IsOpen="true" Busy="saving" Lots="completionLots" Quantities="completionQuantities" QuantityChanged="SetCompletionQuantity" OnCancel="CancelCompletion" OnConfirm="ConfirmCompletionAsync" />
     }
 }
 
@@ -104,6 +71,10 @@ else
     private string? status;
     private bool loading = true;
     private bool saving;
+
+    private IReadOnlyList<QuantityComparisonItem> RequirementItems => requirements
+        .Select(item => new QuantityComparisonItem(item.IngredientName, item.UnitSymbol, item.RequiredQuantity, item.AvailableQuantity, item.MissingQuantity))
+        .ToArray();
 
     [Parameter] public string Date { get; set; } = string.Empty;
 
@@ -206,8 +177,8 @@ else
         }
     }
 
-    private void SetCompletionQuantity(Guid lotId, ChangeEventArgs args) =>
-        completionQuantities[lotId] = decimal.TryParse(args.Value?.ToString(), out var value)
+    private void SetCompletionQuantity(MealCompletionQuantityChange change) =>
+        completionQuantities[change.LotId] = decimal.TryParse(change.Value, NumberStyles.Number, CultureInfo.GetCultureInfo("es-ES"), out var value)
             ? value
             : 0m;
 

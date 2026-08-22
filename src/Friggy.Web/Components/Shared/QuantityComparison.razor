@@ -1,0 +1,33 @@
+@namespace Friggy.Web.Components.Shared
+
+<div class="quantity-comparison" data-testid="quantity-comparison">
+    <div class="quantity-comparison__desktop">
+        <table>
+            <thead><tr><th>Ingrediente</th><th>Unidad</th><th>Necesario</th><th>Disponible</th><th>@MissingLabel</th></tr></thead>
+            <tbody>
+                @foreach (var item in Items)
+                {
+                    <tr @key="(item.Ingredient, item.Unit)">
+                        <th scope="row">@item.Ingredient</th><td>@item.Unit</td>
+                        <td>@QuantityFormatter.Format(item.Required) @item.Unit</td>
+                        <td>@QuantityFormatter.Format(item.Available) @item.Unit</td>
+                        <td>@if (item.Missing == 0) { <StatusBadge Tone="FriggyTone.Success">Cubierto</StatusBadge> } else { <strong>@QuantityFormatter.Format(item.Missing) @item.Unit</strong> }</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="quantity-comparison__mobile" role="list">
+        @foreach (var item in Items)
+        {
+            <article role="listitem" class="quantity-comparison__card" @key="(item.Ingredient, item.Unit)">
+                <h3>@item.Ingredient</h3><dl><div><dt>Unidad</dt><dd>@item.Unit</dd></div><div><dt>Necesario</dt><dd>@QuantityFormatter.Format(item.Required) @item.Unit</dd></div><div><dt>Disponible</dt><dd>@QuantityFormatter.Format(item.Available) @item.Unit</dd></div><div><dt>@MissingLabel</dt><dd>@if (item.Missing == 0) { <StatusBadge Tone="FriggyTone.Success">Cubierto</StatusBadge> } else { <strong>@QuantityFormatter.Format(item.Missing) @item.Unit</strong> }</dd></div></dl>
+            </article>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<QuantityComparisonItem> Items { get; set; } = [];
+    [Parameter] public string MissingLabel { get; set; } = "A comprar";
+}

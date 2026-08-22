@@ -7,17 +7,6 @@
     padding: var(--space-3) var(--space-4);
 }
 
-.friggy-completion-dialog__backdrop {
-    align-items: center;
-    background: var(--color-overlay);
-    display: flex;
-    inset: 0;
-    justify-content: center;
-    padding: var(--space-4);
-    position: fixed;
-    z-index: var(--layer-toast);
-}
-
 .friggy-completion-dialog {
     background: var(--color-surface);
     border: 0;
@@ -31,6 +20,7 @@
     padding: var(--space-6);
     width: 100%;
 }
+.friggy-completion-dialog::backdrop { background: var(--color-overlay); }
 
 .friggy-completion-dialog header p {
     color: var(--color-primary-600);
@@ -52,7 +42,6 @@
 .friggy-completion-dialog__lots label { font-weight: 600; }
 
 @media (max-width: 47.99rem) {
-    .friggy-completion-dialog__backdrop { align-items: end; padding: 0; }
     .friggy-completion-dialog {
         border-radius: var(--radius-large) var(--radius-large) 0 0;
         max-height: 92dvh;

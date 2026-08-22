@@ -1,0 +1,50 @@
+@using Friggy.Application.Inventory.Dtos
+@inject IJSRuntime JavaScript
+@implements IAsyncDisposable
+
+<dialog @ref="dialog" class="friggy-completion-dialog" aria-labelledby="@TitleId" aria-describedby="@DescriptionId" @oncancel="CancelAsync">
+    <header><p>Actualizar inventario</p><h2 id="@TitleId">Selecciona los consumos</h2></header>
+    <p id="@DescriptionId">Indica cuánto quieres consumir de cada lote compatible.</p>
+    @if (Lots.Count == 0)
+    {
+        <FeedbackPanel Title="No hay lotes compatibles" Tone="FriggyTone.Warning">Puedes completar la comida dejando toda la necesidad pendiente.</FeedbackPanel>
+    }
+    <div class="friggy-completion-dialog__lots">
+        @foreach (var candidate in Lots)
+        {
+            <FormField Label="@($"{candidate.IngredientName}: {QuantityFormatter.Format(candidate.Quantity)} {candidate.UnitSymbol}, caduca {candidate.ExpirationDate:dd/MM/yyyy}")" ControlId="@($"completion-{candidate.Id:N}")">
+                <input id="@context.ControlId" type="number" min="0" step="0.001" value="@Quantities.GetValueOrDefault(candidate.Id)" disabled="@Busy" @onchange="args => QuantityChanged.InvokeAsync(new MealCompletionQuantityChange(candidate.Id, args.Value?.ToString()))" />
+            </FormField>
+        }
+    </div>
+    <FormActions>
+        <FriggyButton Variant="FriggyButtonVariant.Secondary" Disabled="Busy" OnClick="CancelAsync">Cancelar</FriggyButton>
+        <FriggyButton Busy="Busy" BusyLabel="Finalizando" OnClick="ConfirmAsync">Confirmar finalización</FriggyButton>
+    </FormActions>
+</dialog>
+
+@code {
+    private readonly string dialogId = $"completion-{Guid.NewGuid():N}";
+    private ElementReference dialog;
+    private IJSObjectReference? module;
+    private bool shown;
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public IReadOnlyList<InventoryLotResponse> Lots { get; set; } = [];
+    [Parameter] public IReadOnlyDictionary<Guid, decimal> Quantities { get; set; } = new Dictionary<Guid, decimal>();
+    [Parameter] public EventCallback<MealCompletionQuantityChange> QuantityChanged { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    private string TitleId => $"{dialogId}-title";
+    private string DescriptionId => $"{dialogId}-description";
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/confirm-dialog.js");
+        if (module is null) return;
+        if (IsOpen && !shown) { await module.InvokeVoidAsync("show", dialog); shown = true; }
+        else if (!IsOpen && shown) { await module.InvokeVoidAsync("close", dialog); shown = false; }
+    }
+    private Task ConfirmAsync() => Busy ? Task.CompletedTask : OnConfirm.InvokeAsync();
+    private Task CancelAsync() => Busy ? Task.CompletedTask : OnCancel.InvokeAsync();
+    public async ValueTask DisposeAsync() { if (module is not null) await module.DisposeAsync(); GC.SuppressFinalize(this); }
+}
