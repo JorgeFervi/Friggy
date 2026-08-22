@@ -84,6 +84,27 @@ public sealed class VisualFoundationContractTests
 
     [Fact]
     [Trait("Category", "Tooling")]
+    public void TextInputStyles_AllTextualVariants_PreserveEditingAffordanceAndClearFocus()
+    {
+        var baseStyles = ReadRepositoryFile("src", "Friggy.Web", "wwwroot", "css", "base.css");
+
+        Assert.Contains("input:is(", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("[type=\"text\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("[type=\"search\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("[type=\"email\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("[type=\"url\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("[type=\"tel\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("[type=\"password\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("caret-color: var(--color-primary-700)", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("cursor: text", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("::placeholder", baseStyles, StringComparison.Ordinal);
+        Assert.Contains(":read-only", baseStyles, StringComparison.Ordinal);
+        Assert.Contains(":focus-visible", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("outline: none", baseStyles, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Tooling")]
     public void RuntimeStyles_Always_KeepExternalResourcesAndHexColorsOutOfComponentStyles()
     {
         var webRoot = Path.Combine(RepositoryRoot, "src", "Friggy.Web");

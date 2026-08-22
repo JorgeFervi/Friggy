@@ -77,6 +77,122 @@ textarea {
     font: inherit;
 }
 
+html input:is(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="password"]
+) {
+    background-color: var(--color-surface);
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-medium);
+    caret-color: var(--color-primary-700);
+    color: var(--color-text);
+    cursor: text;
+    min-height: var(--control-min-size);
+    padding: var(--space-2) var(--space-3);
+    transition:
+        background-color var(--motion-fast),
+        border-color var(--motion-fast),
+        box-shadow var(--motion-fast);
+    width: 100%;
+}
+
+html input:is(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="password"]
+)::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.8;
+}
+
+html input:is(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="password"]
+):hover:not(:disabled):not(:read-only) {
+    border-color: var(--color-primary-600);
+}
+
+html input:is(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="password"]
+):focus-visible {
+    background-color: var(--color-surface);
+    border-color: var(--color-primary-600);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 0 0 0.1875rem var(--color-focus);
+    outline: none;
+}
+
+html input:is(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="password"]
+):read-only {
+    background-color: var(--color-surface-muted);
+}
+
+html input:is(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="password"]
+):disabled {
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+html input:is(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="password"]
+):is(.invalid, [aria-invalid="true"]) {
+    border-color: var(--color-danger);
+}
+
+html input:is(
+    :not([type]),
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="url"],
+    [type="tel"],
+    [type="password"]
+):is(.invalid, [aria-invalid="true"]):focus-visible {
+    box-shadow: 0 0 0 0.1875rem var(--color-danger);
+}
+
 select {
     background-color: var(--color-surface);
     border: 0.0625rem solid var(--color-border);
