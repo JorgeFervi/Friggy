@@ -1,5 +1,5 @@
+using Friggy.Domain.DailyPlans;
 using Friggy.Domain.Inventory;
-using Friggy.Domain.WeeklyPlans;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,7 +1,7 @@
 using Friggy.Domain.Catalogs;
+using Friggy.Domain.DailyPlans;
 using Friggy.Domain.Inventory;
 using Friggy.Domain.Recipes;
-using Friggy.Domain.WeeklyPlans;
 using Microsoft.EntityFrameworkCore;
 
 namespace Friggy.Infrastructure.Persistence;
@@ -38,9 +38,9 @@ public sealed class FriggyDbContext(DbContextOptions<FriggyDbContext> options)
     public DbSet<Recipe> Recipes => Set<Recipe>();
 
     /// <summary>
-    /// Conjunto persistido de planes semanales.
+    /// Conjunto persistido de planes diarios.
     /// </summary>
-    public DbSet<WeeklyPlan> WeeklyPlans => Set<WeeklyPlan>();
+    public DbSet<DailyPlan> DailyPlans => Set<DailyPlan>();
 
     /// <summary>
     /// Conjunto persistido de asignaciones de comidas.

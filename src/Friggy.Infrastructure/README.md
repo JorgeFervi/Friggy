@@ -49,7 +49,7 @@ como parte del composition root mediante [DependencyInjection](DependencyInjecti
 | [RecipeTagLinkConfiguration](Persistence/Configurations/RecipeTagLinkConfiguration.cs) | Configuración de la asociación entre recetas y etiquetas. |
 | [RecipeMealTypeLinkConfiguration](Persistence/Configurations/RecipeMealTypeLinkConfiguration.cs) | Configuración de la asociación entre recetas y tipos de comida. |
 | [RecipeStepIngredientLinkConfiguration](Persistence/Configurations/RecipeStepIngredientLinkConfiguration.cs) | Configuración de la asociación entre pasos y líneas de ingrediente. |
-| [WeeklyPlanConfiguration](Persistence/Configurations/WeeklyPlanConfiguration.cs) | Configuración de planes semanales, fechas, descripción y colecciones. |
+| [DailyPlanConfiguration](Persistence/Configurations/DailyPlanConfiguration.cs) | Configuración del agregado diario y de la unicidad de su fecha. |
 | [MealPlanEntryConfiguration](Persistence/Configurations/MealPlanEntryConfiguration.cs) | Configuración de asignaciones de comidas, estados, restricciones y relaciones. |
 | [MealPlanSlotConfiguration](Persistence/Configurations/MealPlanSlotConfiguration.cs) | Configuración de huecos de comida, orden, horario y claves alternativas. |
 | [InventoryLotConfiguration](Persistence/Configurations/InventoryLotConfiguration.cs) | Configuración de lotes de inventario, cantidades, caducidad, concurrencia y movimientos. |
@@ -84,8 +84,8 @@ como parte del composition root mediante [DependencyInjection](DependencyInjecti
 
 | Tipo | Representación |
 |---|---|
-| [WeeklyPlanRepository](Persistence/Repositories/WeeklyPlanRepository.cs) | Implementación EF Core que carga y persiste planes, asignaciones y huecos, incluyendo sus reordenaciones. |
-| [WeeklyPlanReferenceRepository](Persistence/Repositories/WeeklyPlanReferenceRepository.cs) | Implementación EF Core que consulta recetas, tiempos estimados y tipos de comida para los planes. |
+| [DailyPlanRepository](Persistence/Repositories/DailyPlanRepository.cs) | Implementación EF Core que consulta por fecha o intervalo y persiste planes diarios, asignaciones y huecos. |
+| [DailyPlanReferenceRepository](Persistence/Repositories/DailyPlanReferenceRepository.cs) | Implementación EF Core que consulta en lote tiempos de recetas y tipos de comida. |
 
 ## Migraciones y modelo
 
@@ -101,6 +101,7 @@ y un archivo Designer asociado; el índice enlaza el archivo principal.
 | [AddWeeklyPlans](Persistence/Migrations/20260809201541_AddWeeklyPlans.cs) | Añade las tablas de planes semanales y sus asignaciones. |
 | [AddInventoryAndMealCompletion](Persistence/Migrations/20260812063108_AddInventoryAndMealCompletion.cs) | Añade inventario, movimientos y datos necesarios para completar comidas. |
 | [AddDailyMealPlanSlots](Persistence/Migrations/20260812101526_AddDailyMealPlanSlots.cs) | Añade los huecos diarios de los planes semanales. |
+| [ReplaceWeeklyPlansWithDailyPlans](Persistence/Migrations/20260821210742_ReplaceWeeklyPlansWithDailyPlans.cs) | Sustituye de forma destructiva el esquema semanal por planes con fecha única y conserva el historial de inventario desvinculándolo de las comidas antiguas. |
 | [AddMealPlanSlotSchedule](Persistence/Migrations/20260812103001_AddMealPlanSlotSchedule.cs) | Añade el horario previsto de los huecos de comida. |
 | [AddMealPlanEntrySkippedState](Persistence/Migrations/20260812104103_AddMealPlanEntrySkippedState.cs) | Añade el estado de comida omitida y sus datos asociados. |
 | [AddRecipeStepIngredients](Persistence/Migrations/20260813083730_AddRecipeStepIngredients.cs) | Añade las asociaciones entre pasos y líneas de ingrediente. |

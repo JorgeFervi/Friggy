@@ -1,23 +1,16 @@
 using Friggy.Domain.Catalogs;
+using Friggy.Domain.DailyPlans;
 using Friggy.Domain.Recipes;
-using Friggy.Domain.WeeklyPlans;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friggy.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// Configuración de persistencia de las asignaciones de comidas del plan semanal.
-/// </summary>
-internal sealed class MealPlanEntryConfiguration
+/// <summary>Configura las asignaciones de comidas diarias.</summary>
+internal sealed class DailyMealPlanEntryConfiguration
     : IEntityTypeConfiguration<MealPlanEntry>
 {
-    /// <summary>
-    /// Configura estados, restricciones, claves y relaciones de las asignaciones.
-    /// </summary>
-    /// <param name="builder">
-    /// Constructor de configuración de la entidad.
-    /// </param>
+    /// <summary>Configura restricciones, claves y relaciones.</summary>
     public void Configure(EntityTypeBuilder<MealPlanEntry> builder)
     {
         builder.ToTable("meal_plan_entries", table =>
@@ -39,15 +32,10 @@ internal sealed class MealPlanEntryConfiguration
         });
         builder.HasKey(entry => entry.Id);
         builder.Property(entry => entry.Id).ValueGeneratedNever();
-        builder.Property(entry => entry.WeeklyPlanId).HasColumnName("weekly_plan_id");
-        builder.Property(entry => entry.Date)
-            .HasColumnName("date")
-            .HasColumnType("date");
+        builder.Property(entry => entry.DailyPlanId).HasColumnName("daily_plan_id");
         builder.Property(entry => entry.MealTypeId).HasColumnName("meal_type_id");
         builder.Property(entry => entry.RecipeId).HasColumnName("recipe_id");
-        builder.Property(entry => entry.Servings)
-            .HasColumnName("servings")
-            .HasDefaultValue(1);
+        builder.Property(entry => entry.Servings).HasColumnName("servings").HasDefaultValue(1);
         builder.Property(entry => entry.Status)
             .HasColumnName("status")
             .HasConversion<int>()
@@ -60,16 +48,10 @@ internal sealed class MealPlanEntryConfiguration
             .HasColumnName("alternative_description");
         builder.Ignore(entry => entry.IsCompleted);
         builder.Ignore(entry => entry.IsSkipped);
-        builder.HasIndex(entry => new
-        {
-            entry.WeeklyPlanId,
-            entry.Date,
-            entry.MealTypeId,
-        })
-            .IsUnique();
-        builder.HasOne<WeeklyPlan>()
+        builder.HasIndex(entry => new { entry.DailyPlanId, entry.MealTypeId }).IsUnique();
+        builder.HasOne<DailyPlan>()
             .WithMany(plan => plan.Entries)
-            .HasForeignKey(entry => entry.WeeklyPlanId)
+            .HasForeignKey(entry => entry.DailyPlanId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasOne<Recipe>()
             .WithMany()
@@ -81,18 +63,8 @@ internal sealed class MealPlanEntryConfiguration
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<MealPlanSlot>()
             .WithOne()
-            .HasPrincipalKey<MealPlanSlot>(slot => new
-            {
-                slot.WeeklyPlanId,
-                slot.Date,
-                slot.MealTypeId,
-            })
-            .HasForeignKey<MealPlanEntry>(entry => new
-            {
-                entry.WeeklyPlanId,
-                entry.Date,
-                entry.MealTypeId,
-            })
+            .HasPrincipalKey<MealPlanSlot>(slot => new { slot.DailyPlanId, slot.MealTypeId })
+            .HasForeignKey<MealPlanEntry>(entry => new { entry.DailyPlanId, entry.MealTypeId })
             .OnDelete(DeleteBehavior.NoAction)
             .HasConstraintName("FK_meal_plan_entries_meal_plan_slots");
     }
