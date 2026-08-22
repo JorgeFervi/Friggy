@@ -1,6 +1,6 @@
 # Funcionalidades actuales
 
-> **Estado:** vigente · **Última revisión:** 20 de agosto de 2026
+> **Estado:** vigente · **Última revisión:** 22 de agosto de 2026
 
 Friggy es una aplicación web local y monousuario para organizar recetas, planes diarios e inventario doméstico. Web y API se ejecutan como procesos separados y los datos se conservan en PostgreSQL.
 
@@ -37,6 +37,7 @@ Cada plan corresponde a una fecha y solo puede existir uno por día. Se puede co
 * Establecer una hora prevista y consultar el inicio de preparación derivado del tiempo de la receta.
 * Omitir una asignación indicando un motivo y una alternativa opcional.
 * Completar una comida seleccionando cantidades de lotes compatibles.
+* Eliminar un plan mientras no contenga comidas completadas.
 
 Las comidas omitidas no consumen inventario. Una comida completada queda cerrada y no se vuelve a consumir si se repite la petición.
 

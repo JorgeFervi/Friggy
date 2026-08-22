@@ -42,7 +42,17 @@
                         }
                         else
                         {
-                            <a href="@($"daily-plans/{date:yyyy-MM-dd}")">Abrir plan</a>
+                            <div class="friggy-daily-plan-card__actions">
+                                <a href="@($"daily-plans/{date:yyyy-MM-dd}")">Abrir plan</a>
+                                <FriggyButton Variant="FriggyButtonVariant.Danger"
+                                              Size="FriggyButtonSize.Compact"
+                                              DataAction="delete-daily-plan"
+                                              Busy="@(deletingDate == date)"
+                                              Disabled="@(deletingDate.HasValue)"
+                                              OnClick="() => RequestDelete(date)">
+                                    Borrar plan
+                                </FriggyButton>
+                            </div>
                         }
                     </article>
                 }
@@ -51,6 +61,17 @@
     </PageSection>
 </div>
 
+@if (planToDelete.HasValue)
+{
+    <ConfirmDialog IsOpen="true"
+                   Title="Borrar plan diario"
+                   Message="@($"¿Quieres borrar el plan del {planToDelete.Value:dd/MM/yyyy}? Esta acción no se puede deshacer.")"
+                   ConfirmText="Borrar plan"
+                   Busy="@(deletingDate == planToDelete)"
+                   OnConfirm="DeleteAsync"
+                   OnCancel="CancelDelete" />
+}
+
 @code {
     private readonly CancellationTokenSource cancellation = new();
     private readonly RangeModel range = new();
@@ -58,6 +79,8 @@
     private string? error;
     private bool loading = true;
     private DateOnly? creatingDate;
+    private DateOnly? planToDelete;
+    private DateOnly? deletingDate;
 
     private IEnumerable<DateOnly> Dates => range.From <= range.To
         ? Enumerable.Range(0, range.To.DayNumber - range.From.DayNumber + 1).Select(range.From.AddDays)
@@ -99,6 +122,48 @@
         finally
         {
             creatingDate = null;
+        }
+    }
+
+    private void RequestDelete(DateOnly date)
+    {
+        if (!deletingDate.HasValue)
+        {
+            planToDelete = date;
+        }
+    }
+
+    private void CancelDelete() => planToDelete = null;
+
+    private async Task DeleteAsync()
+    {
+        if (planToDelete is not DateOnly date || deletingDate.HasValue)
+        {
+            return;
+        }
+
+        deletingDate = date;
+        error = null;
+        try
+        {
+            await Api.DeleteAsync(date, cancellation.Token);
+            plans = plans
+                .Where(item => item.Key != date)
+                .ToDictionary(item => item.Key, item => item.Value);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception is ApiProblemException
+                {
+                    StatusCode: System.Net.HttpStatusCode.Conflict,
+                }
+                ? "No se puede borrar un plan que contiene comidas completadas."
+                : $"No se pudo borrar el plan: {exception.Message}";
+        }
+        finally
+        {
+            deletingDate = null;
+            planToDelete = null;
         }
     }
 

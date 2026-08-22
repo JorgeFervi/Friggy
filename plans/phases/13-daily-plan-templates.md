@@ -2,7 +2,7 @@
 
 - **Estado:** Planificada
 - **Estimación:** 3–4 días
-- **Dependencias:** [Fase 12](12-daily-planning.md)
+- **Dependencias:** [Fase 12](../completed/phases/12-daily-planning.md)
 - **Guía ejecutable:** [Implementación de la fase 13](../implementation/13-daily-plan-templates-implementation.md)
 
 ## Resultado esperado

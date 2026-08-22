@@ -64,6 +64,90 @@ public sealed class DailyPlanServiceTests
             result.Plans.Select(plan => plan.Date));
     }
 
+    [Fact]
+    public async Task Delete_PlannedPlan_RemovesItAndPersistsOnce()
+    {
+        var repository = new FakeDailyPlanRepository();
+        var references = new FakeDailyPlanReferenceRepository();
+        var plan = DailyPlan.Create(new DateOnly(2026, 8, 4));
+        repository.Items.Add(plan);
+        var service = new DailyPlanService(repository, references);
+
+        await service.DeleteAsync(plan.Date, TestContext.Current.CancellationToken);
+
+        Assert.Empty(repository.Items);
+        Assert.Equal(1, repository.SaveCount);
+    }
+
+    [Fact]
+    public async Task Delete_CompletedPlan_ThrowsConflictWithoutSaving()
+    {
+        var repository = new FakeDailyPlanRepository();
+        var references = new FakeDailyPlanReferenceRepository();
+        var plan = DailyPlan.Create(new DateOnly(2026, 8, 4));
+        var mealTypeId = references.MealTypes[0].Id;
+        plan.Assign(mealTypeId, Guid.NewGuid());
+        plan.CompleteEntry(
+            mealTypeId,
+            new DateTimeOffset(2026, 8, 4, 12, 0, 0, TimeSpan.Zero));
+        repository.Items.Add(plan);
+        var service = new DailyPlanService(repository, references);
+
+        var exception = await Assert.ThrowsAsync<DailyPlanDateConflictException>(() =>
+            service.DeleteAsync(plan.Date, TestContext.Current.CancellationToken));
+
+        Assert.Equal("daily-plan.completed.delete-conflict", exception.Code);
+        Assert.Single(repository.Items);
+        Assert.Equal(0, repository.SaveCount);
+    }
+
+    [Fact]
+    public async Task SetEntry_ValidReferences_AssignsRecipeAndPersistsOnce()
+    {
+        var repository = new FakeDailyPlanRepository();
+        var references = new FakeDailyPlanReferenceRepository();
+        var plan = DailyPlan.Create(new DateOnly(2026, 8, 4));
+        var mealTypeId = references.MealTypes[0].Id;
+        plan.AddSlot(mealTypeId);
+        repository.Items.Add(plan);
+        var service = new DailyPlanService(repository, references);
+        var recipeId = Guid.NewGuid();
+
+        var result = await service.SetEntryAsync(
+            plan.Date,
+            mealTypeId,
+            new SetMealPlanEntryRequest(recipeId, 3),
+            TestContext.Current.CancellationToken);
+
+        var meal = Assert.Single(result.Meals);
+        Assert.Equal(recipeId, meal.RecipeId);
+        Assert.Equal(3, meal.Servings);
+        Assert.Equal(1, repository.SaveCount);
+    }
+
+    [Fact]
+    public async Task SkipEntry_ValidReason_ReturnsSkippedStateAndPersistsOnce()
+    {
+        var repository = new FakeDailyPlanRepository();
+        var references = new FakeDailyPlanReferenceRepository();
+        var plan = DailyPlan.Create(new DateOnly(2026, 8, 4));
+        var mealTypeId = references.MealTypes[0].Id;
+        plan.Assign(mealTypeId, Guid.NewGuid());
+        repository.Items.Add(plan);
+        var service = new DailyPlanService(repository, references);
+
+        var result = await service.SkipEntryAsync(
+            plan.Date,
+            mealTypeId,
+            new SkipMealPlanEntryRequest("  Viaje  ", "  Bocadillo  "),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(MealPlanEntryState.Skipped, result.Status);
+        Assert.Equal("Viaje", result.SkippedReason);
+        Assert.Equal("Bocadillo", result.AlternativeDescription);
+        Assert.Equal(1, repository.SaveCount);
+    }
+
     private sealed class FakeDailyPlanRepository : IDailyPlanRepository
     {
         public List<DailyPlan> Items { get; } = [];
@@ -99,7 +183,7 @@ public sealed class DailyPlanServiceTests
 
     private sealed class FakeDailyPlanReferenceRepository : IDailyPlanReferenceRepository
     {
-        private readonly MealType[] mealTypes =
+        public MealType[] MealTypes { get; } =
         [
             MealType.Create("Desayuno", 0),
             MealType.Create("Comida", 1),
@@ -115,10 +199,10 @@ public sealed class DailyPlanServiceTests
                 ids.ToDictionary(id => id, _ => (TimeSpan?)TimeSpan.FromMinutes(30)));
 
         public Task<bool> MealTypeExistsAsync(Guid id, CancellationToken cancellationToken) =>
-            Task.FromResult(mealTypes.Any(mealType => mealType.Id == id));
+            Task.FromResult(MealTypes.Any(mealType => mealType.Id == id));
 
         public Task<IReadOnlyList<MealType>> ListMealTypesAsync(
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<MealType>>(mealTypes);
+            Task.FromResult<IReadOnlyList<MealType>>(MealTypes);
     }
 }

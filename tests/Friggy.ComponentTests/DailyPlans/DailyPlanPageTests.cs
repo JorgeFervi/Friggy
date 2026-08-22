@@ -46,10 +46,43 @@ public sealed class DailyPlanPageTests : ComponentTest
         });
     }
 
+    [Fact]
+    [Trait("Category", "Component")]
+    public void DailyPlans_DeleteConfirmed_DeletesPlanAndShowsDateAsUnplanned()
+    {
+        var api = new StubDailyPlansApiClient();
+        api.Plans.Add(new DailyPlanResponse(
+            Guid.NewGuid(),
+            api.Today,
+            []));
+        Services.AddSingleton<IDailyPlansApiClient>(api);
+        SetupConfirmDialog();
+        var component = Render<global::Friggy.Web.Components.Pages.DailyPlans>();
+        component.WaitForElement("button[data-action='delete-daily-plan']");
+
+        component.Find("button[data-action='delete-daily-plan']").Click();
+        component.Find(".confirm-dialog__actions button.friggy-button--danger").Click();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Equal(api.Today, Assert.Single(api.Deleted));
+            Assert.Empty(component.FindAll("a[href^='daily-plans/']"));
+            Assert.Equal(7, component.Markup.Split("Sin plan").Length - 1);
+        });
+    }
+
+    private void SetupConfirmDialog()
+    {
+        var module = JavaScript.SetupModule("./js/confirm-dialog.js");
+        module.SetupVoid("show", _ => true).SetVoidResult();
+        module.SetupVoid("close", _ => true).SetVoidResult();
+    }
+
     private sealed class StubDailyPlansApiClient : IDailyPlansApiClient
     {
         public DateOnly Today { get; } = DateOnly.FromDateTime(DateTime.Today);
         public List<DailyPlanResponse> Plans { get; } = [];
+        public List<DateOnly> Deleted { get; } = [];
 
         public Task<DailyPlanRangeResponse> ListAsync(
             DateOnly startDate,
@@ -67,7 +100,12 @@ public sealed class DailyPlanPageTests : ComponentTest
             return Task.FromResult(plan);
         }
 
-        public Task DeleteAsync(DateOnly plannedDate, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task DeleteAsync(DateOnly plannedDate, CancellationToken cancellationToken)
+        {
+            Deleted.Add(plannedDate);
+            Plans.RemoveAll(plan => plan.Date == plannedDate);
+            return Task.CompletedTask;
+        }
         public Task<DailyPlanResponse> SetEntryAsync(DateOnly plannedDate, Guid mealTypeId, SetMealPlanEntryRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<DailyPlanResponse> RemoveEntryAsync(DateOnly plannedDate, Guid mealTypeId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<DailyPlanResponse> AddSlotAsync(DateOnly plannedDate, AddMealPlanSlotRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();

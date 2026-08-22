@@ -38,4 +38,4 @@ Consumir o descartar más de lo disponible aplica únicamente la cantidad posibl
 
 Cada cambio de cantidad registra tipo, diferencia, cantidad resultante y momento. Los movimientos se muestran del más reciente al más antiguo y no se editan ni eliminan.
 
-Las comidas completadas generan movimientos de consumo enlazados con su asignación semanal. Una corrección posterior debe registrarse como ajuste del lote para conservar la trazabilidad.
+Las comidas completadas generan movimientos de consumo enlazados con su asignación del plan diario. Una corrección posterior debe registrarse como ajuste del lote para conservar la trazabilidad.

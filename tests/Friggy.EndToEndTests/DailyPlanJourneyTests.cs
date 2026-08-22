@@ -70,6 +70,7 @@ public sealed class DailyPlanJourneyTests(FullStackFixture fixture) : FriggyPage
         await Page.GetByLabel("Desde", new() { Exact = true }).FillAsync(date);
         await Page.GetByLabel("Hasta", new() { Exact = true }).FillAsync(date);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Consultar", Exact = true }).ClickAsync();
+        await Expect(Page.Locator(".friggy-daily-plan-card")).ToHaveCountAsync(1);
         var create = Page.GetByRole(AriaRole.Button, new() { Name = "Planificar este día", Exact = true });
         if (await create.CountAsync() > 0)
         {
@@ -92,6 +93,8 @@ public sealed class DailyPlanJourneyTests(FullStackFixture fixture) : FriggyPage
         await NavigateToInteractivePageAsync("/ingredients");
         await Page.GetByLabel("Nombre", new() { Exact = true }).FillAsync(ingredientName);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Cell, new() { Name = ingredientName, Exact = true }))
+            .ToBeVisibleAsync();
         await NavigateToInteractivePageAsync("/recipes/new");
         await Page.GetByLabel("Nombre", new() { Exact = true }).FillAsync(recipeName);
         await Page.GetByLabel("Tiempo estimado (minutos)", new() { Exact = true }).FillAsync("25");
@@ -105,5 +108,7 @@ public sealed class DailyPlanJourneyTests(FullStackFixture fixture) : FriggyPage
         await Page.GetByLabel("Descripción", new() { Exact = true }).FillAsync("Cocinar y triturar");
         await Page.GetByLabel("Comida", new() { Exact = true }).CheckAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Guardar receta", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = recipeName, Exact = true }))
+            .ToBeVisibleAsync();
     }
 }

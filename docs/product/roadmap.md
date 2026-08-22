@@ -1,14 +1,14 @@
 # Estado y hoja de ruta
 
-> **Estado:** vigente · **Última revisión:** 21 de agosto de 2026
+> **Estado:** vigente · **Última revisión:** 22 de agosto de 2026
 
-Las fases 1 a 11 están completadas. Las fases 12 a 14 están planificadas, pero todavía no han comenzado. El detalle histórico y futuro se conserva en [planes](../../plans/README.md).
+Las fases 1 a 12 están completadas. Las fases 13 y 14 están planificadas. El detalle histórico y futuro se conserva en [planes](../../plans/README.md).
 
 ## Capacidades entregadas
 
 * Catálogos de ingredientes, unidades, etiquetas y tipos de comida.
 * Recetas con ingredientes, pasos, clasificación y asociación de ingredientes a pasos.
-* Planificación semanal con raciones, huecos por día, horarios, omisiones y finalización.
+* Planificación diaria por intervalos libres, con raciones, horarios, omisiones y finalización.
 * Inventario por lotes, caducidad, movimientos y cálculo de carencias.
 * Interfaz responsive, accesible y protegida mediante regresión visual.
 * Automatización local, cinco niveles de pruebas y puerta de calidad.
@@ -19,11 +19,10 @@ La descripción funcional vigente está en [Funcionalidades actuales](current-ca
 
 Estos planes describen trabajo futuro y no cambian todavía las funcionalidades actuales:
 
-* [Fase 12: sustituir la planificación semanal por planes diarios](../../plans/phases/12-daily-planning.md).
 * [Fase 13: crear y aplicar plantillas de planes diarios](../../plans/phases/13-daily-plan-templates.md).
 * [Fase 14: calcular una lista de la compra por intervalo](../../plans/phases/14-shopping-list.md).
 
-La Fase 12 es la base obligatoria. Una vez estable, plantillas y lista de la compra son incrementos independientes.
+La [Fase 12](../../plans/completed/phases/12-daily-planning.md) ya proporciona la base diaria estable. Plantillas y lista de la compra son incrementos independientes.
 
 ## Posibles evoluciones
 

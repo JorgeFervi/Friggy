@@ -49,7 +49,7 @@ inventario y planificación diaria.
 | [`RecipeStepIngredientLink`](Recipes/RecipeStepIngredientLink.cs) | Asociación entre un paso y una línea de ingrediente de la misma receta. |
 | [`RecipeTagLink`](Recipes/RecipeTagLink.cs) | Asociación entre una receta y una etiqueta. |
 
-## Planificación semanal
+## Planificación diaria
 
 | Tipo | Representación |
 |---|---|

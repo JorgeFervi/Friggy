@@ -45,7 +45,7 @@ Componente Blazor
 El código se organiza alrededor de tres capacidades principales:
 
 * **Catálogos y recetas:** referencias compartidas, entidad principal receta y sus clasificaciones.
-* **Planificación semanal:** días, huecos de comidas, asignaciones, raciones, horarios y estados.
+* **Planificación diaria:** planes por fecha, huecos de comidas, asignaciones, raciones, horarios y estados.
 * **Inventario:** lotes, movimientos y carencias.
 
 ## Reglas de cambio

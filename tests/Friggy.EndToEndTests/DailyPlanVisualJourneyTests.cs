@@ -38,6 +38,10 @@ public sealed class DailyPlanVisualJourneyTests(FullStackFixture fixture) : Frig
                 .Filter(new LocatorFilterOptions { HasText = "Comida" });
             await lunch.GetByLabel("Receta", new() { Exact = true })
                 .SelectOptionAsync(new SelectOptionValue { Label = recipeName });
+            await Expect(Page.GetByText("Cambios guardados.", new() { Exact = true }))
+                .ToBeVisibleAsync();
+            await Expect(Page.GetByRole(AriaRole.Cell, new() { Name = ingredientName, Exact = true }))
+                .ToBeVisibleAsync();
             await CaptureAsync("daily-plan-editor-mobile-360x800", failures);
             await AssertNoHorizontalOverflowAsync();
             await Page.SetViewportSizeAsync(Tablet.Width, Tablet.Height);
@@ -50,6 +54,7 @@ public sealed class DailyPlanVisualJourneyTests(FullStackFixture fixture) : Frig
             await Page.SetViewportSizeAsync(Mobile.Width, Mobile.Height);
             await lunch.GetByRole(AriaRole.Button, new() { Name = "Completar", Exact = true }).ClickAsync();
             await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Selecciona los consumos", Exact = true })).ToBeVisibleAsync();
+            await Page.EvaluateAsync("() => { document.activeElement?.blur(); window.scrollTo(0, 0); }");
             await CaptureAsync("daily-plan-completion-mobile-360x800", failures);
 
             if (failures.Count > 0)
@@ -65,6 +70,7 @@ public sealed class DailyPlanVisualJourneyTests(FullStackFixture fixture) : Frig
         await Page.GetByLabel("Desde", new() { Exact = true }).FillAsync(date);
         await Page.GetByLabel("Hasta", new() { Exact = true }).FillAsync(date);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Consultar", Exact = true }).ClickAsync();
+        await Expect(Page.Locator(".friggy-daily-plan-card")).ToHaveCountAsync(1);
     }
 
     private async Task EnsureIngredientAsync(string ingredientName)
@@ -74,6 +80,8 @@ public sealed class DailyPlanVisualJourneyTests(FullStackFixture fixture) : Frig
         {
             await Page.GetByLabel("Nombre", new() { Exact = true }).FillAsync(ingredientName);
             await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir", Exact = true }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Cell, new() { Name = ingredientName, Exact = true }))
+                .ToBeVisibleAsync();
         }
     }
 
@@ -91,6 +99,8 @@ public sealed class DailyPlanVisualJourneyTests(FullStackFixture fixture) : Frig
         await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir paso", Exact = true }).ClickAsync();
         await Page.GetByLabel("Descripción", new() { Exact = true }).FillAsync("Preparar y servir templado");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Guardar receta", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = recipeName, Exact = true }))
+            .ToBeVisibleAsync();
     }
 
     private async Task AssertNoHorizontalOverflowAsync()

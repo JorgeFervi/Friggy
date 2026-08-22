@@ -1,7 +1,7 @@
 # Implementación ejecutable — Fase 12
 
 - **Fase relacionada:** [Fase 12 — Planificación diaria](../phases/12-daily-planning.md)
-- **Estado de ejecución:** implementación funcional completada; validación PostgreSQL/E2E y nuevos baselines visuales pendientes de un entorno Docker disponible
+- **Estado de ejecución:** completada el 22 de agosto de 2026; validada con PostgreSQL/Testcontainers, recorridos E2E y baselines visuales responsive revisados
 - **Skills aplicables:** `architecture`, `modern-csharp`, `entity-framework-core`, `minimal-apis`, `blazor`, `run-tests`
 - **Plataforma de pruebas detectada:** .NET SDK 10.0.302, Microsoft Testing Platform y xUnit v3
 
@@ -436,11 +436,11 @@ Gate final:
 
 ## Cierre
 
-- [ ] `DailyPlan` es la única raíz de planificación activa.
-- [ ] La unicidad por fecha está cubierta en Domain/Application y PostgreSQL.
-- [ ] Finalización e inventario siguen siendo atómicos e idempotentes.
-- [ ] No hay N+1 de tiempos de receta en el detalle/rango.
-- [ ] API y Web no conservan rutas ni contratos semanales.
-- [ ] La migración destructiva está documentada y probada desde dos orígenes.
-- [ ] Capturas responsive revisadas en móvil, tableta y escritorio.
-- [ ] Build, formato, pruebas, auditoría y documentación están verdes.
+- [x] `DailyPlan` es la única raíz de planificación activa.
+- [x] La unicidad por fecha está cubierta en Domain/Application y PostgreSQL.
+- [x] Finalización e inventario siguen siendo atómicos e idempotentes.
+- [x] No hay N+1 de tiempos de receta en el detalle/rango.
+- [x] API y Web no conservan rutas ni contratos semanales.
+- [x] La migración destructiva está documentada y probada desde dos orígenes.
+- [x] Capturas responsive revisadas en móvil, tableta y escritorio.
+- [x] Build, formato, pruebas, auditoría y documentación están verdes.

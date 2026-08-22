@@ -27,12 +27,12 @@ Los documentos se organizan por estado:
 | 9 | [Planificación semanal avanzada](completed/phases/09-advanced-weekly-planning.md) | [Guía](completed/implementation/09-advanced-weekly-planning-implementation.md) |
 | 10 | [Ingredientes asociados a pasos](completed/phases/10-recipe-step-ingredients.md) | [Guía](completed/implementation/10-recipe-step-ingredients-implementation.md) |
 | 11 | [Sistema visual y experiencia responsive](completed/phases/11-visual-system-and-responsive-ui.md) | [Guía](completed/implementation/11-visual-system-and-responsive-ui-implementation.md) |
+| 12 | [Planificación diaria](completed/phases/12-daily-planning.md) | [Guía](completed/implementation/12-daily-planning-implementation.md) |
 
 ## Fases planificadas
 
 | Fase | Plan | Implementación | Dependencia |
 |---|---|---|---|
-| 12 | [Planificación diaria](phases/12-daily-planning.md) | [Guía](implementation/12-daily-planning-implementation.md) | Fases 1–11 |
 | 13 | [Plantillas de planes diarios](phases/13-daily-plan-templates.md) | [Guía](implementation/13-daily-plan-templates-implementation.md) | Fase 12 |
 | 14 | [Lista de la compra calculada](phases/14-shopping-list.md) | [Guía](implementation/14-shopping-list-implementation.md) | Fase 12; independiente de la 13 |
 
@@ -47,4 +47,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 11 están completadas. Las fases 12 a 14 están planificadas y aún no han comenzado. La Fase 12 sustituye el modelo semanal; después, las fases 13 y 14 pueden ejecutarse por separado sobre el modelo diario estable.
+Las fases 1 a 12 están completadas. Las fases 13 y 14 están planificadas y pueden ejecutarse por separado sobre el modelo diario estable.

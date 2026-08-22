@@ -1,6 +1,6 @@
 # Fase 12 — Planificación diaria
 
-- **Estado:** En implementación
+- **Estado:** Completada el 22 de agosto de 2026
 - **Estimación:** 5–7 días
 - **Dependencias:** Fases 1–11 completadas
 - **Guía ejecutable:** [Implementación de la fase 12](../implementation/12-daily-planning-implementation.md)
@@ -31,8 +31,8 @@ Sustituir la planificación semanal por planes diarios independientes. Cada fech
 
 ## Fuera de alcance
 
-- Plantillas, que pertenecen a la [Fase 13](13-daily-plan-templates.md).
-- Lista de la compra por rango, que pertenece a la [Fase 14](14-shopping-list.md).
+- Plantillas, que pertenecen a la [Fase 13](../../phases/13-daily-plan-templates.md).
+- Lista de la compra por rango, que pertenece a la [Fase 14](../../phases/14-shopping-list.md).
 - Recurrencias, conversiones de unidades, autenticación o migración de datos semanales existentes.
 
 ## Orden de ejecución

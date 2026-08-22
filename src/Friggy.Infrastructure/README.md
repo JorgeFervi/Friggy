@@ -50,8 +50,8 @@ como parte del composition root mediante [DependencyInjection](DependencyInjecti
 | [RecipeMealTypeLinkConfiguration](Persistence/Configurations/RecipeMealTypeLinkConfiguration.cs) | Configuración de la asociación entre recetas y tipos de comida. |
 | [RecipeStepIngredientLinkConfiguration](Persistence/Configurations/RecipeStepIngredientLinkConfiguration.cs) | Configuración de la asociación entre pasos y líneas de ingrediente. |
 | [DailyPlanConfiguration](Persistence/Configurations/DailyPlanConfiguration.cs) | Configuración del agregado diario y de la unicidad de su fecha. |
-| [MealPlanEntryConfiguration](Persistence/Configurations/MealPlanEntryConfiguration.cs) | Configuración de asignaciones de comidas, estados, restricciones y relaciones. |
-| [MealPlanSlotConfiguration](Persistence/Configurations/MealPlanSlotConfiguration.cs) | Configuración de huecos de comida, orden, horario y claves alternativas. |
+| [DailyMealPlanEntryConfiguration](Persistence/Configurations/DailyMealPlanEntryConfiguration.cs) | Configuración de asignaciones de comidas, estados, restricciones y relaciones. |
+| [DailyMealPlanSlotConfiguration](Persistence/Configurations/DailyMealPlanSlotConfiguration.cs) | Configuración de huecos de comida, orden, horario y claves alternativas. |
 | [InventoryLotConfiguration](Persistence/Configurations/InventoryLotConfiguration.cs) | Configuración de lotes de inventario, cantidades, caducidad, concurrencia y movimientos. |
 | [InventoryMovementConfiguration](Persistence/Configurations/InventoryMovementConfiguration.cs) | Configuración de movimientos, variaciones, cantidades resultantes y relaciones. |
 
@@ -80,7 +80,7 @@ como parte del composition root mediante [DependencyInjection](DependencyInjecti
 | [InventoryLotRepository](Persistence/Repositories/InventoryLotRepository.cs) | Implementación EF Core que consulta y persiste lotes junto con sus movimientos y gestiona la concurrencia. |
 | [InventoryReferenceRepository](Persistence/Repositories/InventoryReferenceRepository.cs) | Implementación EF Core que consulta ingredientes y unidades de medida para las operaciones de inventario. |
 
-### Planificación semanal
+### Planificación diaria
 
 | Tipo | Representación |
 |---|---|
