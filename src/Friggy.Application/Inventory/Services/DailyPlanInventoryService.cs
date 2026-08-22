@@ -1,13 +1,13 @@
+using Friggy.Application.DailyPlans.Exceptions;
+using Friggy.Application.DailyPlans.Interfaces;
 using Friggy.Application.Inventory.Dtos;
 using Friggy.Application.Inventory.Exceptions;
 using Friggy.Application.Inventory.Interfaces;
 using Friggy.Application.Recipes.Interfaces;
-using Friggy.Application.WeeklyPlans.Exceptions;
-using Friggy.Application.WeeklyPlans.Interfaces;
 using Friggy.Domain.Catalogs;
+using Friggy.Domain.DailyPlans;
 using Friggy.Domain.Inventory;
 using Friggy.Domain.Recipes;
-using Friggy.Domain.WeeklyPlans;
 
 namespace Friggy.Application.Inventory.Services;
 
@@ -15,8 +15,8 @@ namespace Friggy.Application.Inventory.Services;
 /// Servicio de aplicación que calcula las necesidades de inventario de un plan
 /// y coordina la finalización de sus comidas.
 /// </summary>
-public sealed class WeeklyPlanInventoryService(
-    IWeeklyPlanRepository plans,
+public sealed class DailyPlanInventoryService(
+    IDailyPlanRepository plans,
     IRecipeRepository recipes,
     IInventoryLotRepository lots,
     IInventoryReferenceRepository references,
@@ -24,14 +24,14 @@ public sealed class WeeklyPlanInventoryService(
     TimeProvider timeProvider)
 {
     /// <summary>
-    /// Calcula las necesidades de ingredientes de un plan semanal y las compara
+    /// Calcula las necesidades de ingredientes de un plan diario y las compara
     /// con las existencias disponibles.
     /// </summary>
     public async Task<IReadOnlyList<InventoryRequirementResponse>> GetRequirementsAsync(
-        Guid planId,
+        DateOnly plannedDate,
         CancellationToken cancellationToken)
     {
-        var plan = await FindPlanAsync(planId, cancellationToken);
+        var plan = await FindPlanAsync(plannedDate, cancellationToken);
         var requirements = await CalculateRequirementsAsync(
             plan.Entries,
             cancellationToken);
@@ -49,17 +49,15 @@ public sealed class WeeklyPlanInventoryService(
     /// devuelve las necesidades que permanecen pendientes.
     /// </summary>
     public async Task<MealCompletionResponse> CompleteMealAsync(
-        Guid planId,
-        DateOnly date,
+        DateOnly plannedDate,
         Guid mealTypeId,
         CompleteMealRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Allocations);
-        var plan = await FindPlanAsync(planId, cancellationToken);
-        var entry = plan.Entries.SingleOrDefault(item =>
-            item.Date == date && item.MealTypeId == mealTypeId) ??
+        var plan = await FindPlanAsync(plannedDate, cancellationToken);
+        var entry = plan.Entries.SingleOrDefault(item => item.MealTypeId == mealTypeId) ??
             throw new InventoryNotFoundException(
                 "meal-completion.entry.not-found",
                 "No hay una receta asignada a la comida.");
@@ -108,20 +106,20 @@ public sealed class WeeklyPlanInventoryService(
             consumptions,
             lotsById,
             cancellationToken);
-        plan.CompleteEntry(date, mealTypeId, timeProvider.GetUtcNow());
+        plan.CompleteEntry(mealTypeId, timeProvider.GetUtcNow());
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return new MealCompletionResponse(entry.Id, false, consumptions, remaining);
     }
 
     private DateOnly Today => DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime);
 
-    private async Task<WeeklyPlan> FindPlanAsync(
-        Guid id,
+    private async Task<DailyPlan> FindPlanAsync(
+        DateOnly plannedDate,
         CancellationToken cancellationToken) =>
-        await plans.GetByIdAsync(id, cancellationToken) ??
-        throw new WeeklyPlanNotFoundException(
-            "weekly-plan.not-found",
-            "No se encontró el plan semanal.");
+        await plans.GetByDateAsync(plannedDate, cancellationToken) ??
+        throw new DailyPlanNotFoundException(
+            "daily-plan.not-found",
+            "No se encontró el plan diario.");
 
     private async Task<Dictionary<(Guid IngredientId, Guid UnitTypeId), decimal>>
         CalculateRequirementsAsync(

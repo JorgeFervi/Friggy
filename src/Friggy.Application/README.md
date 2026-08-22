@@ -19,7 +19,7 @@ capa de infraestructura y los servicios se registran mediante
 | [Catalogs](Catalogs) | Casos de uso y contratos para ingredientes, tipos de comida, etiquetas y unidades de medida. |
 | [Recipes](Recipes) | Casos de uso, DTOs y contratos relacionados con recetas. |
 | [Inventory](Inventory) | Casos de uso, DTOs y contratos relacionados con lotes y operaciones de inventario. |
-| [WeeklyPlans](WeeklyPlans) | Casos de uso, DTOs y contratos relacionados con la planificación semanal. |
+| [DailyPlans](DailyPlans) | Casos de uso, DTOs y contratos relacionados con la planificación por fecha. |
 
 ## Elementos compartidos
 
@@ -123,7 +123,7 @@ capa de infraestructura y los servicios se registran mediante
 | Tipo | Representación |
 |---|---|
 | [InventoryLotService](Inventory/Services/InventoryLotService.cs) | Servicio que lista, consulta, crea, corrige, consume, descarta y ajusta lotes de inventario. |
-| [WeeklyPlanInventoryService](Inventory/Services/WeeklyPlanInventoryService.cs) | Servicio que calcula las necesidades de inventario de un plan y coordina el consumo al completar una comida. |
+| [DailyPlanInventoryService](Inventory/Services/DailyPlanInventoryService.cs) | Servicio que calcula las necesidades de una fecha y coordina el consumo al completar una comida. |
 | [IInventoryLotRepository](Inventory/Interfaces/IInventoryLotRepository.cs) | Contrato de persistencia y consulta de lotes de inventario. |
 | [IInventoryReferenceRepository](Inventory/Interfaces/IInventoryReferenceRepository.cs) | Contrato para consultar ingredientes y unidades necesarios para mostrar o validar lotes. |
 | [IInventoryUnitOfWork](Inventory/Interfaces/IInventoryUnitOfWork.cs) | Contrato para persistir una operación completa de inventario. |
@@ -159,46 +159,39 @@ capa de infraestructura y los servicios se registran mediante
 | [InventoryFailure](Inventory/Exceptions/InventoryFailureClassifier.cs) | Resultado clasificado de un fallo de inventario con su tipo y código. |
 | [InventoryFailureClassifier](Inventory/Exceptions/InventoryFailureClassifier.cs) | Clase que traduce excepciones de inventario a fallos reconocibles por la API. |
 
-## Planificación semanal
+## Planificación diaria
 
 ### Servicios y contratos
 
 | Tipo | Representación |
 |---|---|
-| [WeeklyPlanService](WeeklyPlans/Services/WeeklyPlanService.cs) | Servicio que coordina la gestión de planes, asignaciones de recetas y huecos de comida. |
-| [IWeeklyPlanRepository](WeeklyPlans/Interfaces/IWeeklyPlanRepository.cs) | Contrato de persistencia de planes semanales y de consulta de sus resúmenes y nombres. |
-| [IWeeklyPlanReferenceRepository](WeeklyPlans/Interfaces/IWeeklyPlanReferenceRepository.cs) | Contrato para comprobar recetas y tipos de comida y consultar sus datos necesarios para el plan. |
+| [DailyPlanService](DailyPlans/Services/DailyPlanService.cs) | Servicio que gestiona planes por fecha, intervalos inclusivos, recetas y huecos. |
+| [IDailyPlanRepository](DailyPlans/Interfaces/IDailyPlanRepository.cs) | Contrato de persistencia por fecha e intervalo de planes diarios. |
+| [IDailyPlanReferenceRepository](DailyPlans/Interfaces/IDailyPlanReferenceRepository.cs) | Contrato para comprobar referencias y consultar tiempos de recetas en lote. |
 
 ### DTOs
 
 | Tipo | Representación |
 |---|---|
-| [CreateWeeklyPlanRequest](WeeklyPlans/Dtos/CreateWeeklyPlanRequest.cs) | Datos de entrada para crear un plan semanal. |
-| [UpdateWeeklyPlanRequest](WeeklyPlans/Dtos/UpdateWeeklyPlanRequest.cs) | Datos de entrada para actualizar los detalles de un plan semanal. |
-| [SetMealPlanEntryRequest](WeeklyPlans/Dtos/SetMealPlanEntryRequest.cs) | Datos de entrada para asignar una receta y sus raciones a una comida. |
-| [SkipMealPlanEntryRequest](WeeklyPlans/Dtos/SkipMealPlanEntryRequest.cs) | Datos de entrada para omitir una comida y registrar una alternativa opcional. |
-| [AddMealPlanSlotRequest](WeeklyPlans/Dtos/AddMealPlanSlotRequest.cs) | Datos de entrada para añadir un hueco de comida. |
-| [SetMealPlanSlotTimeRequest](WeeklyPlans/Dtos/SetMealPlanSlotTimeRequest.cs) | Hora prevista de entrada para un hueco de comida. |
-| [ReorderMealPlanSlotsRequest](WeeklyPlans/Dtos/ReorderMealPlanSlotsRequest.cs) | Orden de entrada solicitado para los huecos de un día. |
-| [WeeklyPlanListItemResponse](WeeklyPlans/Dtos/WeeklyPlanListItemResponse.cs) | Resumen de un plan semanal para listados. |
-| [WeeklyPlanResponse](WeeklyPlans/Dtos/WeeklyPlanResponse.cs) | Datos completos de respuesta de un plan semanal. |
-| [WeeklyPlanDayResponse](WeeklyPlans/Dtos/WeeklyPlanDayResponse.cs) | Datos de un día del plan y sus comidas. |
-| [WeeklyPlanMealResponse](WeeklyPlans/Dtos/WeeklyPlanMealResponse.cs) | Datos de una comida, su hueco, receta, horario y estado. |
-| [MealPlanSlotScheduleResponse](WeeklyPlans/Dtos/MealPlanSlotScheduleResponse.cs) | Horario de un hueco y comienzo calculado de su preparación. |
-| [MealPlanEntryStateResponse](WeeklyPlans/Dtos/MealPlanEntryStateResponse.cs) | Estado y metadatos de una asignación de comida. |
-| [MealPlanEntryState](WeeklyPlans/Dtos/MealPlanEntryState.cs) | Enumeración de los estados planificado, completado y omitido. |
+| [CreateDailyPlanRequest](DailyPlans/Dtos/DailyPlanDtos.cs) | Fecha para crear un plan diario. |
+| [DailyPlanRangeResponse](DailyPlans/Dtos/DailyPlanDtos.cs) | Planes existentes dentro de un intervalo inclusivo. |
+| [DailyPlanResponse](DailyPlans/Dtos/DailyPlanDtos.cs) | Plan completo de una fecha. |
+| [DailyPlanMealResponse](DailyPlans/Dtos/DailyPlanDtos.cs) | Hueco, receta, comensales, horario y estado de una comida. |
+| [SetMealPlanEntryRequest](DailyPlans/Dtos/DailyPlanDtos.cs) | Receta y comensales que se asignan a una comida. |
+| [SkipMealPlanEntryRequest](DailyPlans/Dtos/DailyPlanDtos.cs) | Motivo y alternativa opcional al omitir una comida. |
+| [AddMealPlanSlotRequest](DailyPlans/Dtos/DailyPlanDtos.cs) | Tipo de comida que se añade al día. |
+| [SetMealPlanSlotTimeRequest](DailyPlans/Dtos/DailyPlanDtos.cs) | Hora prevista de un hueco. |
+| [ReorderMealPlanSlotsRequest](DailyPlans/Dtos/DailyPlanDtos.cs) | Nuevo orden completo de los huecos. |
 
 ### Errores y clasificación
 
 | Tipo | Representación |
 |---|---|
-| [WeeklyPlanApplicationException](WeeklyPlans/Exceptions/WeeklyPlanApplicationException.cs) | Excepción base para los fallos producidos al ejecutar casos de uso de planificación. |
-| [WeeklyPlanNameConflictException](WeeklyPlans/Exceptions/WeeklyPlanNameConflictException.cs) | Excepción que indica que el nombre de un plan ya está en uso. |
-| [WeeklyPlanNotFoundException](WeeklyPlans/Exceptions/WeeklyPlanNotFoundException.cs) | Excepción que indica que no se encontró un plan semanal. |
-| [WeeklyPlanReferenceNotFoundException](WeeklyPlans/Exceptions/WeeklyPlanReferenceNotFoundException.cs) | Excepción que indica que falta una receta o tipo de comida necesario para el plan. |
-| [WeeklyPlanFailureKind](WeeklyPlans/Exceptions/WeeklyPlanFailureClassifier.cs) | Enumeración de fallos por ausencia de datos o conflicto. |
-| [WeeklyPlanFailure](WeeklyPlans/Exceptions/WeeklyPlanFailureClassifier.cs) | Resultado clasificado de un fallo de planificación con su tipo y código. |
-| [WeeklyPlanFailureClassifier](WeeklyPlans/Exceptions/WeeklyPlanFailureClassifier.cs) | Clase que traduce excepciones de planificación a fallos de aplicación. |
+| [DailyPlanApplicationException](DailyPlans/Exceptions/DailyPlanExceptions.cs) | Excepción base para los fallos de planificación diaria. |
+| [DailyPlanDateConflictException](DailyPlans/Exceptions/DailyPlanExceptions.cs) | Conflicto al intentar crear un segundo plan para la misma fecha. |
+| [DailyPlanNotFoundException](DailyPlans/Exceptions/DailyPlanExceptions.cs) | Indica que no existe plan para la fecha solicitada. |
+| [DailyPlanReferenceNotFoundException](DailyPlans/Exceptions/DailyPlanExceptions.cs) | Indica que falta una receta o tipo de comida referenciado. |
+| [DailyPlanFailureClassifier](DailyPlans/Exceptions/DailyPlanExceptions.cs) | Traduce excepciones diarias a fallos reconocibles por la API. |
 
 ## Flujo general
 
