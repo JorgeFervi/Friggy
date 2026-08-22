@@ -1,4 +1,3 @@
-using System.Globalization;
 using Friggy.Application.Inventory.Dtos;
 using Friggy.Application.Inventory.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -59,30 +58,6 @@ public static class InventoryEndpoints
         return group;
     }
 
-    /// <summary>
-    /// Registra las rutas de requisitos de inventario y de finalización de comidas de un plan semanal.
-    /// </summary>
-    /// <param name="routes">Constructor de rutas donde se registra el grupo de endpoints.</param>
-    /// <returns>Grupo de rutas configurado para las operaciones de inventario de planes semanales.</returns>
-    public static RouteGroupBuilder MapWeeklyPlanInventoryEndpoints(
-        this IEndpointRouteBuilder routes)
-    {
-        var group = routes.MapGroup("/api/weekly-plans").WithTags("Weekly plans");
-        group.MapGet("/{planId:guid}/inventory-requirements", GetRequirementsAsync)
-            .WithName("GetWeeklyPlanInventoryRequirements")
-            .Produces<IReadOnlyList<InventoryRequirementResponse>>()
-            .ProducesProblem(StatusCodes.Status404NotFound);
-        group.MapPost(
-                "/{planId:guid}/days/{date}/meal-types/{mealTypeId:guid}/complete",
-                CompleteMealAsync)
-            .WithName("CompleteWeeklyPlanMeal")
-            .Produces<MealCompletionResponse>()
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
-        return group;
-    }
-
     private static async Task<Ok<IReadOnlyList<InventoryLotResponse>>> ListAsync(
         bool includeUnavailable,
         InventoryLotService service,
@@ -132,44 +107,4 @@ public static class InventoryEndpoints
         CancellationToken cancellationToken) =>
         TypedResults.Ok(await service.AdjustAsync(id, request, cancellationToken));
 
-    private static async Task<Ok<IReadOnlyList<InventoryRequirementResponse>>>
-        GetRequirementsAsync(
-            Guid planId,
-            WeeklyPlanInventoryService service,
-            CancellationToken cancellationToken) =>
-        TypedResults.Ok(await service.GetRequirementsAsync(planId, cancellationToken));
-
-    private static async Task<Results<Ok<MealCompletionResponse>, ProblemHttpResult>>
-        CompleteMealAsync(
-            Guid planId,
-            string date,
-            Guid mealTypeId,
-            CompleteMealRequest request,
-            WeeklyPlanInventoryService service,
-            CancellationToken cancellationToken)
-    {
-        if (!DateOnly.TryParseExact(
-                date,
-                "yyyy-MM-dd",
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.None,
-                out var parsedDate))
-        {
-            return TypedResults.Problem(
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "La solicitud no es válida.",
-                detail: "La fecha debe usar el formato yyyy-MM-dd.",
-                extensions: new Dictionary<string, object?>
-                {
-                    ["code"] = "weekly-plan.date.format",
-                });
-        }
-
-        return TypedResults.Ok(await service.CompleteMealAsync(
-            planId,
-            parsedDate,
-            mealTypeId,
-            request,
-            cancellationToken));
-    }
 }

@@ -24,9 +24,8 @@ app.MapUnitTypeEndpoints();
 app.MapRecipeTagEndpoints();
 app.MapMealTypeEndpoints();
 app.MapRecipeEndpoints();
-app.MapWeeklyPlanEndpoints();
+app.MapDailyPlanEndpoints();
 app.MapInventoryEndpoints();
-app.MapWeeklyPlanInventoryEndpoints();
 
 app.Run();
 

@@ -36,8 +36,8 @@ entrada HTTP, la traducción de errores y la exposición de las respuestas.
 | [RecipeTagEndpoints](Endpoints/RecipeTagEndpoints.cs) | Grupo de endpoints para gestionar etiquetas de recetas en /api/recipe-tags. |
 | [UnitTypeEndpoints](Endpoints/UnitTypeEndpoints.cs) | Grupo de endpoints para gestionar unidades de medida en /api/unit-types. |
 | [RecipeEndpoints](Endpoints/RecipeEndpoints.cs) | Grupo de endpoints para listar, consultar, crear, actualizar y eliminar recetas en /api/recipes, incluidas sus asociaciones. |
-| [WeeklyPlanEndpoints](Endpoints/WeeklyPlanEndpoints.cs) | Grupo de endpoints para gestionar planes semanales, asignaciones de recetas y huecos de comidas en /api/weekly-plans. |
-| [InventoryEndpoints](Endpoints/InventoryEndpoints.cs) | Grupo de endpoints para consultar y operar sobre lotes de inventario en /api/inventory-lots, además de consultar necesidades y completar comidas de planes semanales. |
+| [DailyPlanEndpoints](Endpoints/DailyPlanEndpoints.cs) | Endpoints por fecha para gestionar planes diarios, asignaciones, huecos, necesidades y finalización en /api/daily-plans. |
+| [InventoryEndpoints](Endpoints/InventoryEndpoints.cs) | Grupo de endpoints para consultar y operar sobre lotes de inventario en /api/inventory-lots. |
 
 ## Manejo de errores
 

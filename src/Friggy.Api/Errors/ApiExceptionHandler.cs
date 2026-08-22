@@ -1,7 +1,7 @@
 using Friggy.Application.Catalogs;
+using Friggy.Application.DailyPlans.Exceptions;
 using Friggy.Application.Inventory.Exceptions;
 using Friggy.Application.Recipes.Exceptions;
-using Friggy.Application.WeeklyPlans.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
@@ -77,13 +77,13 @@ public sealed class ApiExceptionHandler : IExceptionHandler
             };
         }
 
-        var weeklyPlanFailure = WeeklyPlanFailureClassifier.Classify(exception);
-        if (weeklyPlanFailure is not null)
+        var dailyPlanFailure = DailyPlanFailureClassifier.Classify(exception);
+        if (dailyPlanFailure is not null)
         {
-            return weeklyPlanFailure.Kind switch
+            return dailyPlanFailure.Kind switch
             {
-                WeeklyPlanFailureKind.NotFound => NotFound(weeklyPlanFailure.Code),
-                WeeklyPlanFailureKind.Conflict => Conflict(weeklyPlanFailure.Code),
+                DailyPlanFailureKind.NotFound => NotFound(dailyPlanFailure.Code),
+                DailyPlanFailureKind.Conflict => Conflict(dailyPlanFailure.Code),
                 _ => null,
             };
         }
