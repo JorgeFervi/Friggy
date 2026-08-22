@@ -337,7 +337,14 @@ public sealed class DailyPlanInventoryServiceTests
             cancellationToken.IsCancellationRequested
                 ? Task.FromCanceled<DailyPlan?>(cancellationToken)
                 : Task.FromResult(Items.SingleOrDefault(item => item.Date == plannedDate));
+        public Task<IReadOnlyList<DateOnly>> ListExistingDatesAsync(
+            IReadOnlyCollection<DateOnly> dates,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<DateOnly>>(
+                Items.Where(item => dates.Contains(item.Date)).Select(item => item.Date).ToArray());
         public Task AddAsync(DailyPlan plan, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task AddRangeAsync(IReadOnlyCollection<DailyPlan> plans, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
         public void Remove(DailyPlan plan) => throw new NotSupportedException();
         public Task SaveChangesAsync(CancellationToken cancellationToken) =>

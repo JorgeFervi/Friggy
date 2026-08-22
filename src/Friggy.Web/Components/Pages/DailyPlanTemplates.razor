@@ -1,0 +1,29 @@
+@page "/daily-plan-templates"
+@implements IDisposable
+@using Friggy.Application.DailyPlanTemplates.Dtos
+@using Friggy.Web.Api
+@inject IDailyPlanTemplatesApiClient Api
+@inject NavigationManager Navigation
+
+<PageTitle>Plantillas de planes</PageTitle>
+<PageHeader Title="Plantillas" Eyebrow="Planificación" Description="Guarda una configuración y aplícala a los días que elijas." />
+@if (error is not null) { <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel> }
+<PageSection Heading="Plantillas guardadas">
+    @if (loading) { <FeedbackPanel Title="Cargando" Tone="FriggyTone.Info">Consultando plantillas.</FeedbackPanel> }
+    else if (templates.Count == 0) { <FeedbackPanel Title="Aún no hay plantillas" Tone="FriggyTone.Neutral">Crea una configuración desde la API; el editor detallado se incorporará en el siguiente incremento de interfaz.</FeedbackPanel> }
+    else { <div role="list">@foreach (var item in templates) { <article role="listitem" @key="item.Id"><h2>@item.Name</h2><p>@item.Meals.Count comidas configuradas.</p><label for="@($"template-date-{item.Id:N}")">Fecha de aplicación</label><input id="@($"template-date-{item.Id:N}")" type="date" @bind="dates[item.Id]" /><FriggyButton Busy="applying == item.Id" OnClick="() => ApplyAsync(item.Id)">Aplicar</FriggyButton><FriggyButton Variant="FriggyButtonVariant.Danger" OnClick="() => DeleteAsync(item.Id)">Borrar</FriggyButton></article> }</div> }
+</PageSection>
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private IReadOnlyList<DailyPlanTemplateResponse> templates = [];
+    private readonly Dictionary<Guid, DateOnly> dates = [];
+    private Guid? applying;
+    private string? error;
+    private bool loading = true;
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+    private async Task ReloadAsync() { loading = true; try { templates = await Api.ListAsync(cancellation.Token); error = null; } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { error = exception.Message; } finally { loading = false; } }
+    private async Task ApplyAsync(Guid id) { if (!dates.TryGetValue(id, out var date)) { error = "Elige una fecha para aplicar la plantilla."; return; } applying = id; try { var result = await Api.ApplyAsync(id, new([date]), cancellation.Token); Navigation.NavigateTo($"/daily-plans/{result.CreatedPlans[0].Date:yyyy-MM-dd}"); } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { error = exception.Message; } finally { applying = null; } }
+    private async Task DeleteAsync(Guid id) { try { await Api.DeleteAsync(id, cancellation.Token); templates = templates.Where(item => item.Id != id).ToArray(); } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { error = exception.Message; } }
+    public void Dispose() { cancellation.Cancel(); cancellation.Dispose(); GC.SuppressFinalize(this); }
+}

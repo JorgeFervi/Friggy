@@ -1,5 +1,6 @@
 using Friggy.Application.Catalogs;
 using Friggy.Application.DailyPlans.Exceptions;
+using Friggy.Application.DailyPlanTemplates.Exceptions;
 using Friggy.Application.Inventory.Exceptions;
 using Friggy.Application.Recipes.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
@@ -24,6 +25,34 @@ public sealed class ApiExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
+        if (exception is DailyPlanTemplateConflictException templateConflict)
+        {
+            await Results.Problem(
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "La operación produce un conflicto.",
+                    detail: templateConflict.Message,
+                    instance: httpContext.Request.Path,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["code"] = templateConflict.Code,
+                        ["conflictingDates"] = templateConflict.ConflictingDates,
+                    })
+                .ExecuteAsync(httpContext);
+            return true;
+        }
+
+        if (exception is DailyPlanTemplateNotFoundException templateNotFound)
+        {
+            await Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "No se encontró el recurso.",
+                    detail: templateNotFound.Message,
+                    instance: httpContext.Request.Path,
+                    extensions: new Dictionary<string, object?> { ["code"] = templateNotFound.Code })
+                .ExecuteAsync(httpContext);
+            return true;
+        }
+
         var failure = Classify(exception);
         if (failure is null)
         {

@@ -29,8 +29,25 @@ public sealed class DailyPlanRepository(FriggyDbContext context) : IDailyPlanRep
             cancellationToken);
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<DateOnly>> ListExistingDatesAsync(
+        IReadOnlyCollection<DateOnly> dates,
+        CancellationToken cancellationToken) =>
+        await context.DailyPlans
+            .AsNoTracking()
+            .Where(plan => dates.Contains(plan.Date))
+            .OrderBy(plan => plan.Date)
+            .Select(plan => plan.Date)
+            .ToListAsync(cancellationToken);
+
+    /// <inheritdoc />
     public async Task AddAsync(DailyPlan plan, CancellationToken cancellationToken) =>
         await context.DailyPlans.AddAsync(plan, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task AddRangeAsync(
+        IReadOnlyCollection<DailyPlan> plans,
+        CancellationToken cancellationToken) =>
+        await context.DailyPlans.AddRangeAsync(plans, cancellationToken);
 
     /// <inheritdoc />
     public void Remove(DailyPlan plan) => context.DailyPlans.Remove(plan);

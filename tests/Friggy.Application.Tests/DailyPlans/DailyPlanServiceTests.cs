@@ -166,9 +166,23 @@ public sealed class DailyPlanServiceTests
             CancellationToken cancellationToken) =>
             Task.FromResult(Items.SingleOrDefault(plan => plan.Date == plannedDate));
 
+        public Task<IReadOnlyList<DateOnly>> ListExistingDatesAsync(
+            IReadOnlyCollection<DateOnly> dates,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<DateOnly>>(
+                Items.Where(plan => dates.Contains(plan.Date)).Select(plan => plan.Date).ToArray());
+
         public Task AddAsync(DailyPlan plan, CancellationToken cancellationToken)
         {
             Items.Add(plan);
+            return Task.CompletedTask;
+        }
+
+        public Task AddRangeAsync(
+            IReadOnlyCollection<DailyPlan> plans,
+            CancellationToken cancellationToken)
+        {
+            Items.AddRange(plans);
             return Task.CompletedTask;
         }
 

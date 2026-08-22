@@ -14,8 +14,16 @@ public interface IDailyPlanRepository
     /// <summary>Busca el plan de una fecha.</summary>
     Task<DailyPlan?> GetByDateAsync(DateOnly plannedDate, CancellationToken cancellationToken);
 
+    /// <summary>Lista las fechas solicitadas que ya tienen un plan.</summary>
+    Task<IReadOnlyList<DateOnly>> ListExistingDatesAsync(
+        IReadOnlyCollection<DateOnly> dates,
+        CancellationToken cancellationToken);
+
     /// <summary>Añade un plan.</summary>
     Task AddAsync(DailyPlan plan, CancellationToken cancellationToken);
+
+    /// <summary>Añade varios planes para guardarlos como una única unidad.</summary>
+    Task AddRangeAsync(IReadOnlyCollection<DailyPlan> plans, CancellationToken cancellationToken);
 
     /// <summary>Marca un plan para eliminación.</summary>
     void Remove(DailyPlan plan);

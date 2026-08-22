@@ -3,6 +3,7 @@ using Friggy.Application.Catalogs.MealTypes.Services;
 using Friggy.Application.Catalogs.RecipeTags.Services;
 using Friggy.Application.Catalogs.UnitTypes.Services;
 using Friggy.Application.DailyPlans.Services;
+using Friggy.Application.DailyPlanTemplates.Services;
 using Friggy.Application.Inventory.Services;
 using Friggy.Application.Recipes.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<MealTypeService>();
         services.AddScoped<RecipeService>();
         services.AddScoped<DailyPlanService>();
+        services.AddScoped<DailyPlanTemplateService>();
         services.AddScoped<InventoryLotService>();
         services.AddScoped<DailyPlanInventoryService>();
         services.AddSingleton(TimeProvider.System);
