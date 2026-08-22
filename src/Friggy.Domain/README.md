@@ -5,7 +5,7 @@
 La capa `Friggy.Domain` contiene las reglas de negocio y los modelos propios
 del dominio de Friggy. No depende de la infraestructura, de la API ni de la
 interfaz web. Sus clases protegen las invariantes de catálogos, recetas,
-inventario y planificación semanal.
+inventario y planificación diaria.
 
 ## Organización
 
@@ -14,7 +14,7 @@ inventario y planificación semanal.
 | [`Catalogs`](Catalogs) | Catálogos, nombres de catálogo y excepciones de validación. |
 | [`Inventory`](Inventory) | Lotes, movimientos y resultados de operaciones de inventario. |
 | [`Recipes`](Recipes) | Recetas, ingredientes, pasos y asociaciones de recetas. |
-| [`WeeklyPlans`](WeeklyPlans) | Planes semanales, huecos, asignaciones y estados de comidas. |
+| [`DailyPlans`](DailyPlans) | Planes por fecha, huecos, asignaciones y estados de comidas. |
 
 ## Catálogos
 
@@ -53,17 +53,17 @@ inventario y planificación semanal.
 
 | Tipo | Representación |
 |---|---|
-| [`WeeklyPlan`](WeeklyPlans/WeeklyPlan.cs) | Entidad principal que representa una semana completa y gestiona sus fechas, huecos y asignaciones de recetas. |
-| [`MealPlanSlot`](WeeklyPlans/MealPlanSlot.cs) | Hueco de comida disponible en un día del plan, con tipo de comida, orden y hora prevista. |
-| [`MealPlanEntry`](WeeklyPlans/MealPlanEntry.cs) | Receta asignada a un tipo de comida y un día del plan, con sus raciones y estado de ejecución. |
-| [`MealPlanEntryStatus`](WeeklyPlans/MealPlanEntryStatus.cs) | Enumeración que indica si una asignación está planificada, completada u omitida. |
+| [`DailyPlan`](DailyPlans/DailyPlan.cs) | Raíz de agregado para una única fecha, con un máximo de un plan por día. |
+| [`MealPlanSlot`](DailyPlans/MealPlanSlot.cs) | Hueco de comida del plan diario, con tipo, orden y hora prevista. |
+| [`MealPlanEntry`](DailyPlans/MealPlanEntry.cs) | Receta asignada a un tipo de comida, con comensales y estado de ejecución. |
+| [`MealPlanEntryStatus`](DailyPlans/MealPlanEntryStatus.cs) | Enumeración que indica si una asignación está planificada, completada u omitida. |
 
 ## Relaciones principales
 
 - `Recipe` contiene `RecipeIngredient` y `RecipeStep`, y se puede clasificar usando sus asociaciones con `RecipeTagLink` y `RecipeMealTypeLink`.
 - `RecipeStep` relaciona sus pasos con las líneas de ingredientes mediante `RecipeStepIngredientLink`.
 - `InventoryLot` registra cada cambio de existencias mediante `InventoryMovement`.
-- `WeeklyPlan` contiene `MealPlanSlot` y `MealPlanEntry` para representar la estructura diaria del plan y el estado planificado, omitido o completado de cada asignación.
+- `DailyPlan` contiene `MealPlanSlot` y `MealPlanEntry`; la fecha solo pertenece a la raíz y los hijos no la duplican.
 - `CatalogName` se utiliza como value object para mantener válidos los nombres de las entidades de catálogo.
 
 Las clases del dominio crean y modifican sus entidades mediante métodos que validan
