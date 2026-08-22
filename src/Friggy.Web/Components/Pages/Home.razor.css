@@ -4,3 +4,8 @@
     color: var(--color-surface); display: inline-flex; font-weight: 700; justify-content: center;
     min-height: var(--control-min-size); padding: var(--space-2) var(--space-5); text-decoration: none;
 }
+.friggy-home__summary { display: grid; gap: var(--space-4); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.friggy-home__summary-card { border: 0.0625rem solid var(--color-border); border-radius: var(--radius-large); display: grid; gap: var(--space-3); padding: var(--space-4); }
+.friggy-home__summary-card h3, .friggy-home__summary-card p { margin: 0; }
+.friggy-home__quick-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }.friggy-home__quick-actions a { align-items: center; border: 0.0625rem solid var(--color-border); border-radius: var(--radius-medium); color: var(--color-primary-700); display: inline-flex; min-height: var(--control-min-size); padding: var(--space-2) var(--space-3); text-decoration: none; }
+@media (max-width: 47.99rem) { .friggy-home__summary { grid-template-columns: 1fr; } }

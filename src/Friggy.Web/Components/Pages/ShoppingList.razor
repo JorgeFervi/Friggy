@@ -35,17 +35,20 @@
             {
                 <FeedbackPanel Title="No hay comidas planificadas" Tone="FriggyTone.Neutral">No hay ingredientes que comprar para este intervalo.</FeedbackPanel>
             }
-            else if (VisibleItems.Count == 0)
-            {
-                <FeedbackPanel Title="Todo está cubierto" Tone="FriggyTone.Success">El inventario actual cubre todas las cantidades del intervalo.</FeedbackPanel>
-            }
             else
             {
                 <div class="friggy-shopping-list__filter" role="group" aria-label="Filtrar comparación">
                     <FriggyButton Variant="@(showPendingOnly ? FriggyButtonVariant.Primary : FriggyButtonVariant.Secondary)" OnClick="() => showPendingOnly = true">Pendientes</FriggyButton>
                     <FriggyButton Variant="@(!showPendingOnly ? FriggyButtonVariant.Primary : FriggyButtonVariant.Secondary)" OnClick="() => showPendingOnly = false">Todos</FriggyButton>
                 </div>
-                <QuantityComparison Items="VisibleItems" />
+                @if (VisibleItems.Count == 0)
+                {
+                    <FeedbackPanel Title="Todo está cubierto" Tone="FriggyTone.Success">El inventario actual cubre todas las cantidades del intervalo. Selecciona “Todos” para revisar la comparación completa.</FeedbackPanel>
+                }
+                else
+                {
+                    <QuantityComparison Items="VisibleItems" />
+                }
             }
         </PageSection>
     }

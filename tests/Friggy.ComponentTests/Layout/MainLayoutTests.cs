@@ -26,7 +26,10 @@ public sealed class MainLayoutTests : ComponentTest
             link => AssertNavigationLink(link, "Inicio", "/", active: false),
             link => AssertNavigationLink(link, "Recetas", "/recipes", active: true),
             link => AssertNavigationLink(link, "Planes diarios", "/daily-plans", active: false),
+            link => AssertNavigationLink(link, "Plantillas", "/daily-plan-templates", active: false),
+            link => AssertNavigationLink(link, "Lista de la compra", "/shopping-list", active: false),
             link => AssertNavigationLink(link, "Inventario", "/inventory", active: false));
+        Assert.Equal("Planificación", sidebar.QuerySelector("[aria-label='Planificación']")?.ParentElement?.QuerySelector("h2")?.TextContent.Trim());
         Assert.Equal("Catálogos", sidebar.QuerySelector("[data-navigation-group='catalogs'] h2")?.TextContent.Trim());
         Assert.Collection(
             sidebar.QuerySelectorAll("[data-navigation-group='catalogs'] a"),

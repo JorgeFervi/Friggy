@@ -62,7 +62,8 @@ public sealed class HomeComponentTests : ComponentTest
 
         component.WaitForAssertion(() =>
         {
-            Assert.Contains("La API no está disponible", component.Find("[role='alert']").TextContent, StringComparison.Ordinal);
+            Assert.Contains("No pudimos cargar las recetas", component.Find("[role='alert']").TextContent, StringComparison.Ordinal);
+            Assert.DoesNotContain("La API no está disponible", component.Find("[role='alert']").TextContent, StringComparison.Ordinal);
             Assert.DoesNotContain("Aún no hay recetas", component.Markup, StringComparison.Ordinal);
         });
     }

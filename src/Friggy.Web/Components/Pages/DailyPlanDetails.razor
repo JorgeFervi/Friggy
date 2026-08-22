@@ -21,7 +21,7 @@
 else if (plan is null)
 {
     <PageHeader Title="Plan diario" Eyebrow="Planificación"><Breadcrumb><a href="daily-plans">Volver a planes diarios</a></Breadcrumb></PageHeader>
-    <FeedbackPanel Title="No se pudo cargar el plan" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+    <FeedbackPanel Title="@error?.Title" Tone="FriggyTone.Danger"><ChildContent>@error?.Message</ChildContent><Actions><a href="daily-plans">Volver a planes diarios</a></Actions></FeedbackPanel>
 }
 else
 {
@@ -31,7 +31,7 @@ else
     </PageHeader>
     @if (error is not null)
     {
-        <FeedbackPanel Title="No pudimos guardar el cambio" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+        <FeedbackPanel Title="@error.Title" Tone="FriggyTone.Danger"><ChildContent>@error.Message</ChildContent><Actions>@if (error.CanRetry) { <FriggyButton Variant="FriggyButtonVariant.Secondary" OnClick="ReloadAsync">Reintentar</FriggyButton> }</Actions></FeedbackPanel>
     }
     @if (status is not null)
     {
@@ -67,7 +67,7 @@ else
     private readonly Dictionary<Guid, decimal> completionQuantities = [];
     private Guid? mealToComplete;
     private DateOnly plannedDate;
-    private string? error;
+    private UserFacingError? error;
     private string? status;
     private bool loading = true;
     private bool saving;
@@ -82,7 +82,7 @@ else
     {
         if (!DateOnly.TryParseExact(Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out plannedDate))
         {
-            error = "La fecha de la ruta no es válida.";
+            error = new UserFacingError("La fecha no es válida", "Vuelve a la lista de planes y elige un día válido.", false);
             loading = false;
             return;
         }
@@ -107,7 +107,7 @@ else
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
-            error = exception.Message;
+            error = UserFacingError.From(exception, "cargar el plan diario");
         }
         finally
         {
@@ -169,7 +169,7 @@ else
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
             CancelCompletion();
-            error = exception.Message;
+            error = UserFacingError.From(exception, "preparar la finalización de la comida");
         }
         finally
         {
@@ -213,7 +213,7 @@ else
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
-            error = exception.Message;
+            error = UserFacingError.From(exception, "finalizar la comida");
         }
         finally
         {
@@ -241,7 +241,7 @@ else
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
-            error = exception.Message;
+            error = UserFacingError.From(exception, "guardar el cambio");
         }
         finally
         {

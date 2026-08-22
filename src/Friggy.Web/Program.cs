@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddFriggyApiClients(builder.Configuration);
 builder.Services.AddHealthChecks();
 

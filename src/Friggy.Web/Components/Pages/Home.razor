@@ -1,68 +1,50 @@
 @page "/"
 @implements IDisposable
+@using Friggy.Application.DailyPlans.Dtos
+@using Friggy.Application.Inventory.Dtos
 @using Friggy.Application.Recipes.Dtos
 @using Friggy.Web.Api
 @using Friggy.Web.Components.Recipes
+@using Microsoft.Extensions.DependencyInjection
 @inject IRecipesApiClient RecipesApi
+@inject IServiceProvider ServiceProvider
 
 <PageTitle>Friggy</PageTitle>
-
 <div class="friggy-home">
-    <PageHeader Title="Tu cocina, organizada"
-                Eyebrow="Bienvenido a Friggy"
-                Description="Guarda tus recetas, prepara la semana y mantén cada ingrediente bajo control.">
+    <PageHeader Title="Tu cocina, organizada" Eyebrow="Bienvenido a Friggy" Description="Consulta lo importante de hoy y sigue organizando tu cocina.">
         <Actions><a class="friggy-home__primary-action" href="recipes/new">Crear receta</a></Actions>
     </PageHeader>
-
+    <PageSection Heading="Hoy" Description="Tu planificación y los ingredientes que necesitan atención.">
+        <div class="friggy-home__summary" role="list">
+            <article role="listitem" class="friggy-home__summary-card"><h3>Plan de hoy</h3>@if (planLoading) { <p>Cargando plan…</p> } else if (planError is not null) { <p>@planError.Message</p><FriggyButton Variant="FriggyButtonVariant.Secondary" OnClick="LoadPlanAsync">Reintentar</FriggyButton> } else if (todayPlan is null) { <p>Aún no hay un plan para hoy.</p><a href="daily-plans">Planificar hoy</a> } else { <p>@todayPlan.Meals.Count comidas configuradas.</p><a href="@($"daily-plans/{today:yyyy-MM-dd}")">Ver o completar plan</a> }</article>
+            <article role="listitem" class="friggy-home__summary-card"><h3>Caducidades próximas</h3>@if (inventoryLoading) { <p>Consultando inventario…</p> } else if (inventoryError is not null) { <p>@inventoryError.Message</p><FriggyButton Variant="FriggyButtonVariant.Secondary" OnClick="LoadInventoryAsync">Reintentar</FriggyButton> } else if (expiringLots.Count == 0) { <p>No hay ingredientes que caduquen en los próximos 3 días.</p><a href="inventory">Ver inventario</a> } else { <p>@expiringLots.Count lotes caducan pronto.</p><a href="inventory">Revisar inventario</a> }</article>
+            <article role="listitem" class="friggy-home__summary-card"><h3>Compra</h3><p>Calcula lo que falta para los próximos días.</p><a href="shopping-list">Ver lista de la compra</a></article>
+        </div>
+    </PageSection>
+    <PageSection Heading="Acciones rápidas" Description="Accesos directos para continuar organizando."><div class="friggy-home__quick-actions"><a href="daily-plans">Planificar comidas</a><a href="daily-plan-templates">Usar una plantilla</a><a href="inventory">Añadir inventario</a></div></PageSection>
     <PageSection Heading="Tus recetas" Description="Platos listos para volver a cocinar y compartir.">
-        @if (loading)
-        {
-            <FeedbackPanel Title="Cargando recetas" Tone="FriggyTone.Info">Estamos preparando tu recetario.</FeedbackPanel>
-        }
-        else if (error is not null)
-        {
-            <FeedbackPanel Title="No pudimos cargar las recetas" Tone="FriggyTone.Danger">@error</FeedbackPanel>
-        }
-        else if (recipes.Count == 0)
-        {
-            <FeedbackPanel Title="Aún no hay recetas" Tone="FriggyTone.Neutral">
-                <ChildContent>Crea tu primera receta para empezar a organizar la cocina.</ChildContent>
-                <Actions><a href="recipes/new">Crear la primera receta</a></Actions>
-            </FeedbackPanel>
-        }
-        else
-        {
-            <RecipeGrid Recipes="recipes" />
-        }
+        @if (recipesLoading) { <FeedbackPanel Title="Cargando recetas" Tone="FriggyTone.Info">Estamos preparando tu recetario.</FeedbackPanel> }
+        else if (recipesError is not null) { <FeedbackPanel Title="@recipesError.Title" Tone="FriggyTone.Danger"><ChildContent>@recipesError.Message</ChildContent><Actions><FriggyButton Variant="FriggyButtonVariant.Secondary" OnClick="LoadRecipesAsync">Reintentar</FriggyButton></Actions></FeedbackPanel> }
+        else if (recipes.Count == 0) { <FeedbackPanel Title="Aún no hay recetas" Tone="FriggyTone.Neutral"><ChildContent>Crea tu primera receta para empezar a organizar la cocina.</ChildContent><Actions><a href="recipes/new">Crear la primera receta</a></Actions></FeedbackPanel> }
+        else { <RecipeGrid Recipes="recipes" /> }
     </PageSection>
 </div>
 
 @code {
     private readonly CancellationTokenSource cancellation = new();
     private IReadOnlyList<RecipeListItemResponse> recipes = [];
-    private string? error;
-    private bool loading = true;
-
+    private IReadOnlyList<InventoryLotResponse> expiringLots = [];
+    private DailyPlanResponse? todayPlan;
+    private UserFacingError? recipesError; private UserFacingError? planError; private UserFacingError? inventoryError;
+    private bool recipesLoading = true; private bool planLoading; private bool inventoryLoading;
+    private DateOnly today;
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            recipes = await RecipesApi.ListAsync(cancellation.Token);
-        }
-        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
-        {
-            error = exception.Message;
-        }
-        finally
-        {
-            loading = false;
-        }
+        today = DateOnly.FromDateTime((ServiceProvider.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+        await Task.WhenAll(LoadRecipesAsync(), LoadPlanAsync(), LoadInventoryAsync());
     }
-
-    public void Dispose()
-    {
-        cancellation.Cancel();
-        cancellation.Dispose();
-        GC.SuppressFinalize(this);
-    }
+    private async Task LoadRecipesAsync() { recipesLoading = true; try { recipes = await RecipesApi.ListAsync(cancellation.Token); recipesError = null; } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { recipesError = UserFacingError.From(exception, "cargar las recetas"); } finally { recipesLoading = false; } }
+    private async Task LoadPlanAsync() { var api = ServiceProvider.GetService<IDailyPlansApiClient>(); if (api is null) return; planLoading = true; try { todayPlan = (await api.ListAsync(today, today, cancellation.Token)).Plans.SingleOrDefault(); planError = null; } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { planError = UserFacingError.From(exception, "cargar el plan de hoy"); } finally { planLoading = false; } }
+    private async Task LoadInventoryAsync() { var api = ServiceProvider.GetService<IInventoryApiClient>(); if (api is null) return; inventoryLoading = true; try { var limit = today.AddDays(3); expiringLots = (await api.ListAsync(false, cancellation.Token)).Where(lot => !lot.IsExpired && lot.ExpirationDate <= limit).ToArray(); inventoryError = null; } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { inventoryError = UserFacingError.From(exception, "cargar el inventario"); } finally { inventoryLoading = false; } }
+    public void Dispose() { cancellation.Cancel(); cancellation.Dispose(); GC.SuppressFinalize(this); }
 }

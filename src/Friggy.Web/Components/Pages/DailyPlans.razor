@@ -12,15 +12,15 @@
     <PageSection Heading="Intervalo" Description="Ambas fechas están incluidas.">
         <EditForm Model="range" OnValidSubmit="ReloadAsync" FormName="daily-plan-range-form">
             <div class="friggy-daily-plans__range">
-                <div><label for="daily-from">Desde</label><InputDate id="daily-from" @bind-Value="range.From" /></div>
-                <div><label for="daily-to">Hasta</label><InputDate id="daily-to" @bind-Value="range.To" /></div>
+                <FormField Context="field" Label="Desde" ControlId="daily-from" Error="@rangeError"><InputDate id="@field.ControlId" @bind-Value="range.From" aria-describedby="@field.DescribedBy" aria-invalid="@field.Invalid" /></FormField>
+                <FormField Context="field" Label="Hasta" ControlId="daily-to" Error="@rangeError"><InputDate id="@field.ControlId" @bind-Value="range.To" aria-describedby="@field.DescribedBy" aria-invalid="@field.Invalid" /></FormField>
                 <FriggyButton Type="FriggyButtonType.Submit" Busy="loading">Consultar</FriggyButton>
             </div>
         </EditForm>
     </PageSection>
     @if (error is not null)
     {
-        <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+        <FeedbackPanel Title="@error.Title" Tone="FriggyTone.Danger"><ChildContent>@error.Message</ChildContent><Actions>@if (error.CanRetry) { <FriggyButton Variant="FriggyButtonVariant.Secondary" OnClick="ReloadAsync">Reintentar</FriggyButton> }</Actions></FeedbackPanel>
     }
     <PageSection Heading="Días" Description="Un día sin plan es distinto de un plan todavía vacío.">
         @if (loading)
@@ -76,7 +76,8 @@
     private readonly CancellationTokenSource cancellation = new();
     private readonly RangeModel range = new();
     private IReadOnlyDictionary<DateOnly, DailyPlanResponse> plans = new Dictionary<DateOnly, DailyPlanResponse>();
-    private string? error;
+    private UserFacingError? error;
+    private string? rangeError;
     private bool loading = true;
     private DateOnly? creatingDate;
     private DateOnly? planToDelete;
@@ -90,6 +91,13 @@
 
     private async Task ReloadAsync()
     {
+        if (range.From > range.To)
+        {
+            rangeError = "La fecha inicial no puede ser posterior a la fecha final.";
+            return;
+        }
+
+        rangeError = null;
         loading = true;
         try
         {
@@ -99,7 +107,7 @@
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
-            error = exception.Message;
+            error = UserFacingError.From(exception, "cargar los planes diarios");
         }
         finally
         {
@@ -117,7 +125,7 @@
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
-            error = exception.Message;
+            error = UserFacingError.From(exception, "crear el plan diario");
         }
         finally
         {
@@ -157,8 +165,8 @@
                 {
                     StatusCode: System.Net.HttpStatusCode.Conflict,
                 }
-                ? "No se puede borrar un plan que contiene comidas completadas."
-                : $"No se pudo borrar el plan: {exception.Message}";
+                ? new UserFacingError("No se puede borrar el plan", "Un plan que contiene comidas completadas debe conservarse.", false)
+                : UserFacingError.From(exception, "borrar el plan diario");
         }
         finally
         {
