@@ -12,8 +12,19 @@ public sealed class DailyPlanTemplatesApiClient(HttpClient httpClient) : IDailyP
         return await response.Content.ReadFromJsonAsync<DailyPlanTemplateResponse[]>(cancellationToken) ?? [];
     }
 
+    public async Task<DailyPlanTemplateResponse> GetAsync(Guid id, CancellationToken cancellationToken)
+    {
+        using var response = await httpClient.GetAsync($"api/daily-plan-templates/{id}", cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<DailyPlanTemplateResponse>(cancellationToken) ??
+            throw new ApiProblemException("La API devolvió una respuesta vacía.");
+    }
+
     public Task<DailyPlanTemplateResponse> CreateAsync(CreateDailyPlanTemplateRequest request, CancellationToken cancellationToken) =>
         SendAsync<DailyPlanTemplateResponse>(HttpMethod.Post, "api/daily-plan-templates", request, cancellationToken);
+
+    public Task<DailyPlanTemplateResponse> UpdateAsync(Guid id, UpdateDailyPlanTemplateRequest request, CancellationToken cancellationToken) =>
+        SendAsync<DailyPlanTemplateResponse>(HttpMethod.Put, $"api/daily-plan-templates/{id}", request, cancellationToken);
 
     public Task<ApplyDailyPlanTemplateResponse> ApplyAsync(Guid id, ApplyDailyPlanTemplateRequest request, CancellationToken cancellationToken) =>
         SendAsync<ApplyDailyPlanTemplateResponse>(HttpMethod.Post, $"api/daily-plan-templates/{id}/apply", request, cancellationToken);

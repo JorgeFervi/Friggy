@@ -1,29 +1,55 @@
 @page "/daily-plan-templates"
 @implements IDisposable
+@using Friggy.Application.Catalogs.MealTypes.Dtos
 @using Friggy.Application.DailyPlanTemplates.Dtos
+@using Friggy.Application.Recipes.Dtos
 @using Friggy.Web.Api
 @inject IDailyPlanTemplatesApiClient Api
+@inject IMealTypesApiClient MealTypesApi
+@inject IRecipesApiClient RecipesApi
 @inject NavigationManager Navigation
 
 <PageTitle>Plantillas de planes</PageTitle>
 <PageHeader Title="Plantillas" Eyebrow="Planificación" Description="Guarda una configuración y aplícala a los días que elijas." />
 @if (error is not null) { <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel> }
+<PageSection Heading="Nueva plantilla">
+    <EditForm Model="draft" OnValidSubmit="SaveAsync" FormName="daily-plan-template-form">
+        <label for="template-name">Nombre</label><InputText id="template-name" @bind-Value="draft.Name" />
+        @foreach (var meal in draft.Meals)
+        {
+            <fieldset @key="meal.ClientId"><legend>Comida @(meal.Order + 1)</legend>
+                <label>Tipo <select @bind="meal.MealTypeId"><option value="@Guid.Empty">Selecciona un tipo</option>@foreach (var item in mealTypes) { <option value="@item.Id">@item.Name</option> }</select></label>
+                <label>Receta <select @bind="meal.RecipeId"><option value="">Sin receta</option>@foreach (var item in recipes) { <option value="@item.Id">@item.Name</option> }</select></label>
+                <label>Raciones <InputNumber @bind-Value="meal.Servings" /></label>
+                <label>Hora <InputText @bind-Value="meal.PlannedTime" placeholder="HH:mm" /></label>
+                <FriggyButton Variant="FriggyButtonVariant.Secondary" Disabled="@(draft.Meals.Count == 1)" OnClick="() => RemoveMeal(meal.ClientId)">Quitar</FriggyButton>
+            </fieldset>
+        }
+        <FormActions><FriggyButton Variant="FriggyButtonVariant.Secondary" OnClick="AddMeal">Añadir comida</FriggyButton><FriggyButton Type="FriggyButtonType.Submit" Busy="saving">Guardar plantilla</FriggyButton></FormActions>
+    </EditForm>
+</PageSection>
 <PageSection Heading="Plantillas guardadas">
     @if (loading) { <FeedbackPanel Title="Cargando" Tone="FriggyTone.Info">Consultando plantillas.</FeedbackPanel> }
-    else if (templates.Count == 0) { <FeedbackPanel Title="Aún no hay plantillas" Tone="FriggyTone.Neutral">Crea una configuración desde la API; el editor detallado se incorporará en el siguiente incremento de interfaz.</FeedbackPanel> }
-    else { <div role="list">@foreach (var item in templates) { <article role="listitem" @key="item.Id"><h2>@item.Name</h2><p>@item.Meals.Count comidas configuradas.</p><label for="@($"template-date-{item.Id:N}")">Fecha de aplicación</label><input id="@($"template-date-{item.Id:N}")" type="date" @bind="dates[item.Id]" /><FriggyButton Busy="applying == item.Id" OnClick="() => ApplyAsync(item.Id)">Aplicar</FriggyButton><FriggyButton Variant="FriggyButtonVariant.Danger" OnClick="() => DeleteAsync(item.Id)">Borrar</FriggyButton></article> }</div> }
+    else if (templates.Count == 0) { <FeedbackPanel Title="Aún no hay plantillas" Tone="FriggyTone.Neutral">Crea una plantilla para reutilizar tu configuración de comidas.</FeedbackPanel> }
+    else { <div role="list">@foreach (var item in templates) { <article role="listitem" @key="item.Id"><h2>@item.Name</h2><p>@item.Meals.Count comidas configuradas.</p><label for="@($"template-date-{item.Id:N}")">Fecha</label><input id="@($"template-date-{item.Id:N}")" type="date" @bind="dates[item.Id]" /><FriggyButton Busy="applying == item.Id" OnClick="() => ApplyAsync(item.Id)">Aplicar</FriggyButton><FriggyButton Variant="FriggyButtonVariant.Danger" OnClick="() => DeleteAsync(item.Id)">Borrar</FriggyButton></article> }</div> }
 </PageSection>
 
 @code {
     private readonly CancellationTokenSource cancellation = new();
     private IReadOnlyList<DailyPlanTemplateResponse> templates = [];
+    private IReadOnlyList<MealTypeResponse> mealTypes = [];
+    private IReadOnlyList<RecipeListItemResponse> recipes = [];
+    private readonly TemplateDraft draft = new();
     private readonly Dictionary<Guid, DateOnly> dates = [];
-    private Guid? applying;
-    private string? error;
-    private bool loading = true;
+    private Guid? applying; private string? error; private bool loading = true; private bool saving;
     protected override async Task OnInitializedAsync() => await ReloadAsync();
-    private async Task ReloadAsync() { loading = true; try { templates = await Api.ListAsync(cancellation.Token); error = null; } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { error = exception.Message; } finally { loading = false; } }
-    private async Task ApplyAsync(Guid id) { if (!dates.TryGetValue(id, out var date)) { error = "Elige una fecha para aplicar la plantilla."; return; } applying = id; try { var result = await Api.ApplyAsync(id, new([date]), cancellation.Token); Navigation.NavigateTo($"/daily-plans/{result.CreatedPlans[0].Date:yyyy-MM-dd}"); } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { error = exception.Message; } finally { applying = null; } }
-    private async Task DeleteAsync(Guid id) { try { await Api.DeleteAsync(id, cancellation.Token); templates = templates.Where(item => item.Id != id).ToArray(); } catch (Exception exception) when (exception is HttpRequestException or ApiProblemException) { error = exception.Message; } }
+    private async Task ReloadAsync() { loading = true; try { var a = Api.ListAsync(cancellation.Token); var b = MealTypesApi.ListAsync(cancellation.Token); var c = RecipesApi.ListAsync(cancellation.Token); await Task.WhenAll(a, b, c); templates = await a; mealTypes = await b; recipes = await c; error = null; } catch (Exception e) when (e is HttpRequestException or ApiProblemException) { error = e.Message; } finally { loading = false; } }
+    private void AddMeal() => draft.Meals.Add(new() { Order = draft.Meals.Count });
+    private void RemoveMeal(Guid id) { draft.Meals.RemoveAll(item => item.ClientId == id); for (var i = 0; i < draft.Meals.Count; i++) draft.Meals[i].Order = i; }
+    private async Task SaveAsync() { saving = true; try { var result = await Api.CreateAsync(new(draft.Name, draft.Meals.Select(item => new DailyPlanTemplateMealRequest(item.MealTypeId, item.RecipeId, item.Servings, item.PlannedTime, item.Order)).ToArray()), cancellation.Token); templates = [.. templates, result]; draft.Reset(); error = null; } catch (Exception e) when (e is HttpRequestException or ApiProblemException) { error = e.Message; } finally { saving = false; } }
+    private async Task ApplyAsync(Guid id) { if (!dates.TryGetValue(id, out var date)) { error = "Elige una fecha para aplicar la plantilla."; return; } applying = id; try { var result = await Api.ApplyAsync(id, new([date]), cancellation.Token); Navigation.NavigateTo($"/daily-plans/{result.CreatedPlans[0].Date:yyyy-MM-dd}"); } catch (Exception e) when (e is HttpRequestException or ApiProblemException) { error = e.Message; } finally { applying = null; } }
+    private async Task DeleteAsync(Guid id) { try { await Api.DeleteAsync(id, cancellation.Token); templates = templates.Where(item => item.Id != id).ToArray(); } catch (Exception e) when (e is HttpRequestException or ApiProblemException) { error = e.Message; } }
     public void Dispose() { cancellation.Cancel(); cancellation.Dispose(); GC.SuppressFinalize(this); }
+    private sealed class TemplateDraft { public string Name { get; set; } = string.Empty; public List<TemplateMealDraft> Meals { get; } = [new()]; public void Reset() { Name = string.Empty; Meals.Clear(); Meals.Add(new()); } }
+    private sealed class TemplateMealDraft { public Guid ClientId { get; } = Guid.NewGuid(); public Guid MealTypeId { get; set; } public Guid? RecipeId { get; set; } public int Servings { get; set; } = 1; public string? PlannedTime { get; set; } public int Order { get; set; } }
 }
