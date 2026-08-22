@@ -69,6 +69,21 @@ public sealed class VisualFoundationContractTests
 
     [Fact]
     [Trait("Category", "Tooling")]
+    public void SelectStyles_SupportedBrowsers_UseCustomizablePickerWithProgressiveFallback()
+    {
+        var baseStyles = ReadRepositoryFile("src", "Friggy.Web", "wwwroot", "css", "base.css");
+
+        Assert.Contains("@supports (appearance: base-select)", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("select::picker(select)", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("appearance: base-select", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("select::picker-icon", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("select:open::picker-icon", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("select option::checkmark", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("select option:checked", baseStyles, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Tooling")]
     public void RuntimeStyles_Always_KeepExternalResourcesAndHexColorsOutOfComponentStyles()
     {
         var webRoot = Path.Combine(RepositoryRoot, "src", "Friggy.Web");

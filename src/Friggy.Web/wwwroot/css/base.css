@@ -77,6 +77,116 @@ textarea {
     font: inherit;
 }
 
+select {
+    background-color: var(--color-surface);
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-medium);
+    color: var(--color-text);
+    cursor: pointer;
+    min-height: var(--control-min-size);
+    padding: var(--space-2) var(--space-3);
+    transition:
+        background-color var(--motion-fast),
+        border-color var(--motion-fast),
+        box-shadow var(--motion-fast);
+    width: 100%;
+}
+
+select:hover:not(:disabled) {
+    background-color: var(--color-primary-100);
+    border-color: var(--color-primary-600);
+}
+
+select:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+@supports (appearance: base-select) {
+    select,
+    select::picker(select) {
+        appearance: base-select;
+    }
+
+    select::picker-icon {
+        color: var(--color-primary-600);
+        transition: rotate var(--motion-standard);
+    }
+
+    select:open {
+        border-color: var(--color-primary-600);
+        box-shadow: var(--shadow-surface);
+    }
+
+    select:open::picker-icon {
+        rotate: 180deg;
+    }
+
+    select::picker(select) {
+        background: var(--color-surface);
+        border: 0.0625rem solid var(--color-border);
+        border-radius: var(--radius-medium);
+        box-shadow: var(--shadow-dialog);
+        margin-block: var(--space-1);
+        max-height: min(20rem, 50vh);
+        opacity: 0;
+        overflow-y: auto;
+        transform: translateY(calc(0rem - var(--space-1)));
+        transition:
+            opacity var(--motion-fast),
+            transform var(--motion-fast),
+            display var(--motion-fast) allow-discrete,
+            overlay var(--motion-fast) allow-discrete;
+    }
+
+    select:open::picker(select) {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    select option {
+        align-items: center;
+        background: var(--color-surface);
+        color: var(--color-text);
+        cursor: pointer;
+        display: flex;
+        gap: var(--space-3);
+        min-height: var(--control-min-size);
+        padding: var(--space-2) var(--space-3);
+        transition: background-color var(--motion-fast), color var(--motion-fast);
+    }
+
+    select option:hover,
+    select option:focus,
+    select option:checked {
+        background: var(--color-primary-100);
+        color: var(--color-primary-700);
+    }
+
+    select option:checked {
+        font-weight: 600;
+    }
+
+    select option:disabled {
+        color: var(--color-text-muted);
+        cursor: not-allowed;
+        opacity: 0.65;
+    }
+
+    select option::checkmark {
+        color: var(--color-primary-600);
+        margin-inline-start: auto;
+        order: 1;
+    }
+
+    @starting-style {
+        select:open::picker(select) {
+            opacity: 0;
+            transform: translateY(calc(0rem - var(--space-1)));
+        }
+    }
+}
+
 button,
 a,
 input,
