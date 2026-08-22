@@ -1,0 +1,287 @@
+@page "/daily-plans/{Date}"
+@implements IDisposable
+@using System.Globalization
+@using Friggy.Application.Catalogs.MealTypes.Dtos
+@using Friggy.Application.DailyPlans.Dtos
+@using Friggy.Application.Inventory.Dtos
+@using Friggy.Application.Recipes.Dtos
+@using Friggy.Web.Api
+@using Friggy.Web.Components.DailyPlans
+@using Friggy.Web.DailyPlans
+@inject IDailyPlansApiClient Api
+@inject IRecipesApiClient RecipesApi
+@inject IMealTypesApiClient MealTypesApi
+@inject IInventoryApiClient LotsApi
+
+<PageTitle>Plan diario</PageTitle>
+@if (loading)
+{
+    <PageHeader Title="Plan diario" Eyebrow="Planificación" Description="Cargando el día…" />
+}
+else if (plan is null)
+{
+    <PageHeader Title="Plan diario" Eyebrow="Planificación"><Breadcrumb><a href="daily-plans">Volver a planes diarios</a></Breadcrumb></PageHeader>
+    <FeedbackPanel Title="No se pudo cargar el plan" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+}
+else
+{
+    <PageHeader Title="@plan.Date.ToString("dddd, dd/MM/yyyy")" Eyebrow="Planificación diaria"
+                Description="Configura las comidas de este único día.">
+        <Breadcrumb><a href="daily-plans">Volver a planes diarios</a></Breadcrumb>
+    </PageHeader>
+    @if (error is not null)
+    {
+        <FeedbackPanel Title="No pudimos guardar el cambio" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+    }
+    @if (status is not null)
+    {
+        <p class="friggy-daily-plan-details__status" role="status">@status</p>
+    }
+    <PageSection Heading="Comidas" Description="Asigna recetas y comensales, cambia horarios o registra el resultado.">
+        <DailyPlanEditor Model="plan" Recipes="recipes" MealTypes="mealTypes" IsSaving="saving"
+                         OnChanged="ChangeEntryAsync" OnTimeChanged="SetTimeAsync"
+                         OnSlotAdded="AddSlotAsync" OnSlotRemoved="RemoveSlotAsync"
+                         OnSlotsReordered="ReorderSlotsAsync" OnSkipped="SkipAsync"
+                         OnComplete="CompleteAsync" />
+    </PageSection>
+    <PageSection Heading="Necesidades del día" Description="Vista provisional del día; la comparación multifecha pertenece a la lista de compra.">
+        @if (requirements.Count == 0)
+        {
+            <FeedbackPanel Title="Sin ingredientes requeridos" Tone="FriggyTone.Neutral">Asigna recetas para calcular las necesidades.</FeedbackPanel>
+        }
+        else
+        {
+            <table><thead><tr><th>Ingrediente</th><th>Requerido</th><th>Disponible</th><th>Faltante</th></tr></thead><tbody>
+            @foreach (var item in requirements)
+            {
+                <tr @key="@($"{item.IngredientId:N}-{item.UnitTypeId:N}")"><td>@item.IngredientName</td><td>@item.RequiredQuantity @item.UnitSymbol</td><td>@item.AvailableQuantity @item.UnitSymbol</td><td>@item.MissingQuantity @item.UnitSymbol</td></tr>
+            }
+            </tbody></table>
+        }
+    </PageSection>
+    @if (mealToComplete is not null)
+    {
+        <div class="friggy-completion-dialog__backdrop">
+            <section class="friggy-completion-dialog" role="dialog" aria-modal="true"
+                     aria-labelledby="completion-title" aria-describedby="completion-description">
+                <header><p>Actualizar inventario</p><h2 id="completion-title">Selecciona los consumos</h2></header>
+                <p id="completion-description">Indica cuánto quieres consumir de cada lote compatible.</p>
+                @if (completionLots.Count == 0)
+                {
+                    <FeedbackPanel Title="No hay lotes compatibles" Tone="FriggyTone.Warning">Puedes completar la comida dejando toda la necesidad pendiente.</FeedbackPanel>
+                }
+                <div class="friggy-completion-dialog__lots">
+                    @foreach (var candidate in completionLots)
+                    {
+                        <div @key="candidate.Id">
+                            <label for="@($"completion-{candidate.Id:N}")">@candidate.IngredientName: @candidate.Quantity @candidate.UnitSymbol, caduca @candidate.ExpirationDate.ToString("dd/MM/yyyy")</label>
+                            <input id="@($"completion-{candidate.Id:N}")" type="number" min="0" step="0.001"
+                                   value="@completionQuantities.GetValueOrDefault(candidate.Id)"
+                                   @onchange="args => SetCompletionQuantity(candidate.Id, args)" />
+                        </div>
+                    }
+                </div>
+                <FormActions>
+                    <FriggyButton Variant="FriggyButtonVariant.Secondary" Disabled="saving" OnClick="CancelCompletion">Cancelar</FriggyButton>
+                    <FriggyButton Busy="saving" BusyLabel="Finalizando" OnClick="ConfirmCompletionAsync">Confirmar finalización</FriggyButton>
+                </FormActions>
+            </section>
+        </div>
+    }
+}
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private DailyPlanResponse? plan;
+    private IReadOnlyList<RecipeListItemResponse> recipes = [];
+    private IReadOnlyList<MealTypeResponse> mealTypes = [];
+    private IReadOnlyList<InventoryRequirementResponse> requirements = [];
+    private IReadOnlyList<InventoryLotResponse> completionLots = [];
+    private readonly Dictionary<Guid, decimal> completionQuantities = [];
+    private Guid? mealToComplete;
+    private DateOnly plannedDate;
+    private string? error;
+    private string? status;
+    private bool loading = true;
+    private bool saving;
+
+    [Parameter] public string Date { get; set; } = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!DateOnly.TryParseExact(Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out plannedDate))
+        {
+            error = "La fecha de la ruta no es válida.";
+            loading = false;
+            return;
+        }
+
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        loading = true;
+        try
+        {
+            var planTask = Api.GetAsync(plannedDate, cancellation.Token);
+            var recipesTask = RecipesApi.ListAsync(cancellation.Token);
+            var mealTypesTask = MealTypesApi.ListAsync(cancellation.Token);
+            await Task.WhenAll(planTask, recipesTask, mealTypesTask);
+            plan = await planTask;
+            recipes = await recipesTask;
+            mealTypes = await mealTypesTask;
+            requirements = await Api.GetRequirementsAsync(plannedDate, cancellation.Token);
+            error = null;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private Task ChangeEntryAsync(DailyPlanMealChange change) => SaveAsync(async () =>
+    {
+        plan = change.RecipeId.HasValue
+            ? await Api.SetEntryAsync(plannedDate, change.MealTypeId, new(change.RecipeId.Value, change.Servings), cancellation.Token)
+            : await Api.RemoveEntryAsync(plannedDate, change.MealTypeId, cancellation.Token);
+    });
+
+    private Task SetTimeAsync(DailyPlanSlotTimeChange change) => SaveAsync(async () =>
+    {
+        await Api.SetSlotTimeAsync(plannedDate, change.SlotId, new(change.PlannedTime), cancellation.Token);
+        plan = await Api.GetAsync(plannedDate, cancellation.Token);
+    });
+
+    private Task AddSlotAsync(DailyPlanSlotAddChange change) => SaveAsync(async () =>
+        plan = await Api.AddSlotAsync(plannedDate, new(change.MealTypeId), cancellation.Token));
+
+    private Task RemoveSlotAsync(Guid slotId) => SaveAsync(async () =>
+        plan = await Api.RemoveSlotAsync(plannedDate, slotId, cancellation.Token));
+
+    private Task ReorderSlotsAsync(DailyPlanSlotsOrderChange change) => SaveAsync(async () =>
+        plan = await Api.ReorderSlotsAsync(plannedDate, new(change.SlotIds), cancellation.Token));
+
+    private Task SkipAsync(DailyPlanSkipChange change) => SaveAsync(async () =>
+    {
+        await Api.SkipEntryAsync(plannedDate, change.MealTypeId, new(change.Reason, change.AlternativeDescription), cancellation.Token);
+        plan = await Api.GetAsync(plannedDate, cancellation.Token);
+    });
+
+    private async Task CompleteAsync(Guid mealTypeId)
+    {
+        if (plan?.Meals.SingleOrDefault(meal => meal.MealTypeId == mealTypeId)?.RecipeId is not Guid recipeId)
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        try
+        {
+            mealToComplete = mealTypeId;
+            completionQuantities.Clear();
+            var lotsTask = LotsApi.ListAsync(false, cancellation.Token);
+            var recipeTask = RecipesApi.GetAsync(recipeId, cancellation.Token);
+            await Task.WhenAll(lotsTask, recipeTask);
+            var requiredKeys = (await recipeTask).Ingredients
+                .Select(item => (item.IngredientId, item.UnitTypeId))
+                .ToHashSet();
+            completionLots = (await lotsTask)
+                .Where(lot => requiredKeys.Contains((lot.IngredientId, lot.UnitTypeId)))
+                .ToArray();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            CancelCompletion();
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void SetCompletionQuantity(Guid lotId, ChangeEventArgs args) =>
+        completionQuantities[lotId] = decimal.TryParse(args.Value?.ToString(), out var value)
+            ? value
+            : 0m;
+
+    private async Task ConfirmCompletionAsync()
+    {
+        if (mealToComplete is not Guid mealTypeId)
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        try
+        {
+            var completion = await Api.CompleteMealAsync(
+                plannedDate,
+                mealTypeId,
+                new CompleteMealRequest(completionQuantities
+                    .Where(item => item.Value > 0)
+                    .Select(item => new InventoryLotAllocationRequest(item.Key, item.Value))
+                    .ToArray()),
+                cancellation.Token);
+            plan = await Api.GetAsync(plannedDate, cancellation.Token);
+            requirements = await Api.GetRequirementsAsync(plannedDate, cancellation.Token);
+            status = completion.RemainingRequirements is { Count: > 0 }
+                ? "Comida completada. Queda por cubrir: " + string.Join(
+                    ", ",
+                    completion.RemainingRequirements.Select(item =>
+                        $"{item.RemainingQuantity} {item.UnitSymbol} de {item.IngredientName}")) + "."
+                : "Comida completada e inventario actualizado.";
+            CancelCompletion();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void CancelCompletion()
+    {
+        mealToComplete = null;
+        completionLots = [];
+        completionQuantities.Clear();
+    }
+
+    private async Task SaveAsync(Func<Task> operation)
+    {
+        if (saving) return;
+        saving = true;
+        error = null;
+        try
+        {
+            await operation();
+            requirements = await Api.GetRequirementsAsync(plannedDate, cancellation.Token);
+            status = "Cambios guardados.";
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

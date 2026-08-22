@@ -25,9 +25,8 @@ public static class FriggyApiServiceCollectionExtensions
         services.AddHttpClient<IRecipeTagsApiClient, CatalogApiClient>(ConfigureClient);
         services.AddHttpClient<IMealTypesApiClient, CatalogApiClient>(ConfigureClient);
         services.AddHttpClient<IRecipesApiClient, RecipeApiClient>(ConfigureClient);
-        services.AddHttpClient<IWeeklyPlansApiClient, WeeklyPlanApiClient>(ConfigureClient);
+        services.AddHttpClient<IDailyPlansApiClient, DailyPlanApiClient>(ConfigureClient);
         services.AddHttpClient<IInventoryApiClient, InventoryApiClient>(ConfigureClient);
-        services.AddHttpClient<IWeeklyPlanInventoryApiClient, InventoryApiClient>(ConfigureClient);
 
         return services;
     }

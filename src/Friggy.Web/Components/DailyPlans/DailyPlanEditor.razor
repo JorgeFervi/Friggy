@@ -1,0 +1,146 @@
+@using Friggy.Application.Catalogs.MealTypes.Dtos
+@using Friggy.Application.DailyPlans.Dtos
+@using Friggy.Application.Recipes.Dtos
+@using Friggy.Web.DailyPlans
+
+<div class="friggy-daily-editor" data-testid="daily-plan-editor">
+    @{ var orderedMeals = Model.Meals.OrderBy(item => item.SlotOrder).ToArray(); }
+    @foreach (var meal in orderedMeals)
+    {
+        var locked = meal.IsCompleted || meal.Status == MealPlanEntryState.Skipped;
+        <article class="friggy-meal-slot" data-testid="meal-slot" @key="meal.SlotId">
+            <header class="friggy-meal-slot__header">
+                <strong>@meal.MealTypeName</strong>
+                @if (meal.IsCompleted)
+                {
+                    <StatusBadge Tone="FriggyTone.Success">Completada</StatusBadge>
+                }
+                else if (meal.Status == MealPlanEntryState.Skipped)
+                {
+                    <StatusBadge Tone="FriggyTone.Warning">Omitida</StatusBadge>
+                }
+                <button type="button" disabled="@(IsSaving || meal.SlotOrder == 0)"
+                        aria-label="Subir @meal.MealTypeName" @onclick="() => MoveAsync(orderedMeals, meal.SlotId, -1)">↑</button>
+                <button type="button" disabled="@(IsSaving || meal.SlotOrder == orderedMeals.Length - 1)"
+                        aria-label="Bajar @meal.MealTypeName" @onclick="() => MoveAsync(orderedMeals, meal.SlotId, 1)">↓</button>
+                <button type="button" disabled="@(IsSaving || meal.RecipeId.HasValue)"
+                        aria-label="Eliminar hueco @meal.MealTypeName" @onclick="() => OnSlotRemoved.InvokeAsync(meal.SlotId)">Eliminar hueco</button>
+            </header>
+            <div class="friggy-meal-slot__fields">
+                <div class="friggy-meal-slot__field">
+                    <label for="@($"recipe-{meal.SlotId:N}")">Receta</label>
+                    <select id="@($"recipe-{meal.SlotId:N}")"
+                            value="@(meal.RecipeId?.ToString() ?? string.Empty)"
+                            disabled="@(IsSaving || locked)"
+                            @onchange="args => SelectRecipeAsync(meal, args)">
+                        <option value="">Sin receta</option>
+                        @foreach (var recipe in Recipes.OrderBy(item => item.Name))
+                        {
+                            <option value="@recipe.Id">@recipe.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="friggy-meal-slot__field">
+                    <label for="@($"servings-{meal.SlotId:N}")">Comensales</label>
+                    <input id="@($"servings-{meal.SlotId:N}")" type="number" min="1"
+                           value="@meal.Servings" disabled="@(IsSaving || locked || !meal.RecipeId.HasValue)"
+                           @onchange="args => ChangeServingsAsync(meal, args)" />
+                </div>
+                <div class="friggy-meal-slot__field">
+                    <label for="@($"time-{meal.SlotId:N}")">Hora prevista</label>
+                    <input id="@($"time-{meal.SlotId:N}")" type="time" value="@meal.PlannedTime"
+                           disabled="@IsSaving"
+                           @onchange="args => OnTimeChanged.InvokeAsync(new(meal.SlotId, args.Value?.ToString()))" />
+                </div>
+            </div>
+            @if (meal.PreparationStartsAt.HasValue)
+            {
+                <p>Empezar preparación: @meal.PreparationStartsAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
+            }
+            @if (meal.RecipeId.HasValue && !locked)
+            {
+                <div class="friggy-meal-slot__actions">
+                    <FriggyButton Size="FriggyButtonSize.Compact" Disabled="IsSaving"
+                                  OnClick="() => OnComplete.InvokeAsync(meal.MealTypeId)">Completar</FriggyButton>
+                    <input aria-label="Motivo para omitir @meal.MealTypeName"
+                           placeholder="Motivo para omitir"
+                           @oninput="args => skipReasons[meal.MealTypeId] = args.Value?.ToString()" />
+                    <FriggyButton Variant="FriggyButtonVariant.Secondary" Size="FriggyButtonSize.Compact"
+                                  Disabled="@(IsSaving || !skipReasons.ContainsKey(meal.MealTypeId))"
+                                  OnClick="() => SkipAsync(meal.MealTypeId)">Omitir</FriggyButton>
+                </div>
+            }
+        </article>
+    }
+
+    <div>
+        <label for="daily-plan-add-slot">Añadir tipo de comida</label>
+        <select id="daily-plan-add-slot" @bind="pendingMealTypeId" disabled="@IsSaving">
+            <option value="">Selecciona un tipo</option>
+            @foreach (var mealType in MealTypes
+                .Where(item => Model.Meals.All(meal => meal.MealTypeId != item.Id))
+                .OrderBy(item => item.Order))
+            {
+                <option value="@mealType.Id">@mealType.Name</option>
+            }
+        </select>
+        <FriggyButton Variant="FriggyButtonVariant.Secondary" Disabled="@(IsSaving || !pendingMealTypeId.HasValue)"
+                      OnClick="AddSlotAsync">Añadir hueco</FriggyButton>
+    </div>
+</div>
+
+@code {
+    private readonly Dictionary<Guid, string?> skipReasons = [];
+    private Guid? pendingMealTypeId;
+
+    [Parameter, EditorRequired] public DailyPlanResponse Model { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlyList<RecipeListItemResponse> Recipes { get; set; } = [];
+    [Parameter, EditorRequired] public IReadOnlyList<MealTypeResponse> MealTypes { get; set; } = [];
+    [Parameter] public bool IsSaving { get; set; }
+    [Parameter] public EventCallback<DailyPlanMealChange> OnChanged { get; set; }
+    [Parameter] public EventCallback<DailyPlanSlotTimeChange> OnTimeChanged { get; set; }
+    [Parameter] public EventCallback<DailyPlanSlotAddChange> OnSlotAdded { get; set; }
+    [Parameter] public EventCallback<Guid> OnSlotRemoved { get; set; }
+    [Parameter] public EventCallback<DailyPlanSlotsOrderChange> OnSlotsReordered { get; set; }
+    [Parameter] public EventCallback<DailyPlanSkipChange> OnSkipped { get; set; }
+    [Parameter] public EventCallback<Guid> OnComplete { get; set; }
+
+    private async Task SelectRecipeAsync(DailyPlanMealResponse meal, ChangeEventArgs args)
+    {
+        var recipeId = Guid.TryParse(args.Value?.ToString(), out var parsed) ? parsed : (Guid?)null;
+        await OnChanged.InvokeAsync(new(meal.MealTypeId, recipeId, meal.Servings));
+    }
+
+    private async Task ChangeServingsAsync(DailyPlanMealResponse meal, ChangeEventArgs args)
+    {
+        var servings = int.TryParse(args.Value?.ToString(), out var parsed) && parsed > 0
+            ? parsed
+            : meal.Servings;
+        await OnChanged.InvokeAsync(new(meal.MealTypeId, meal.RecipeId, servings));
+    }
+
+    private Task SkipAsync(Guid mealTypeId) =>
+        OnSkipped.InvokeAsync(new(mealTypeId, skipReasons.GetValueOrDefault(mealTypeId), null));
+
+    private async Task AddSlotAsync()
+    {
+        if (pendingMealTypeId.HasValue)
+        {
+            await OnSlotAdded.InvokeAsync(new(pendingMealTypeId.Value));
+            pendingMealTypeId = null;
+        }
+    }
+
+    private Task MoveAsync(DailyPlanMealResponse[] meals, Guid slotId, int offset)
+    {
+        var ids = meals.Select(meal => meal.SlotId).ToList();
+        var current = ids.IndexOf(slotId);
+        var target = current + offset;
+        if (current >= 0 && target >= 0 && target < ids.Count)
+        {
+            (ids[current], ids[target]) = (ids[target], ids[current]);
+        }
+
+        return OnSlotsReordered.InvokeAsync(new(ids));
+    }
+}

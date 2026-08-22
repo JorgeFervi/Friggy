@@ -1,12 +1,9 @@
-using System.Globalization;
 using System.Net.Http.Json;
 using Friggy.Application.Inventory.Dtos;
 
 namespace Friggy.Web.Api;
 
-public sealed class InventoryApiClient(HttpClient httpClient) :
-    IInventoryApiClient,
-    IWeeklyPlanInventoryApiClient
+public sealed class InventoryApiClient(HttpClient httpClient) : IInventoryApiClient
 {
     public Task<IReadOnlyList<InventoryLotResponse>> ListAsync(
         bool includeUnavailable,
@@ -64,27 +61,6 @@ public sealed class InventoryApiClient(HttpClient httpClient) :
         SendAsync<InventoryLotResponse>(
             HttpMethod.Post,
             $"api/inventory-lots/{id}/adjust",
-            request,
-            cancellationToken);
-
-    public Task<IReadOnlyList<InventoryRequirementResponse>> GetRequirementsAsync(
-        Guid planId,
-        CancellationToken cancellationToken) =>
-        GetListAsync<InventoryRequirementResponse>(
-            $"api/weekly-plans/{planId}/inventory-requirements",
-            cancellationToken);
-
-    public Task<MealCompletionResponse> CompleteMealAsync(
-        Guid planId,
-        DateOnly mealDate,
-        Guid mealTypeId,
-        CompleteMealRequest request,
-        CancellationToken cancellationToken) =>
-        SendAsync<MealCompletionResponse>(
-            HttpMethod.Post,
-            $"api/weekly-plans/{planId}/days/" +
-                $"{mealDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}/" +
-                $"meal-types/{mealTypeId}/complete",
             request,
             cancellationToken);
 

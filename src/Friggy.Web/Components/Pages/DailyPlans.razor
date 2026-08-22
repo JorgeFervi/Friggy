@@ -1,0 +1,117 @@
+@page "/daily-plans"
+@implements IDisposable
+@using Friggy.Application.DailyPlans.Dtos
+@using Friggy.Web.Api
+@inject IDailyPlansApiClient Api
+@inject NavigationManager Navigation
+
+<PageTitle>Planes diarios</PageTitle>
+<div class="friggy-daily-plans">
+    <PageHeader Title="Planes diarios" Eyebrow="Organiza tus comidas"
+                Description="Elige cualquier intervalo y planifica solo los días que necesitas." />
+    <PageSection Heading="Intervalo" Description="Ambas fechas están incluidas.">
+        <EditForm Model="range" OnValidSubmit="ReloadAsync" FormName="daily-plan-range-form">
+            <div class="friggy-daily-plans__range">
+                <div><label for="daily-from">Desde</label><InputDate id="daily-from" @bind-Value="range.From" /></div>
+                <div><label for="daily-to">Hasta</label><InputDate id="daily-to" @bind-Value="range.To" /></div>
+                <FriggyButton Type="FriggyButtonType.Submit" Busy="loading">Consultar</FriggyButton>
+            </div>
+        </EditForm>
+    </PageSection>
+    @if (error is not null)
+    {
+        <FeedbackPanel Title="No pudimos completar la operación" Tone="FriggyTone.Danger">@error</FeedbackPanel>
+    }
+    <PageSection Heading="Días" Description="Un día sin plan es distinto de un plan todavía vacío.">
+        @if (loading)
+        {
+            <FeedbackPanel Title="Cargando días" Tone="FriggyTone.Info">Consultando la planificación.</FeedbackPanel>
+        }
+        else
+        {
+            <div class="friggy-daily-plans__grid" role="list" data-testid="daily-plan-list">
+                @foreach (var date in Dates)
+                {
+                    var plan = plans.GetValueOrDefault(date);
+                    <article class="friggy-daily-plan-card" role="listitem" @key="date">
+                        <div><strong>@date.ToString("dddd, dd/MM/yyyy")</strong>
+                            <p>@(plan is null ? "Sin plan" : $"{plan.Meals.Count} comidas configuradas")</p></div>
+                        @if (plan is null)
+                        {
+                            <FriggyButton Busy="@(creatingDate == date)" OnClick="() => CreateAsync(date)">Planificar este día</FriggyButton>
+                        }
+                        else
+                        {
+                            <a href="@($"daily-plans/{date:yyyy-MM-dd}")">Abrir plan</a>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </PageSection>
+</div>
+
+@code {
+    private readonly CancellationTokenSource cancellation = new();
+    private readonly RangeModel range = new();
+    private IReadOnlyDictionary<DateOnly, DailyPlanResponse> plans = new Dictionary<DateOnly, DailyPlanResponse>();
+    private string? error;
+    private bool loading = true;
+    private DateOnly? creatingDate;
+
+    private IEnumerable<DateOnly> Dates => range.From <= range.To
+        ? Enumerable.Range(0, range.To.DayNumber - range.From.DayNumber + 1).Select(range.From.AddDays)
+        : [];
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        loading = true;
+        try
+        {
+            var result = await Api.ListAsync(range.From, range.To, cancellation.Token);
+            plans = result.Plans.ToDictionary(plan => plan.Date);
+            error = null;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CreateAsync(DateOnly date)
+    {
+        creatingDate = date;
+        try
+        {
+            var plan = await Api.CreateAsync(new(date), cancellation.Token);
+            Navigation.NavigateTo($"/daily-plans/{plan.Date:yyyy-MM-dd}");
+        }
+        catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
+        {
+            error = exception.Message;
+        }
+        finally
+        {
+            creatingDate = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        cancellation.Cancel();
+        cancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private sealed class RangeModel
+    {
+        public DateOnly From { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public DateOnly To { get; set; } = DateOnly.FromDateTime(DateTime.Today).AddDays(6);
+    }
+}
