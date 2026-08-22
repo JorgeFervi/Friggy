@@ -1,8 +1,9 @@
-<button class="friggy-button @VariantClass @SizeClass"
+<button class="friggy-button @VariantClass @SizeClass @CssClass"
         type="@TypeValue"
         disabled="@(Disabled || Busy)"
         autofocus="@AutoFocus"
         data-action="@DataAction"
+        aria-label="@AriaLabel"
         aria-busy="@(Busy ? "true" : null)"
         @onclick="HandleClickAsync">
     @if (Busy)
@@ -42,6 +43,12 @@
 
     [Parameter]
     public string? DataAction { get; set; }
+
+    [Parameter]
+    public string? AriaLabel { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
 
     [Parameter]
     public EventCallback<MouseEventArgs> OnClick { get; set; }

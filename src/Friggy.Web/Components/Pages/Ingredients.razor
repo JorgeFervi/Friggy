@@ -52,37 +52,87 @@
         }
         else if (items.Count > 0)
         {
-            <div class="friggy-catalog-page__cards" role="list">
-                @foreach (var item in items)
-                {
-                    <article class="friggy-catalog-card" role="listitem" @key="item.Id">
-                        <h3>@item.Name</h3>
-                        <div class="friggy-catalog-page__actions">
-                            <FriggyIconButton Label="@($"Editar {item.Name}")" Icon="FriggyIconName.Edit" OnClick="() => BeginEdit(item)" />
-                            <FriggyIconButton Label="@($"Borrar {item.Name}")" Icon="FriggyIconName.Delete" Variant="FriggyButtonVariant.Danger" OnClick="() => RequestDelete(item)" />
-                        </div>
-                    </article>
-                }
+            <div class="friggy-catalog-page__toolbar">
+                <div class="friggy-catalog-page__search">
+                    <label for="ingredient-search">Buscar por nombre</label>
+                    <input id="ingredient-search"
+                           type="search"
+                           value="@searchTerm"
+                           placeholder="Ej. tomate"
+                           autocomplete="off"
+                           @oninput="SearchChanged" />
+                </div>
+                <p class="friggy-catalog-page__result-status"
+                   data-testid="ingredient-result-status"
+                   role="status"
+                   aria-live="polite">@ResultSummary</p>
             </div>
-            <div class="friggy-catalog-page__table">
-                <table>
-                    <thead><tr><th>Nombre</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
-                    <tbody>
-                    @foreach (var item in items)
+
+            @if (FilteredItemCount == 0)
+            {
+                <FeedbackPanel Title="Sin coincidencias" Tone="FriggyTone.Neutral">
+                    No hay ingredientes cuyo nombre coincida con “@searchTerm”.
+                </FeedbackPanel>
+            }
+            else
+            {
+                <div class="friggy-catalog-page__cards" role="list">
+                    @foreach (var item in PagedItems)
                     {
-                        <tr @key="item.Id">
-                            <td>@item.Name</td>
-                            <td>
-                                <div class="friggy-catalog-page__actions">
-                                    <FriggyIconButton Label="@($"Editar {item.Name}")" Icon="FriggyIconName.Edit" OnClick="() => BeginEdit(item)" />
-                                    <FriggyIconButton Label="@($"Borrar {item.Name}")" Icon="FriggyIconName.Delete" Variant="FriggyButtonVariant.Danger" OnClick="() => RequestDelete(item)" />
-                                </div>
-                            </td>
-                        </tr>
+                        <article class="friggy-catalog-card" role="listitem" @key="item.Id">
+                            <h3>@item.Name</h3>
+                            <div class="friggy-catalog-page__actions">
+                                <FriggyIconButton Label="@($"Editar {item.Name}")" Icon="FriggyIconName.Edit" OnClick="() => BeginEdit(item)" />
+                                <FriggyIconButton Label="@($"Borrar {item.Name}")" Icon="FriggyIconName.Delete" Variant="FriggyButtonVariant.Danger" OnClick="() => RequestDelete(item)" />
+                            </div>
+                        </article>
                     }
-                    </tbody>
-                </table>
-            </div>
+                </div>
+                <div class="friggy-catalog-page__table">
+                    <table>
+                        <thead><tr><th>Nombre</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
+                        <tbody>
+                        @foreach (var item in PagedItems)
+                        {
+                            <tr @key="item.Id">
+                                <td>@item.Name</td>
+                                <td>
+                                    <div class="friggy-catalog-page__actions">
+                                        <FriggyIconButton Label="@($"Editar {item.Name}")" Icon="FriggyIconName.Edit" OnClick="() => BeginEdit(item)" />
+                                        <FriggyIconButton Label="@($"Borrar {item.Name}")" Icon="FriggyIconName.Delete" Variant="FriggyButtonVariant.Danger" OnClick="() => RequestDelete(item)" />
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (TotalPages > 1)
+            {
+                <nav class="friggy-catalog-page__pagination"
+                     data-testid="ingredient-pagination"
+                     aria-label="Paginación de ingredientes">
+                    <FriggyButton Variant="FriggyButtonVariant.Secondary"
+                                  Size="FriggyButtonSize.Compact"
+                                  AriaLabel="Página anterior"
+                                  Disabled="@(currentPage == 1)"
+                                  OnClick="PreviousPage">
+                        Anterior
+                    </FriggyButton>
+                    <span data-testid="ingredient-page-status" aria-live="polite">
+                        Página @currentPage de @TotalPages
+                    </span>
+                    <FriggyButton Variant="FriggyButtonVariant.Secondary"
+                                  Size="FriggyButtonSize.Compact"
+                                  AriaLabel="Página siguiente"
+                                  Disabled="@(currentPage == TotalPages)"
+                                  OnClick="NextPage">
+                        Siguiente
+                    </FriggyButton>
+                </nav>
+            }
         }
     </PageSection>
 </div>
@@ -99,6 +149,7 @@
 }
 
 @code {
+    private const int PageSize = 10;
     private readonly CancellationTokenSource cancellation = new();
     private readonly IngredientInput model = new();
     private IReadOnlyList<IngredientResponse> items = [];
@@ -108,6 +159,45 @@
     private bool loading = true;
     private bool saving;
     private bool deleting;
+    private string searchTerm = string.Empty;
+    private int currentPage = 1;
+
+    private IReadOnlyList<IngredientResponse> FilteredItems =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? items
+            : items
+                .Where(item => item.Name.Contains(searchTerm.Trim(), StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+    private IReadOnlyList<IngredientResponse> PagedItems =>
+        FilteredItems
+            .Skip((currentPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToArray();
+
+    private int FilteredItemCount => FilteredItems.Count;
+
+    private int TotalPages => Math.Max(1, (FilteredItemCount + PageSize - 1) / PageSize);
+
+    private string ResultSummary
+    {
+        get
+        {
+            if (FilteredItemCount == 0)
+            {
+                return "No se encontraron ingredientes";
+            }
+
+            if (FilteredItemCount == 1)
+            {
+                return "Mostrando 1 de 1 ingrediente";
+            }
+
+            var firstItem = ((currentPage - 1) * PageSize) + 1;
+            var lastItem = Math.Min(currentPage * PageSize, FilteredItemCount);
+            return $"Mostrando {firstItem}-{lastItem} de {FilteredItemCount} ingredientes";
+        }
+    }
 
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
@@ -116,6 +206,7 @@
         try
         {
             items = await Api.ListAsync(cancellation.Token);
+            EnsureCurrentPageIsValid();
             error = null;
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
@@ -170,6 +261,30 @@
         editingId = null;
         model.Name = string.Empty;
     }
+
+    private void SearchChanged(ChangeEventArgs args)
+    {
+        searchTerm = args.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+    }
+
+    private void PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (currentPage < TotalPages)
+        {
+            currentPage++;
+        }
+    }
+
+    private void EnsureCurrentPageIsValid() => currentPage = Math.Min(currentPage, TotalPages);
 
     private void RequestDelete(IngredientResponse item)
     {

@@ -19,11 +19,14 @@
                 {
                     <StatusBadge Tone="FriggyTone.Warning">Omitida</StatusBadge>
                 }
-                <button type="button" disabled="@(IsSaving || meal.SlotOrder == 0)"
+                <button class="friggy-meal-slot__toolbar-action friggy-meal-slot__toolbar-action--icon"
+                        type="button" disabled="@(IsSaving || meal.SlotOrder == 0)"
                         aria-label="Subir @meal.MealTypeName" @onclick="() => MoveAsync(orderedMeals, meal.SlotId, -1)">↑</button>
-                <button type="button" disabled="@(IsSaving || meal.SlotOrder == orderedMeals.Length - 1)"
+                <button class="friggy-meal-slot__toolbar-action friggy-meal-slot__toolbar-action--icon"
+                        type="button" disabled="@(IsSaving || meal.SlotOrder == orderedMeals.Length - 1)"
                         aria-label="Bajar @meal.MealTypeName" @onclick="() => MoveAsync(orderedMeals, meal.SlotId, 1)">↓</button>
-                <button type="button" disabled="@(IsSaving || meal.RecipeId.HasValue)"
+                <button class="friggy-meal-slot__toolbar-action"
+                        type="button" disabled="@(IsSaving || meal.RecipeId.HasValue)"
                         aria-label="Eliminar hueco @meal.MealTypeName" @onclick="() => OnSlotRemoved.InvokeAsync(meal.SlotId)">Eliminar hueco</button>
             </header>
             <div class="friggy-meal-slot__fields">
@@ -60,12 +63,13 @@
             @if (meal.RecipeId.HasValue && !locked)
             {
                 <div class="friggy-meal-slot__actions">
-                    <FriggyButton Size="FriggyButtonSize.Compact" Disabled="IsSaving"
+                    <FriggyButton CssClass="friggy-meal-slot__complete" Size="FriggyButtonSize.Compact" Disabled="IsSaving"
                                   OnClick="() => OnComplete.InvokeAsync(meal.MealTypeId)">Completar</FriggyButton>
                     <input aria-label="Motivo para omitir @meal.MealTypeName"
                            placeholder="Motivo para omitir"
                            @oninput="args => skipReasons[meal.MealTypeId] = args.Value?.ToString()" />
-                    <FriggyButton Variant="FriggyButtonVariant.Secondary" Size="FriggyButtonSize.Compact"
+                    <FriggyButton CssClass="friggy-meal-slot__secondary-action"
+                                  Variant="FriggyButtonVariant.Secondary" Size="FriggyButtonSize.Compact"
                                   Disabled="@(IsSaving || !skipReasons.ContainsKey(meal.MealTypeId))"
                                   OnClick="() => SkipAsync(meal.MealTypeId)">Omitir</FriggyButton>
                 </div>

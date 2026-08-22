@@ -193,6 +193,154 @@ html input:is(
     box-shadow: 0 0 0 0.1875rem var(--color-danger);
 }
 
+html input[type="date"] {
+    accent-color: var(--color-primary-700);
+    background-color: var(--color-surface);
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-medium);
+    caret-color: var(--color-primary-700);
+    color: var(--color-text);
+    color-scheme: light;
+    cursor: pointer;
+    min-height: var(--control-min-size);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+    transition:
+        background-color var(--motion-fast),
+        border-color var(--motion-fast),
+        box-shadow var(--motion-fast);
+    width: 100%;
+}
+
+html input[type="date"]:hover:not(:disabled) {
+    border-color: var(--color-primary-600);
+}
+
+html input[type="date"]:focus-visible {
+    background-color: var(--color-surface);
+    border-color: var(--color-primary-600);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 0 0 0.1875rem var(--color-focus);
+    outline: none;
+}
+
+html input[type="date"]:disabled {
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+html input[type="date"]:is(.invalid, [aria-invalid="true"]) {
+    border-color: var(--color-danger);
+}
+
+html input[type="date"]:is(.invalid, [aria-invalid="true"]):focus-visible {
+    box-shadow: 0 0 0 0.1875rem var(--color-danger);
+}
+
+html input[type="date"]::-webkit-calendar-picker-indicator {
+    border-radius: var(--radius-small);
+    cursor: pointer;
+    margin: 0;
+    opacity: 0.72;
+    padding: var(--space-1);
+    transition: background-color var(--motion-fast), opacity var(--motion-fast);
+}
+
+html input[type="date"]:hover:not(:disabled)::-webkit-calendar-picker-indicator {
+    background-color: var(--color-primary-100);
+    opacity: 1;
+}
+
+html input[type="date"]:disabled::-webkit-calendar-picker-indicator {
+    cursor: not-allowed;
+}
+
+html input:is([type="number"], [type="time"]) {
+    accent-color: var(--color-primary-700);
+    background-color: var(--color-surface);
+    border: 0.0625rem solid var(--color-border);
+    border-radius: var(--radius-medium);
+    caret-color: var(--color-primary-700);
+    color: var(--color-text);
+    min-height: var(--control-min-size);
+    padding: var(--space-2) var(--space-3);
+    transition:
+        background-color var(--motion-fast),
+        border-color var(--motion-fast),
+        box-shadow var(--motion-fast);
+    width: 100%;
+}
+
+html input[type="number"] {
+    cursor: text;
+}
+
+html input[type="time"] {
+    color-scheme: light;
+    cursor: pointer;
+    padding-inline-end: var(--space-2);
+}
+
+html input[type="number"]:hover:not(:disabled):not(:read-only),
+html input[type="time"]:hover:not(:disabled) {
+    border-color: var(--color-primary-600);
+}
+
+html input:is([type="number"], [type="time"]):focus-visible {
+    background-color: var(--color-surface);
+    border-color: var(--color-primary-600);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 0 0 0.1875rem var(--color-focus);
+    outline: none;
+}
+
+html input[type="number"]:read-only {
+    background-color: var(--color-surface-muted);
+}
+
+html input:is([type="number"], [type="time"]):disabled {
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+html input:is([type="number"], [type="time"]):is(.invalid, [aria-invalid="true"]) {
+    border-color: var(--color-danger);
+}
+
+html input:is([type="number"], [type="time"]):is(.invalid, [aria-invalid="true"]):focus-visible {
+    box-shadow: 0 0 0 0.1875rem var(--color-danger);
+}
+
+html input[type="number"]::-webkit-inner-spin-button {
+    cursor: pointer;
+    opacity: 0.72;
+}
+
+html input[type="number"]:hover:not(:disabled)::-webkit-inner-spin-button {
+    opacity: 1;
+}
+
+html input[type="time"]::-webkit-calendar-picker-indicator {
+    border-radius: var(--radius-small);
+    cursor: pointer;
+    margin: 0;
+    opacity: 0.72;
+    padding: var(--space-1);
+    transition: background-color var(--motion-fast), opacity var(--motion-fast);
+}
+
+html input[type="time"]:hover:not(:disabled)::-webkit-calendar-picker-indicator {
+    background-color: var(--color-primary-100);
+    opacity: 1;
+}
+
+html input[type="time"]:disabled::-webkit-calendar-picker-indicator {
+    cursor: not-allowed;
+}
+
 select {
     background-color: var(--color-surface);
     border: 0.0625rem solid var(--color-border);

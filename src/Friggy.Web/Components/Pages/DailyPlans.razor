@@ -43,9 +43,10 @@
                         else
                         {
                             <div class="friggy-daily-plan-card__actions">
-                                <a href="@($"daily-plans/{date:yyyy-MM-dd}")">Abrir plan</a>
+                                <a class="friggy-daily-plan-card__action friggy-daily-plan-card__action--open"
+                                   href="@($"daily-plans/{date:yyyy-MM-dd}")">Abrir plan</a>
                                 <FriggyButton Variant="FriggyButtonVariant.Danger"
-                                              Size="FriggyButtonSize.Compact"
+                                              CssClass="friggy-daily-plan-card__action"
                                               DataAction="delete-daily-plan"
                                               Busy="@(deletingDate == date)"
                                               Disabled="@(deletingDate.HasValue)"

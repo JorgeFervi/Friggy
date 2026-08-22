@@ -1,13 +1,27 @@
 .friggy-catalog-page {
     display: grid;
-    gap: var(--space-7);
+    gap: var(--space-6);
     min-width: 0;
+}
+
+.friggy-catalog-page > header.page-header {
+    margin-block-end: 0;
+}
+
+.friggy-catalog-page > section.page-section {
+    gap: var(--space-4);
+    margin-block: 0;
+}
+
+.friggy-catalog-page .page-section__content {
+    display: grid;
+    gap: var(--space-4);
 }
 
 .friggy-catalog-page__form {
     display: grid;
-    gap: var(--space-5);
-    max-width: 42rem;
+    gap: var(--space-4);
+    max-width: 56rem;
 }
 
 .friggy-catalog-page__fields {
@@ -19,6 +33,46 @@
 .friggy-catalog-page__fields > div {
     display: grid;
     gap: var(--space-2);
+}
+
+.friggy-catalog-page .friggy-catalog-page__form .form-actions {
+    margin-block-start: 0;
+}
+
+.friggy-catalog-page__toolbar {
+    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+    justify-content: space-between;
+}
+
+.friggy-catalog-page__search {
+    display: grid;
+    flex: 1 1 20rem;
+    gap: var(--space-2);
+    max-width: 32rem;
+}
+
+.friggy-catalog-page__result-status {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+    margin: 0;
+}
+
+.friggy-catalog-page__pagination {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: flex-end;
+}
+
+.friggy-catalog-page__pagination span {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+    min-width: 7rem;
+    text-align: center;
 }
 
 .friggy-catalog-page__cards {
@@ -79,7 +133,22 @@
     text-transform: uppercase;
 }
 
+@media (min-width: 48rem) {
+    .friggy-catalog-page__form {
+        align-items: end;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .friggy-catalog-page .friggy-catalog-page__form .form-actions {
+        align-self: end;
+    }
+}
+
 @media (max-width: 47.99rem) {
+    .friggy-catalog-page {
+        gap: var(--space-5);
+    }
+
     .friggy-catalog-page__fields {
         grid-template-columns: 1fr;
     }
@@ -91,5 +160,9 @@
 
     .friggy-catalog-page__table {
         display: none;
+    }
+
+    .friggy-catalog-page__pagination {
+        justify-content: center;
     }
 }

@@ -105,6 +105,42 @@ public sealed class VisualFoundationContractTests
 
     [Fact]
     [Trait("Category", "Tooling")]
+    public void DateInputStyles_AllDatePickers_MatchTheFormControlFoundation()
+    {
+        var baseStyles = ReadRepositoryFile("src", "Friggy.Web", "wwwroot", "css", "base.css");
+
+        Assert.Contains("input[type=\"date\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("::-webkit-calendar-picker-indicator", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("min-height: var(--control-min-size)", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("border-radius: var(--radius-medium)", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("caret-color: var(--color-primary-700)", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input[type=\"date\"]:hover", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input[type=\"date\"]:focus-visible", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input[type=\"date\"]:disabled", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input[type=\"date\"]:is(.invalid, [aria-invalid=\"true\"])", baseStyles, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Tooling")]
+    public void NumberAndTimeInputStyles_AllTypedControls_MatchTheFormControlFoundation()
+    {
+        var baseStyles = ReadRepositoryFile("src", "Friggy.Web", "wwwroot", "css", "base.css");
+
+        Assert.Contains("input[type=\"number\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input[type=\"time\"]", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("::-webkit-inner-spin-button", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("::-webkit-calendar-picker-indicator", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("min-height: var(--control-min-size)", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("border-radius: var(--radius-medium)", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input[type=\"number\"]:hover", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input[type=\"time\"]:hover", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input:is([type=\"number\"], [type=\"time\"]):focus-visible", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input:is([type=\"number\"], [type=\"time\"]):disabled", baseStyles, StringComparison.Ordinal);
+        Assert.Contains("input:is([type=\"number\"], [type=\"time\"]):is(.invalid, [aria-invalid=\"true\"])", baseStyles, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Tooling")]
     public void RuntimeStyles_Always_KeepExternalResourcesAndHexColorsOutOfComponentStyles()
     {
         var webRoot = Path.Combine(RepositoryRoot, "src", "Friggy.Web");

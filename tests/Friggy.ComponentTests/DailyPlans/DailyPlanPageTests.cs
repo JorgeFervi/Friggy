@@ -40,7 +40,14 @@ public sealed class DailyPlanPageTests : ComponentTest
 
         component.WaitForAssertion(() =>
         {
-            Assert.Single(component.FindAll("a[href^='daily-plans/']"));
+            var openAction = Assert.Single(component.FindAll("a[href^='daily-plans/']"));
+            var deleteAction = component.Find("button[data-action='delete-daily-plan']");
+
+            Assert.Contains("friggy-daily-plan-card__action", openAction.ClassList);
+            Assert.Contains("friggy-daily-plan-card__action--open", openAction.ClassList);
+            Assert.Contains("friggy-daily-plan-card__action", deleteAction.ClassList);
+            Assert.Contains("friggy-button--regular", deleteAction.ClassList);
+            Assert.Contains("friggy-button--danger", deleteAction.ClassList);
             Assert.Equal(6, component.FindAll("button").Count(button =>
                 button.TextContent.Contains("Planificar este día", StringComparison.Ordinal)));
         });

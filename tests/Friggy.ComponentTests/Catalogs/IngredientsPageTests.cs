@@ -11,6 +11,8 @@ namespace Friggy.ComponentTests.Catalogs;
 
 public sealed class IngredientsPageTests : ComponentTest
 {
+    private const int PageSize = 10;
+
     [Fact]
     [Trait("Category", "Component")]
     public void Render_EmptyCatalog_ShowsEmptyState()
@@ -138,8 +140,92 @@ public sealed class IngredientsPageTests : ComponentTest
         Assert.Empty(api.Created);
     }
 
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Render_MoreThanTenIngredients_ShowsTenRowsAndPaginationStatus()
+    {
+        var api = new StubIngredientsApiClient
+        {
+            Items = CreateIngredients(PageSize + 2),
+        };
+        Services.AddSingleton<IIngredientsApiClient>(api);
+
+        var component = Render<global::Friggy.Web.Components.Pages.Ingredients>();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.Equal(PageSize, component.FindAll(".friggy-catalog-page__table tbody tr").Count);
+            Assert.Contains(
+                "Mostrando 1-10 de 12 ingredientes",
+                component.Find("[data-testid='ingredient-result-status']").TextContent,
+                StringComparison.Ordinal);
+            Assert.Contains(
+                "Página 1 de 2",
+                component.Find("[data-testid='ingredient-page-status']").TextContent,
+                StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Pagination_NextPage_ShowsRemainingIngredientsAndUpdatesNavigation()
+    {
+        var api = new StubIngredientsApiClient
+        {
+            Items = CreateIngredients(PageSize + 2),
+        };
+        Services.AddSingleton<IIngredientsApiClient>(api);
+        var component = Render<global::Friggy.Web.Components.Pages.Ingredients>();
+        component.WaitForElement("button[aria-label='Página siguiente']");
+
+        component.Find("button[aria-label='Página siguiente']").Click();
+
+        Assert.Equal(2, component.FindAll(".friggy-catalog-page__table tbody tr").Count);
+        Assert.Contains(
+            "Mostrando 11-12 de 12 ingredientes",
+            component.Find("[data-testid='ingredient-result-status']").TextContent,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Página 2 de 2",
+            component.Find("[data-testid='ingredient-page-status']").TextContent,
+            StringComparison.Ordinal);
+        Assert.NotNull(component.Find("button[aria-label='Página siguiente'][disabled]"));
+        Assert.NotNull(component.Find("button[aria-label='Página anterior']:not([disabled])"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Search_ByName_FiltersEveryPageAndReturnsToFirstPage()
+    {
+        var api = new StubIngredientsApiClient
+        {
+            Items = [.. CreateIngredients(PageSize + 1), new(Guid.NewGuid(), "Tomate cherry")],
+        };
+        Services.AddSingleton<IIngredientsApiClient>(api);
+        var component = Render<global::Friggy.Web.Components.Pages.Ingredients>();
+        component.WaitForElement("button[aria-label='Página siguiente']");
+        component.Find("button[aria-label='Página siguiente']").Click();
+
+        component.Find("#ingredient-search").Input("tomate");
+
+        var rows = component.FindAll(".friggy-catalog-page__table tbody tr");
+        Assert.Single(rows);
+        Assert.Contains("Tomate cherry", rows[0].TextContent, StringComparison.Ordinal);
+        Assert.Contains(
+            "Mostrando 1 de 1 ingrediente",
+            component.Find("[data-testid='ingredient-result-status']").TextContent,
+            StringComparison.Ordinal);
+        Assert.Empty(component.FindAll("[data-testid='ingredient-pagination']"));
+    }
+
+    private static IngredientResponse[] CreateIngredients(int count) =>
+        Enumerable.Range(1, count)
+            .Select(index => new IngredientResponse(Guid.NewGuid(), $"Ingrediente {index:00}"))
+            .ToArray();
+
     private sealed class StubIngredientsApiClient : IIngredientsApiClient
     {
+        public IReadOnlyList<IngredientResponse> Items { get; init; } = [];
         public Exception? ListException { get; init; }
         public Exception? CreateException { get; init; }
         public List<string> Created { get; } = [];
@@ -151,7 +237,7 @@ public sealed class IngredientsPageTests : ComponentTest
             }
 
             return Task.FromResult<IReadOnlyList<IngredientResponse>>(
-                Created.Select(name => new IngredientResponse(Guid.NewGuid(), name)).ToArray());
+                [.. Items, .. Created.Select(name => new IngredientResponse(Guid.NewGuid(), name))]);
         }
         public Task<IngredientResponse> CreateAsync(CreateIngredientRequest request, CancellationToken cancellationToken)
         {
