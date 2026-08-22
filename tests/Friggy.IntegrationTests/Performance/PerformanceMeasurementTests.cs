@@ -163,6 +163,33 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             Assert.All(requirementsMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 
+        var shoppingListInterceptor = new SqlCaptureInterceptor();
+        await using (var shoppingListContext = CreateMeasuredContext(shoppingListInterceptor))
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var snapshot = await new ShoppingListReadRepository(shoppingListContext)
+                .GetSnapshotAsync(
+                    scenario.FirstPlanDate,
+                    scenario.FirstPlanDate.AddDays(scenario.DailyPlanCount - 1),
+                    new DateOnly(2026, 8, 12),
+                    TestContext.Current.CancellationToken);
+            stopwatch.Stop();
+
+            var shoppingListMeasurement = new ScenarioMeasurement(
+                "shopping-list.snapshot",
+                stopwatch.Elapsed.TotalMilliseconds,
+                snapshot.Demands.Count,
+                snapshot.Stock.Count,
+                shoppingListInterceptor.Commands.Count,
+                shoppingListInterceptor.Commands);
+            measurements.Add(shoppingListMeasurement);
+
+            Assert.Equal(3, shoppingListMeasurement.RootRows);
+            Assert.Equal(3, shoppingListMeasurement.RelatedRows);
+            Assert.Equal(2, shoppingListMeasurement.CommandCount);
+            Assert.All(shoppingListMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
+        }
+
         var reportPath = Path.Combine(
             FindRepositoryRoot(),
             "TestResults",

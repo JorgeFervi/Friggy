@@ -4,7 +4,7 @@ Esta carpeta mantiene tres itinerarios consecutivos:
 
 1. [Plan general del MVP](000-general-plan.md): fases 1 a 6, ya completadas.
 2. [Plan general post-MVP](001-general-plan.md): correcciones, inventario, planificación avanzada, detalle de recetas y evolución visual.
-3. Fases 12 a 14: sustitución por planes diarios, plantillas y lista de la compra, definidas como planes individuales debajo.
+3. Fases 12 a 15: sustitución por planes diarios, plantillas, lista de la compra y consolidación de UI/UX, definidas como planes individuales debajo.
 
 Los documentos se organizan por estado:
 
@@ -35,6 +35,7 @@ Los documentos se organizan por estado:
 |---|---|---|---|
 | 13 | [Plantillas de planes diarios](phases/13-daily-plan-templates.md) | [Guía](implementation/13-daily-plan-templates-implementation.md) | Fase 12 |
 | 14 | [Lista de la compra calculada](phases/14-shopping-list.md) | [Guía](implementation/14-shopping-list-implementation.md) | Fase 12; independiente de la 13 |
+| 15 | [Consolidación de UI y UX](phases/15-ui-ux-consolidation.md) | [Guía](implementation/15-ui-ux-consolidation-implementation.md) | Fases 13 y 14 completadas |
 
 ## Reglas de uso
 
@@ -47,4 +48,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 12 están completadas. Las fases 13 y 14 están planificadas y pueden ejecutarse por separado sobre el modelo diario estable.
+Las fases 1 a 12 están completadas. Las fases 13 y 14 están planificadas y pueden ejecutarse por separado sobre el modelo diario estable. La fase 15 consolida su experiencia una vez entregadas ambas.

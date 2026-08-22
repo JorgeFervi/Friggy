@@ -2,7 +2,7 @@
 
 > **Estado:** vigente · **Última revisión:** 22 de agosto de 2026
 
-Las fases 1 a 12 están completadas. Las fases 13 y 14 están planificadas. El detalle histórico y futuro se conserva en [planes](../../plans/README.md).
+Las fases 1 a 12 están completadas. Las fases 13 a 15 están planificadas. El detalle histórico y futuro se conserva en [planes](../../plans/README.md).
 
 ## Capacidades entregadas
 
@@ -21,8 +21,9 @@ Estos planes describen trabajo futuro y no cambian todavía las funcionalidades 
 
 * [Fase 13: crear y aplicar plantillas de planes diarios](../../plans/phases/13-daily-plan-templates.md).
 * [Fase 14: calcular una lista de la compra por intervalo](../../plans/phases/14-shopping-list.md).
+* [Fase 15: consolidar la UI y UX de los recorridos principales](../../plans/phases/15-ui-ux-consolidation.md).
 
-La [Fase 12](../../plans/completed/phases/12-daily-planning.md) ya proporciona la base diaria estable. Plantillas y lista de la compra son incrementos independientes.
+La [Fase 12](../../plans/completed/phases/12-daily-planning.md) ya proporciona la base diaria estable. Plantillas y lista de la compra son incrementos independientes; la fase 15 depende de ambos para consolidar su experiencia sin cambiar contratos de negocio.
 
 ## Posibles evoluciones
 
