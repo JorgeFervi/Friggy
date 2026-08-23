@@ -1,0 +1,126 @@
+<div class="searchable-multi-select">
+    <span class="searchable-multi-select__label" id="@LabelId">@Label</span>
+    <button class="searchable-multi-select__trigger"
+            type="button"
+            role="combobox"
+            aria-expanded="@(isOpen ? "true" : "false")"
+            aria-controls="@OptionsId"
+            aria-haspopup="listbox"
+            aria-labelledby="@LabelId @TriggerId"
+            id="@TriggerId"
+            data-combobox="@Key"
+            @onclick="ToggleOpen">
+        <span>@SelectionSummary</span>
+        <span class="searchable-multi-select__chevron" aria-hidden="true">⌄</span>
+    </button>
+
+    @if (isOpen)
+    {
+        <div class="searchable-multi-select__popover">
+            <label class="searchable-multi-select__search" for="@SearchId">
+                <span class="visually-hidden">Buscar en @Label.ToLowerInvariant()</span>
+                <input id="@SearchId"
+                       type="search"
+                       placeholder="@SearchPlaceholder"
+                       autocomplete="off"
+                       data-combobox-search="@Key"
+                       @bind="searchTerm"
+                       @bind:event="oninput" />
+            </label>
+
+            <div class="searchable-multi-select__options"
+                 id="@OptionsId"
+                 role="listbox"
+                 aria-multiselectable="true"
+                 aria-label="Opciones de @Label.ToLowerInvariant()"
+                 tabindex="0"
+                 data-combobox-options="@Key">
+                @if (VisibleOptions.Count == 0)
+                {
+                    <p class="searchable-multi-select__empty">No hay opciones que coincidan.</p>
+                }
+                else
+                {
+                    @foreach (var group in VisibleOptions.GroupBy(option => option.Group))
+                    {
+                        <div class="searchable-multi-select__group" role="group" aria-label="@group.Key">
+                            @if (group.Key is not null)
+                            {
+                                <strong>@group.Key</strong>
+                            }
+                            @foreach (var option in group)
+                            {
+                                var selected = IsSelected(option);
+                                <label class="searchable-multi-select__option"
+                                       role="option"
+                                       aria-selected="@(selected ? "true" : "false")">
+                                    <input type="checkbox"
+                                           checked="@selected"
+                                           data-option-id="@option.Id"
+                                           @onchange="_ => OptionToggled.InvokeAsync(option)" />
+                                    <span>@option.Name</span>
+                                </label>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isOpen;
+    private string searchTerm = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Key { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<MultiSelectOption> Options { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public Func<MultiSelectOption, bool> IsSelected { get; set; } = _ => false;
+
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "Buscar opciones";
+
+    [Parameter]
+    public EventCallback<MultiSelectOption> OptionToggled { get; set; }
+
+    private string LabelId => $"{Key}-combobox-label";
+    private string TriggerId => $"{Key}-combobox";
+    private string SearchId => $"{Key}-combobox-search";
+    private string OptionsId => $"{Key}-combobox-options";
+
+    private IReadOnlyList<MultiSelectOption> VisibleOptions => Options
+        .Where(option => string.IsNullOrWhiteSpace(searchTerm) ||
+            option.Name.Contains(searchTerm.Trim(), StringComparison.OrdinalIgnoreCase))
+        .ToArray();
+
+    private string SelectionSummary
+    {
+        get
+        {
+            var selected = Options.Where(IsSelected).ToArray();
+            return selected.Length switch
+            {
+                0 => $"Seleccionar {Label.ToLowerInvariant()}",
+                1 => selected[0].Name,
+                _ => $"{selected.Length} seleccionados",
+            };
+        }
+    }
+
+    private void ToggleOpen()
+    {
+        isOpen = !isOpen;
+        if (!isOpen)
+        {
+            searchTerm = string.Empty;
+        }
+    }
+}

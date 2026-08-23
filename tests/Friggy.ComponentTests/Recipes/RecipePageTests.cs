@@ -115,10 +115,12 @@ public sealed class RecipePageTests : ComponentTest
         Assert.Equal(["Sopa de cebolla"], VisibleRecipeNames(component));
 
         component.Find("#recipe-name-filter").Input(string.Empty);
-        component.Find($"input[data-filter-ingredient='{IngredientId}']").Change(true);
+        component.Find("button[data-combobox='ingredients']").Click();
+        component.Find($"[data-combobox-options='ingredients'] input[data-option-id='{IngredientId}']").Change(true);
         Assert.Equal(["Ensalada", "Gazpacho"], VisibleRecipeNames(component));
 
-        component.Find($"input[data-filter-classification='meal-type:{dinnerId}']").Change(true);
+        component.Find("button[data-combobox='classification']").Click();
+        component.Find($"[data-combobox-options='classification'] input[data-option-id='{dinnerId}']").Change(true);
         Assert.Equal(["Ensalada"], VisibleRecipeNames(component));
 
         component.Find("button[data-action='clear-recipe-filters']").Click();
@@ -127,6 +129,47 @@ public sealed class RecipePageTests : ComponentTest
 
         component.Find("#recipe-sort").Change("time-asc");
         Assert.Equal(["Ensalada", "Gazpacho", "Sopa de cebolla"], VisibleRecipeNames(component));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Recipes_FacetsRenderAsSearchableMultiSelectComboboxesWithGroupedClassification()
+    {
+        var onionId = Guid.Parse("10000000-0000-0000-0000-000000000002");
+        Services.AddSingleton<IRecipesApiClient>(new StubRecipesApiClient
+        {
+            Recipes = [new(RecipeId, "Gazpacho", 20, [IngredientId], [TagId], [MealTypeId])],
+        });
+        Services.AddSingleton<IIngredientsApiClient>(new IngredientsApiClientStub
+        {
+            Items = [new(IngredientId, "Tomate"), new(onionId, "Cebolla")],
+        });
+        Services.AddSingleton<IRecipeTagsApiClient>(new RecipeTagsApiClientStub());
+        Services.AddSingleton<IMealTypesApiClient>(new MealTypesApiClientStub());
+
+        var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
+        component.WaitForElement("[data-testid='recipe-filters']");
+
+        var comboboxes = component.FindAll("button[role='combobox']");
+        Assert.Equal(2, comboboxes.Count);
+        Assert.All(comboboxes, combobox => Assert.Equal("false", combobox.GetAttribute("aria-expanded")));
+
+        component.Find("button[data-combobox='ingredients']").Click();
+        Assert.Equal("true", component.Find("button[data-combobox='ingredients']").GetAttribute("aria-expanded"));
+        component.Find("input[data-combobox-search='ingredients']").Input("cebo");
+
+        var ingredientListbox = component.Find("[data-combobox-options='ingredients']");
+        Assert.Equal("0", ingredientListbox.GetAttribute("tabindex"));
+        Assert.Equal("Opciones de ingredientes", ingredientListbox.GetAttribute("aria-label"));
+        var ingredientOptions = ingredientListbox.QuerySelectorAll("label");
+        Assert.Equal("Cebolla", Assert.Single(ingredientOptions).TextContent.Trim());
+
+        component.Find("button[data-combobox='classification']").Click();
+        var classification = component.Find("[data-combobox-options='classification']");
+        Assert.Contains("Etiquetas", classification.TextContent, StringComparison.Ordinal);
+        Assert.Contains("Tipos de comida", classification.TextContent, StringComparison.Ordinal);
+        Assert.Contains("Vegano", classification.TextContent, StringComparison.Ordinal);
+        Assert.Contains("Comida", classification.TextContent, StringComparison.Ordinal);
     }
 
     [Fact]

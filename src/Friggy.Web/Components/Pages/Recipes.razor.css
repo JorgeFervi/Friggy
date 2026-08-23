@@ -15,13 +15,6 @@
 .friggy-recipes-page__filter-grid label { display: grid; gap: var(--space-2); }
 .friggy-recipes-page__filter-grid label > span { font-weight: 700; }
 .friggy-recipes-page__facets { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.friggy-recipes-page__facets details { border: 0.0625rem solid var(--color-border); border-radius: var(--radius-medium); overflow: hidden; }
-.friggy-recipes-page__facets summary { cursor: pointer; font-weight: 700; min-height: var(--control-min-size); padding: var(--space-2) var(--space-3); }
-.friggy-recipes-page__facets details[open] summary { background: var(--color-primary-100); color: var(--color-primary-700); }
-.friggy-recipes-page__options { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3); }
-.friggy-recipes-page__options label { align-items: center; background: var(--color-surface-muted); border-radius: 999px; cursor: pointer; display: flex; gap: var(--space-2); min-height: var(--control-min-size); padding: var(--space-2) var(--space-3); }
-.friggy-recipes-page__classification-group { display: grid; gap: var(--space-2); padding: var(--space-3); }
-.friggy-recipes-page__classification-group .friggy-recipes-page__options { padding: 0 0 var(--space-2); }
 .friggy-recipes-page__result-status { color: var(--color-text-muted); font-size: var(--font-size-small); margin: 0; }
 @media (max-width: 47.99rem) {
     .friggy-recipes-page__filters > header { align-items: stretch; flex-direction: column; }

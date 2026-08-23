@@ -61,40 +61,18 @@
                 </label>
             </div>
             <div class="friggy-recipes-page__facets">
-                <details>
-                    <summary>Ingredientes <span>@SelectionCount(selectedIngredientIds)</span></summary>
-                    <div class="friggy-recipes-page__options">
-                        @foreach (var ingredient in ingredients.OrderBy(item => item.Name))
-                        {
-                            <label><input type="checkbox" checked="@selectedIngredientIds.Contains(ingredient.Id)"
-                                          data-filter-ingredient="@ingredient.Id"
-                                          @onchange="args => ToggleSelection(selectedIngredientIds, ingredient.Id, args)" />@ingredient.Name</label>
-                        }
-                    </div>
-                </details>
-                <details>
-                    <summary>Clasificación <span>@SelectionCount(selectedTagIds, selectedMealTypeIds)</span></summary>
-                    <div class="friggy-recipes-page__classification-group">
-                        <strong>Etiquetas</strong>
-                        <div class="friggy-recipes-page__options">
-                            @foreach (var tag in tags.OrderBy(item => item.Name))
-                            {
-                                <label><input type="checkbox" checked="@selectedTagIds.Contains(tag.Id)"
-                                              data-filter-classification="tag:@tag.Id"
-                                              @onchange="args => ToggleSelection(selectedTagIds, tag.Id, args)" />@tag.Name</label>
-                            }
-                        </div>
-                        <strong>Tipos de comida</strong>
-                        <div class="friggy-recipes-page__options">
-                            @foreach (var mealType in mealTypes.OrderBy(item => item.Order))
-                            {
-                                <label><input type="checkbox" checked="@selectedMealTypeIds.Contains(mealType.Id)"
-                                              data-filter-classification="meal-type:@mealType.Id"
-                                              @onchange="args => ToggleSelection(selectedMealTypeIds, mealType.Id, args)" />@mealType.Name</label>
-                            }
-                        </div>
-                    </div>
-                </details>
+                <SearchableMultiSelect Key="ingredients"
+                                       Label="Ingredientes"
+                                       SearchPlaceholder="Buscar ingredientes"
+                                       Options="IngredientFilterOptions"
+                                       IsSelected="IsIngredientSelected"
+                                       OptionToggled="ToggleIngredient" />
+                <SearchableMultiSelect Key="classification"
+                                       Label="Clasificación"
+                                       SearchPlaceholder="Buscar etiquetas o tipos de comida"
+                                       Options="ClassificationFilterOptions"
+                                       IsSelected="IsClassificationSelected"
+                                       OptionToggled="ToggleClassification" />
             </div>
         </section>
 
@@ -171,6 +149,18 @@
         selectedMealTypeIds.Count > 0 ||
         sortOrder != "name-asc";
 
+    private IReadOnlyList<MultiSelectOption> IngredientFilterOptions => ingredients
+        .OrderBy(item => item.Name)
+        .Select(item => new MultiSelectOption(item.Id, item.Name))
+        .ToArray();
+
+    private IReadOnlyList<MultiSelectOption> ClassificationFilterOptions =>
+        tags.OrderBy(item => item.Name)
+            .Select(item => new MultiSelectOption(item.Id, item.Name, "Etiquetas"))
+            .Concat(mealTypes.OrderBy(item => item.Order)
+                .Select(item => new MultiSelectOption(item.Id, item.Name, "Tipos de comida")))
+            .ToArray();
+
     private string ResultStatus => VisibleRecipes.Count == recipes.Count
         ? $"{recipes.Count} recetas"
         : $"{VisibleRecipes.Count} de {recipes.Count} recetas";
@@ -213,22 +203,31 @@
 
     private void CancelDelete() => recipeToDelete = null;
 
-    private static string SelectionCount(params IReadOnlyCollection<Guid>[] selections)
+    private static void ToggleSelection(HashSet<Guid> selection, Guid id)
     {
-        var count = selections.Sum(selection => selection.Count);
-        return count == 0 ? string.Empty : $"({count})";
-    }
-
-    private static void ToggleSelection(HashSet<Guid> selection, Guid id, ChangeEventArgs args)
-    {
-        if (args.Value is true)
-        {
-            selection.Add(id);
-        }
-        else
+        if (!selection.Add(id))
         {
             selection.Remove(id);
         }
+    }
+
+    private bool IsIngredientSelected(MultiSelectOption option) =>
+        selectedIngredientIds.Contains(option.Id);
+
+    private void ToggleIngredient(MultiSelectOption option) =>
+        ToggleSelection(selectedIngredientIds, option.Id);
+
+    private bool IsClassificationSelected(MultiSelectOption option) => option.Group switch
+    {
+        "Etiquetas" => selectedTagIds.Contains(option.Id),
+        "Tipos de comida" => selectedMealTypeIds.Contains(option.Id),
+        _ => false,
+    };
+
+    private void ToggleClassification(MultiSelectOption option)
+    {
+        var selection = option.Group == "Etiquetas" ? selectedTagIds : selectedMealTypeIds;
+        ToggleSelection(selection, option.Id);
     }
 
     private void ClearFilters()
