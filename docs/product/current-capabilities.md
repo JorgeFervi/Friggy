@@ -13,7 +13,7 @@ La aplicación permite crear, consultar, editar y eliminar:
 * Etiquetas de receta.
 * Tipos de comida con un orden configurable.
 
-La base de datos incluye inicialmente unidades de masa, volumen y conteo. Cada unidad puede habilitarse para cocina, compra o ambos contextos. Un elemento referenciado por recetas, planes o inventario puede estar protegido frente al borrado; su dimensión y factor tampoco se reinterpretan mientras esté en uso.
+La base de datos incluye inicialmente unidades de masa, volumen y conteo. En una instalación sin contenido también incluye ingredientes y etiquetas para diez recetas de bienvenida. Cada unidad puede habilitarse para cocina, compra o ambos contextos. Un elemento referenciado por recetas, planes o inventario puede estar protegido frente al borrado; su dimensión y factor tampoco se reinterpretan mientras esté en uso.
 
 ## Recetas
 
@@ -26,6 +26,8 @@ Cada receta puede incluir:
 * Etiquetas y tipos de comida recomendados.
 
 Las recetas se pueden crear, editar, consultar y eliminar desde la interfaz.
+
+Las diez recetas de bienvenida cubren desayuno, comida y cena, y combinan clasificaciones como rápida, vegetariana, vegana, sin gluten, al horno y alta en proteína. No se inyectan en una actualización si la instalación ya contiene datos del usuario.
 
 ## Planificación diaria
 

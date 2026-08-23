@@ -89,9 +89,9 @@ como parte del composition root mediante [DependencyInjection](DependencyInjecti
 
 ## Migraciones y modelo
 
-Las migraciones son clases generadas por Entity Framework Core que representan
-la evolución versionada del esquema. Cada migración tiene un archivo principal
-y un archivo Designer asociado; el índice enlaza el archivo principal.
+Las migraciones son clases de Entity Framework Core que representan la evolución
+versionada del esquema y de sus datos controlados. Las que cambian el modelo
+tienen un archivo Designer asociado; el índice enlaza el archivo principal.
 
 | Migración | Representación |
 |---|---|
@@ -101,11 +101,14 @@ y un archivo Designer asociado; el índice enlaza el archivo principal.
 | [AddWeeklyPlans](Persistence/Migrations/20260809201541_AddWeeklyPlans.cs) | Añade las tablas de planes semanales y sus asignaciones. |
 | [AddInventoryAndMealCompletion](Persistence/Migrations/20260812063108_AddInventoryAndMealCompletion.cs) | Añade inventario, movimientos y datos necesarios para completar comidas. |
 | [AddDailyMealPlanSlots](Persistence/Migrations/20260812101526_AddDailyMealPlanSlots.cs) | Añade los huecos diarios de los planes semanales. |
-| [ReplaceWeeklyPlansWithDailyPlans](Persistence/Migrations/20260821210742_ReplaceWeeklyPlansWithDailyPlans.cs) | Sustituye de forma destructiva el esquema semanal por planes con fecha única y conserva el historial de inventario desvinculándolo de las comidas antiguas. |
 | [AddMealPlanSlotSchedule](Persistence/Migrations/20260812103001_AddMealPlanSlotSchedule.cs) | Añade el horario previsto de los huecos de comida. |
 | [AddMealPlanEntrySkippedState](Persistence/Migrations/20260812104103_AddMealPlanEntrySkippedState.cs) | Añade el estado de comida omitida y sus datos asociados. |
 | [AddRecipeStepIngredients](Persistence/Migrations/20260813083730_AddRecipeStepIngredients.cs) | Añade las asociaciones entre pasos y líneas de ingrediente. |
 | [DeferRecipeIngredientOrderUniqueness](Persistence/Migrations/20260813085711_DeferRecipeIngredientOrderUniqueness.cs) | Ajusta la gestión de unicidad del orden de las líneas de ingrediente. |
+| [ReplaceWeeklyPlansWithDailyPlans](Persistence/Migrations/20260821210742_ReplaceWeeklyPlansWithDailyPlans.cs) | Sustituye de forma destructiva el esquema semanal por planes con fecha única y conserva el historial de inventario desvinculándolo de las comidas antiguas. |
+| [AddDailyPlanTemplates](Persistence/Migrations/20260822081846_AddDailyPlanTemplates.cs) | Añade plantillas reutilizables para los huecos de un plan diario. |
+| [AddUnitConversionMetadata](Persistence/Migrations/20260823092318_AddUnitConversionMetadata.cs) | Añade dimensiones, factores base y usos permitidos a las unidades. |
+| [SeedWelcomeRecipes](Persistence/Migrations/20260823150000_SeedWelcomeRecipes.cs) | Añade diez recetas de bienvenida solo a instalaciones sin contenido previo. |
 | [FriggyDbContextModelSnapshot](Persistence/Migrations/FriggyDbContextModelSnapshot.cs) | Representa el modelo actual conocido por Entity Framework Core para calcular futuras migraciones. |
 
 ## Flujo de persistencia

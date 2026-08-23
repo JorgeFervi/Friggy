@@ -13,6 +13,8 @@ Antes de crear una receta puedes preparar:
 
 Los nombres deben ser válidos y no pueden duplicarse dentro de su catálogo. Si un elemento está referenciado, su eliminación puede rechazarse para proteger recetas, planes o lotes existentes.
 
+Una instalación sin contenido recibe diez recetas de bienvenida con ingredientes y clasificaciones variadas. Son datos normales y editables: puedes modificarlos o eliminarlos. La migración no los añade cuando detecta contenido creado previamente por el usuario.
+
 ## Crear una receta
 
 Desde **Recetas**, selecciona **Crear receta** y completa:

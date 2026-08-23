@@ -64,8 +64,8 @@ El volumen de PostgreSQL conserva los datos entre ejecuciones. En los siguientes
 
 El recorrido recomendado es:
 
-1. Revisar los catálogos iniciales de ingredientes, unidades, etiquetas y tipos de comida.
-2. Crear una receta con sus ingredientes y pasos.
+1. Revisar las diez recetas de bienvenida y sus ingredientes, unidades, etiquetas y tipos de comida.
+2. Crear o adaptar una receta con sus ingredientes y pasos.
 3. Registrar las existencias disponibles en el inventario.
 4. Crear planes para las fechas necesarias y asignar recetas y comensales.
 5. Revisar las cantidades faltantes y completar una comida seleccionando los lotes consumidos.

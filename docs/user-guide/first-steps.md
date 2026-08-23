@@ -6,11 +6,13 @@ Este tutorial recorre catálogos, recetas, inventario y planificación desde la 
 
 ## 1. Preparar los catálogos
 
-Abre la navegación de catálogos y comprueba que existen las unidades y los tipos de comida iniciales. Después:
+Una instalación vacía incluye diez recetas de bienvenida, sus ingredientes, etiquetas, unidades y tipos de comida. Abre la navegación de catálogos y:
 
-1. En **Ingredientes**, añade `Arroz`.
-2. En **Etiquetas**, añade `Rápida` si quieres clasificar la receta.
+1. En **Ingredientes**, localiza `Arroz`.
+2. En **Etiquetas**, localiza `Rápida`.
 3. Conserva una unidad y un tipo de comida existentes, por ejemplo `gramo` y `comida`.
+
+Puedes abrir cualquiera de las recetas incluidas para ver un ejemplo completo antes de crear la tuya. Si actualizas una instalación que ya tiene contenido, Friggy no mezcla automáticamente estos ejemplos con tus datos.
 
 Los catálogos son referencias compartidas. La aplicación puede impedir borrar un elemento que ya esté siendo utilizado.
 

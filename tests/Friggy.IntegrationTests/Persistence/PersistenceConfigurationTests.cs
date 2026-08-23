@@ -5,6 +5,8 @@ using Friggy.Infrastructure;
 using Friggy.Infrastructure.Persistence;
 using Friggy.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -134,8 +136,27 @@ public sealed class PersistenceConfigurationTests
             migration => Assert.EndsWith(
                 "_AddUnitConversionMetadata",
                 migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_SeedWelcomeRecipes",
+                migration,
                 StringComparison.Ordinal));
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", context.Database.ProviderName);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void DesignTimeFactory_GeneratesIdempotentWelcomeDataMigrationScript()
+    {
+        using var context = new FriggyDbContextFactory().CreateDbContext([]);
+        var migrator = context.GetService<IMigrator>();
+
+        var script = migrator.GenerateScript(
+            options: MigrationsSqlGenerationOptions.Idempotent);
+
+        Assert.Contains("20260823150000_SeedWelcomeRecipes", script, StringComparison.Ordinal);
+        Assert.Contains("Avena con plátano", script, StringComparison.Ordinal);
+        Assert.Contains("Pollo al horno con patatas", script, StringComparison.Ordinal);
     }
 
     private static IConfiguration CreateConfiguration() =>
