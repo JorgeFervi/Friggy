@@ -17,6 +17,11 @@ Este índice separa la documentación vigente de los documentos históricos. Si 
 * [Funcionalidades actuales](product/current-capabilities.md)
 * [Estado y hoja de ruta](product/roadmap.md)
 
+## Planes ejecutables
+
+* [Fase 16: conversiones y usos contextuales de unidades](plans/phases/16-unit-conversions.md)
+* [Guía de implementación de la fase 16](plans/implementation/16-unit-conversions-implementation.md)
+
 ## Desarrollo
 
 * [Contribuir a Friggy](../CONTRIBUTING.md)
