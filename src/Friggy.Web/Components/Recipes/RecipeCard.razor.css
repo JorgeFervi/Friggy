@@ -26,7 +26,7 @@
     justify-content: center; min-height: var(--control-min-size); padding: var(--space-2) var(--space-4);
     text-decoration: none;
 }
-.friggy-recipe-card__detail { background: var(--color-success); color: var(--color-surface); margin-left: auto; }
+.friggy-recipe-card__detail { background: var(--color-primary-700); color: var(--color-surface); margin-left: auto; }
 .friggy-recipe-card__detail:hover { color: var(--color-surface); filter: brightness(0.92); }
 .friggy-recipe-card__edit { color: var(--color-primary-700); }
 .friggy-recipe-card__actions ::deep .friggy-recipe-card__delete { min-height: var(--control-min-size); }

@@ -169,6 +169,26 @@ public sealed class VisualFoundationContractTests
         }
     }
 
+    [Fact]
+    [Trait("Category", "Tooling")]
+    public void InteractiveActionStyles_Always_UsePrimaryPaletteInsteadOfSuccessStatePalette()
+    {
+        string[][] actionStylePaths =
+        [
+            ["src", "Friggy.Web", "Components", "Pages", "DailyPlans.razor.css"],
+            ["src", "Friggy.Web", "Components", "Recipes", "RecipeCard.razor.css"],
+            ["src", "Friggy.Web", "Components", "DailyPlans", "DailyPlanEditor.razor.css"],
+        ];
+
+        foreach (var path in actionStylePaths)
+        {
+            var styles = ReadRepositoryFile(path);
+
+            Assert.DoesNotContain("var(--color-success)", styles, StringComparison.Ordinal);
+            Assert.Contains("var(--color-primary-700)", styles, StringComparison.Ordinal);
+        }
+    }
+
     [Theory]
     [InlineData("#284e63", "#ffffff")]
     [InlineData("#356b85", "#ffffff")]

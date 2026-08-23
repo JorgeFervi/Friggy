@@ -23,7 +23,7 @@
 }
 
 .friggy-daily-plan-card__actions ::deep .friggy-daily-plan-card__action--open {
-    background: var(--color-success);
+    background: var(--color-primary-700);
     color: var(--color-surface);
     transition: filter var(--motion-fast), transform var(--motion-fast);
 }

@@ -58,7 +58,7 @@ public sealed class DailyPlanEditorTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
-    public void MealSlot_WithPlannedRecipe_UsesModernGreenActionsAndTypedControls()
+    public void MealSlot_WithPlannedRecipe_UsesModernPrimaryActionsAndTypedControls()
     {
         var mealTypeId = Guid.NewGuid();
         var meal = new DailyPlanMealResponse(
