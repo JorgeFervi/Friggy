@@ -2,6 +2,7 @@
 @using Friggy.Application.DailyPlans.Dtos
 @using Friggy.Application.Recipes.Dtos
 @using Friggy.Web.DailyPlans
+@using System.Globalization
 
 <div class="friggy-daily-editor" data-testid="daily-plan-editor">
     @{ var orderedMeals = Model.Meals.OrderBy(item => item.SlotOrder).ToArray(); }
@@ -31,17 +32,14 @@
             </header>
             <div class="friggy-meal-slot__fields">
                 <div class="friggy-meal-slot__field">
-                    <label for="@($"recipe-{meal.SlotId:N}")">Receta</label>
-                    <select id="@($"recipe-{meal.SlotId:N}")"
-                            value="@(meal.RecipeId?.ToString() ?? string.Empty)"
-                            disabled="@(IsSaving || locked)"
-                            @onchange="args => SelectRecipeAsync(meal, args)">
-                        <option value="">Sin receta</option>
-                        @foreach (var recipe in Recipes.OrderBy(item => item.Name))
-                        {
-                            <option value="@recipe.Id">@recipe.Name</option>
-                        }
-                    </select>
+                    <SearchableSingleSelect Key="@($"recipe-{meal.SlotId:N}")"
+                                            Label="Receta"
+                                            EmptyText="Sin receta"
+                                            SearchPlaceholder="Buscar por nombre de receta"
+                                            Options="RecipeOptions"
+                                            SelectedId="meal.RecipeId"
+                                            SelectedIdChanged="recipeId => SelectRecipeAsync(meal, recipeId)"
+                                            Disabled="@(IsSaving || locked)" />
                 </div>
                 <div class="friggy-meal-slot__field">
                     <label for="@($"servings-{meal.SlotId:N}")">Comensales</label>
@@ -53,7 +51,7 @@
                     <label for="@($"time-{meal.SlotId:N}")">Hora prevista</label>
                     <input id="@($"time-{meal.SlotId:N}")" type="time" value="@meal.PlannedTime"
                            disabled="@IsSaving"
-                           @onchange="args => OnTimeChanged.InvokeAsync(new(meal.SlotId, args.Value?.ToString()))" />
+                           @onchange="args => ChangeTimeAsync(meal, args)" />
                 </div>
             </div>
             @if (meal.PreparationStartsAt.HasValue)
@@ -109,10 +107,25 @@
     [Parameter] public EventCallback<DailyPlanSkipChange> OnSkipped { get; set; }
     [Parameter] public EventCallback<Guid> OnComplete { get; set; }
 
-    private async Task SelectRecipeAsync(DailyPlanMealResponse meal, ChangeEventArgs args)
+    private IReadOnlyList<MultiSelectOption> RecipeOptions => Recipes
+        .OrderBy(item => item.Name)
+        .Select(item => new MultiSelectOption(item.Id, item.Name))
+        .ToArray();
+
+    private Task SelectRecipeAsync(DailyPlanMealResponse meal, Guid? recipeId) =>
+        OnChanged.InvokeAsync(new(meal.MealTypeId, recipeId, meal.Servings));
+
+    private Task ChangeTimeAsync(DailyPlanMealResponse meal, ChangeEventArgs args)
     {
-        var recipeId = Guid.TryParse(args.Value?.ToString(), out var parsed) ? parsed : (Guid?)null;
-        await OnChanged.InvokeAsync(new(meal.MealTypeId, recipeId, meal.Servings));
+        var value = args.Value?.ToString();
+        var normalized = TimeOnly.TryParse(
+            value,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var time)
+            ? time.ToString("HH:mm", CultureInfo.InvariantCulture)
+            : value;
+        return OnTimeChanged.InvokeAsync(new(meal.SlotId, normalized));
     }
 
     private async Task ChangeServingsAsync(DailyPlanMealResponse meal, ChangeEventArgs args)

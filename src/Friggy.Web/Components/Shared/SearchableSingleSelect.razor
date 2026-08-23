@@ -1,0 +1,122 @@
+<div class="searchable-single-select">
+    <span class="searchable-single-select__label" id="@LabelId">@Label</span>
+    <button class="searchable-single-select__trigger"
+            type="button"
+            role="combobox"
+            aria-expanded="@(isOpen ? "true" : "false")"
+            aria-controls="@OptionsId"
+            aria-haspopup="listbox"
+            aria-labelledby="@LabelId @TriggerId"
+            disabled="@Disabled"
+            id="@TriggerId"
+            data-single-combobox="@Key"
+            @onclick="ToggleOpen">
+        <span>@SelectedText</span>
+        <span class="searchable-single-select__chevron" aria-hidden="true">⌄</span>
+    </button>
+
+    @if (isOpen)
+    {
+        <div class="searchable-single-select__popover">
+            <label class="searchable-single-select__search" for="@SearchId">
+                <span class="visually-hidden">Buscar en @Label.ToLowerInvariant()</span>
+                <input id="@SearchId"
+                       type="search"
+                       placeholder="@SearchPlaceholder"
+                       autocomplete="off"
+                       data-single-combobox-search="@Key"
+                       @bind="searchTerm"
+                       @bind:event="oninput" />
+            </label>
+
+            <div class="searchable-single-select__options"
+                 id="@OptionsId"
+                 role="listbox"
+                 aria-label="Opciones de @Label.ToLowerInvariant()"
+                 tabindex="0"
+                 data-single-combobox-options="@Key">
+                @if (string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    <button class="searchable-single-select__option"
+                            type="button"
+                            role="option"
+                            aria-selected="@(!SelectedId.HasValue ? "true" : "false")"
+                            data-option-id=""
+                            @onclick="() => SelectAsync(null)">@EmptyText</button>
+                }
+                @if (VisibleOptions.Count == 0 && !string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    <p class="searchable-single-select__empty">No hay recetas que coincidan.</p>
+                }
+                else
+                {
+                    @foreach (var option in VisibleOptions)
+                    {
+                        <button class="searchable-single-select__option"
+                                type="button"
+                                role="option"
+                                aria-selected="@(SelectedId == option.Id ? "true" : "false")"
+                                data-option-id="@option.Id"
+                                @onclick="() => SelectAsync(option.Id)">@option.Name</button>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isOpen;
+    private string searchTerm = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Key { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<MultiSelectOption> Options { get; set; } = [];
+
+    [Parameter]
+    public Guid? SelectedId { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid?> SelectedIdChanged { get; set; }
+
+    [Parameter]
+    public string EmptyText { get; set; } = "Sin selección";
+
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "Buscar opciones";
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    private string LabelId => $"{Key}-combobox-label";
+    private string TriggerId => $"{Key}-combobox";
+    private string SearchId => $"{Key}-combobox-search";
+    private string OptionsId => $"{Key}-combobox-options";
+    private string SelectedText => Options.FirstOrDefault(option => option.Id == SelectedId)?.Name ?? EmptyText;
+
+    private IReadOnlyList<MultiSelectOption> VisibleOptions => Options
+        .Where(option => string.IsNullOrWhiteSpace(searchTerm) ||
+            option.Name.Contains(searchTerm.Trim(), StringComparison.OrdinalIgnoreCase))
+        .ToArray();
+
+    private void ToggleOpen()
+    {
+        isOpen = !isOpen;
+        if (!isOpen)
+        {
+            searchTerm = string.Empty;
+        }
+    }
+
+    private async Task SelectAsync(Guid? id)
+    {
+        isOpen = false;
+        searchTerm = string.Empty;
+        await SelectedIdChanged.InvokeAsync(id);
+    }
+}

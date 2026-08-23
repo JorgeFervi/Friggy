@@ -126,6 +126,26 @@ public sealed class DailyPlanServiceTests
     }
 
     [Fact]
+    public async Task SetSlotTime_HtmlTimeWithSeconds_NormalizesAndPersists()
+    {
+        var repository = new FakeDailyPlanRepository();
+        var references = new FakeDailyPlanReferenceRepository();
+        var plan = DailyPlan.Create(new DateOnly(2026, 8, 23));
+        var slot = plan.AddSlot(references.MealTypes[0].Id);
+        repository.Items.Add(plan);
+        var service = new DailyPlanService(repository, references);
+
+        var result = await service.SetSlotTimeAsync(
+            plan.Date,
+            slot.Id,
+            new SetMealPlanSlotTimeRequest("10:52:00"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("10:52", result.PlannedTime);
+        Assert.Equal(1, repository.SaveCount);
+    }
+
+    [Fact]
     public async Task SkipEntry_ValidReason_ReturnsSkippedStateAndPersistsOnce()
     {
         var repository = new FakeDailyPlanRepository();

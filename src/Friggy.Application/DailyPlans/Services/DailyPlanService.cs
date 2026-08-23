@@ -305,7 +305,7 @@ public sealed class DailyPlanService(
 
         if (TimeOnly.TryParseExact(
             value,
-            "HH:mm",
+            ["HH:mm", "HH:mm:ss", "HH:mm:ss.FFFFFFF"],
             CultureInfo.InvariantCulture,
             DateTimeStyles.None,
             out var plannedTime))
@@ -315,7 +315,7 @@ public sealed class DailyPlanService(
 
         throw new DomainValidationException(
             "daily-plan.slot.planned-time.invalid",
-            "La hora prevista debe usar el formato HH:mm.");
+            "La hora prevista no es válida.");
     }
 
     private static MealPlanEntryState MapState(MealPlanEntryStatus status) => status switch
