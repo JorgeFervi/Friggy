@@ -23,9 +23,11 @@
                 <label for="unit-type-@Model.ClientId">Unidad</label>
                 <InputSelect id="@($"unit-type-{Model.ClientId}")" data-field="unit-type" @bind-Value="Model.UnitTypeId">
                     <option value="@Guid.Empty">Selecciona una unidad</option>
-                    @foreach (var unitType in UnitTypes)
+                    @foreach (var unitType in AvailableUnitTypes)
                     {
-                        <option value="@unitType.Id">@unitType.Name (@unitType.Symbol)</option>
+                        <option value="@unitType.Id">
+                            @unitType.Name (@unitType.Symbol)@(!unitType.CanUseForCooking ? " — no disponible" : string.Empty)
+                        </option>
                     }
                 </InputSelect>
             </div>
@@ -101,6 +103,11 @@
     private string IngredientName =>
         Ingredients.FirstOrDefault(item => item.Id == Model.IngredientId)?.Name
         ?? "Ingrediente sin seleccionar";
+
+    private IEnumerable<UnitTypeResponse> AvailableUnitTypes => UnitTypes
+        .Where(item => item.CanUseForCooking ||
+            (Model.IsPersisted && item.Id == Model.UnitTypeId))
+        .OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase);
 
     private string QuantityAndUnit
     {

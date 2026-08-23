@@ -30,6 +30,87 @@ public sealed class ShoppingListServiceTests
     }
 
     [Fact]
+    public async Task GetAsync_TablespoonDemandAndLiterStock_ReturnsMilliliters()
+    {
+        var ingredientId = Guid.NewGuid();
+        var milliliter = UnitType.Create(
+            "Mililitro", "ml", MeasurementDimension.Volume, 1m, true, true);
+        var liter = UnitType.Create(
+            "Litro", "l", MeasurementDimension.Volume, 1000m, true, true);
+        var tablespoon = UnitType.Create(
+            "Cucharada", "cda", MeasurementDimension.Volume, 15m, true, false);
+        var snapshot = new ShoppingListSnapshot(
+            [new(ingredientId, "Aceite", tablespoon.Id, tablespoon.Name.Value, tablespoon.Symbol, 2m)],
+            [new(ingredientId, liter.Id, 0.01m)])
+        {
+            Units = [milliliter, liter, tablespoon],
+        };
+
+        var result = await new ShoppingListService(
+            new FakeRepository(snapshot),
+            new FixedTimeProvider()).GetAsync(
+                new(2030, 1, 1),
+                new(2030, 1, 1),
+                TestContext.Current.CancellationToken);
+
+        var item = Assert.Single(result.Items);
+        Assert.Equal(milliliter.Id, item.UnitTypeId);
+        Assert.Equal((30m, 10m, 20m),
+            (item.RequiredQuantity, item.AvailableQuantity, item.QuantityToBuy));
+    }
+
+    [Fact]
+    public async Task GetAsync_LargeVolumeDemand_SelectsLiterDeterministically()
+    {
+        var ingredientId = Guid.NewGuid();
+        var milliliter = UnitType.Create(
+            "Mililitro", "ml", MeasurementDimension.Volume, 1m, true, true);
+        var liter = UnitType.Create(
+            "Litro", "l", MeasurementDimension.Volume, 1000m, true, true);
+        var snapshot = new ShoppingListSnapshot(
+            [new(ingredientId, "Aceite", milliliter.Id, "Mililitro", "ml", 1500m)],
+            [])
+        {
+            Units = [milliliter, liter],
+        };
+
+        var result = await new ShoppingListService(
+            new FakeRepository(snapshot),
+            new FixedTimeProvider()).GetAsync(
+                new(2030, 1, 1),
+                new(2030, 1, 1),
+                TestContext.Current.CancellationToken);
+
+        var item = Assert.Single(result.Items);
+        Assert.Equal(liter.Id, item.UnitTypeId);
+        Assert.Equal(1.5m, item.RequiredQuantity);
+    }
+
+    [Fact]
+    public async Task GetAsync_DimensionWithoutShoppingUnit_ThrowsStableValidation()
+    {
+        var ingredientId = Guid.NewGuid();
+        var tablespoon = UnitType.Create(
+            "Cucharada", "cda", MeasurementDimension.Volume, 15m, true, false);
+        var snapshot = new ShoppingListSnapshot(
+            [new(ingredientId, "Aceite", tablespoon.Id, "Cucharada", "cda", 1m)],
+            [])
+        {
+            Units = [tablespoon],
+        };
+
+        var exception = await Assert.ThrowsAsync<DomainValidationException>(() =>
+            new ShoppingListService(
+                new FakeRepository(snapshot),
+                new FixedTimeProvider()).GetAsync(
+                    new(2030, 1, 1),
+                    new(2030, 1, 1),
+                    TestContext.Current.CancellationToken));
+
+        Assert.Equal("unit-type.shopping-unit.required", exception.Code);
+    }
+
+    [Fact]
     public async Task GetAsync_InvertedRange_ThrowsWithoutQueryingRepository()
     {
         var repository = new FakeRepository(new([], []));

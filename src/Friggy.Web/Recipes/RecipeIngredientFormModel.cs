@@ -14,6 +14,7 @@ public sealed class RecipeIngredientFormModel
         Guid? id = null)
     {
         Id = id ?? Guid.NewGuid();
+        IsPersisted = id.HasValue;
         IngredientId = ingredientId;
         UnitTypeId = unitTypeId;
         Quantity = quantity;
@@ -22,6 +23,7 @@ public sealed class RecipeIngredientFormModel
 
     public Guid ClientId { get; } = Guid.NewGuid();
     public Guid Id { get; private set; } = Guid.NewGuid();
+    public bool IsPersisted { get; }
     public Guid IngredientId { get; set; }
     public Guid UnitTypeId { get; set; }
     public decimal Quantity { get; set; }

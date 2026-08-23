@@ -27,6 +27,43 @@ public sealed class OtherCatalogServicesTests
     }
 
     [Fact]
+    public async Task UnitType_CreateConvertible_ReturnsMeasurementMetadata()
+    {
+        var repository = new FakeUnitTypeRepository(UnitType.Create(
+            "Gramo", "g", MeasurementDimension.Mass, 1m, true, true));
+        var service = new UnitTypeService(repository);
+        var request = new CreateUnitTypeRequest("Kilogramo", "kg")
+        {
+            MeasurementDimension = "mass",
+            BaseUnitFactor = 1000m,
+            CanUseForCooking = true,
+            CanUseForShopping = true,
+        };
+
+        var result = await service.CreateAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal("mass", result.MeasurementDimension);
+        Assert.Equal(1000m, result.BaseUnitFactor);
+        Assert.True(result.CanUseForCooking);
+        Assert.True(result.CanUseForShopping);
+    }
+
+    [Fact]
+    public async Task UnitType_UpdateReferencedFactor_ThrowsConflict()
+    {
+        var unit = UnitType.Create("Gramo", "g", MeasurementDimension.Mass, 1m, true, true);
+        var repository = new FakeUnitTypeRepository(unit) { ReferencedId = unit.Id };
+        var service = new UnitTypeService(repository);
+        var request = new UpdateUnitTypeRequest("Gramo", "g") { BaseUnitFactor = 10m };
+
+        var exception = await Assert.ThrowsAsync<CatalogConflictException>(() =>
+            service.UpdateAsync(unit.Id, request, TestContext.Current.CancellationToken));
+
+        Assert.Equal("unit-type.conversion-metadata.in-use", exception.Code);
+        Assert.Equal(1m, unit.BaseUnitFactor);
+    }
+
+    [Fact]
     public async Task RecipeTag_CreateValidName_ReturnsTag()
     {
         var repository = new FakeRecipeTagRepository();
@@ -61,10 +98,12 @@ public sealed class OtherCatalogServicesTests
     private sealed class FakeUnitTypeRepository(params UnitType[] items) : IUnitTypeRepository
     {
         private readonly List<UnitType> values = [.. items];
+        public Guid? ReferencedId { get; init; }
         public Task AddAsync(UnitType item, CancellationToken cancellationToken) { values.Add(item); return Task.CompletedTask; }
         public Task<bool> ExistsByNormalizedNameAsync(string name, Guid? excludingId, CancellationToken cancellationToken) => Task.FromResult(values.Any(x => x.Name.Normalized == name && x.Id != excludingId));
         public Task<UnitType?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(values.SingleOrDefault(x => x.Id == id));
         public Task<IReadOnlyList<UnitType>> ListAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<UnitType>>(values);
+        public Task<bool> IsReferencedAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(ReferencedId == id);
         public void Remove(UnitType item) => values.Remove(item);
         public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }

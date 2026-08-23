@@ -40,7 +40,7 @@ como parte del composition root mediante [DependencyInjection](DependencyInjecti
 |---|---|
 | [CatalogConfiguration](Persistence/Configurations/CatalogConfiguration.cs) | Configuración auxiliar del value object CatalogName, incluidas sus columnas e índice único normalizado. |
 | [IngredientConfiguration](Persistence/Configurations/IngredientConfiguration.cs) | Configuración de la tabla y del nombre de los ingredientes. |
-| [UnitTypeConfiguration](Persistence/Configurations/UnitTypeConfiguration.cs) | Configuración de unidades de medida, símbolos y nombres. |
+| [UnitTypeConfiguration](Persistence/Configurations/UnitTypeConfiguration.cs) | Configuración de unidades, dimensiones, factores, usos, índices y checks PostgreSQL. |
 | [MealTypeConfiguration](Persistence/Configurations/MealTypeConfiguration.cs) | Configuración de tipos de comida, nombres y orden de presentación. |
 | [RecipeTagConfiguration](Persistence/Configurations/RecipeTagConfiguration.cs) | Configuración de etiquetas de receta y sus nombres. |
 | [RecipeConfiguration](Persistence/Configurations/RecipeConfiguration.cs) | Configuración de recetas, tiempo estimado, nombre y colecciones agregadas. |

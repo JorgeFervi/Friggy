@@ -126,6 +126,14 @@ public sealed class PersistenceConfigurationTests
             migration => Assert.EndsWith(
                 "_ReplaceWeeklyPlansWithDailyPlans",
                 migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_AddDailyPlanTemplates",
+                migration,
+                StringComparison.Ordinal),
+            migration => Assert.EndsWith(
+                "_AddUnitConversionMetadata",
+                migration,
                 StringComparison.Ordinal));
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", context.Database.ProviderName);
     }

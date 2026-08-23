@@ -73,7 +73,7 @@ Activa **Mostrar agotados y caducados**. Si el lote aparece como caducado, revis
 
 ## Una necesidad no usa mi lote
 
-Ingrediente y unidad deben coincidir exactamente con la línea de la receta. Friggy no convierte kilogramos a gramos ni otras unidades. También se excluyen lotes agotados o cuya caducidad ya pasó.
+El ingrediente debe coincidir y las unidades deben pertenecer a la misma dimensión. Friggy convierte, por ejemplo, kilogramos con gramos y litros con mililitros, pero nunca masa con volumen. Las unidades personalizadas sin conversión solo coinciden consigo mismas. También se excluyen lotes agotados o cuya caducidad ya pasó.
 
 ## Las pruebas E2E no encuentran Chromium
 

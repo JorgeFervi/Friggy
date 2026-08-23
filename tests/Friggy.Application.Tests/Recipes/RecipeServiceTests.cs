@@ -10,6 +10,47 @@ namespace Friggy.Application.Tests.Recipes;
 public sealed class RecipeServiceTests
 {
     [Fact]
+    public async Task Create_UnitDisabledForCooking_ThrowsConflict()
+    {
+        var scenario = RecipeScenario.Create();
+        var unitTypeId = scenario.Request.Ingredients[0].UnitTypeId;
+        scenario.References.DisabledCookingUnitTypeIds.Add(unitTypeId);
+
+        var exception = await Assert.ThrowsAsync<RecipeConflictException>(() =>
+            scenario.CreateService().CreateAsync(
+                scenario.Request,
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("recipe.unit-type.not-allowed-for-cooking", exception.Code);
+        Assert.Empty(scenario.Recipes.Items);
+    }
+
+    [Fact]
+    public async Task Update_RetainedLineWithUnitDisabledForCooking_IsAllowed()
+    {
+        var scenario = RecipeScenario.Create();
+        var service = scenario.CreateService();
+        var created = await service.CreateAsync(
+            scenario.Request,
+            TestContext.Current.CancellationToken);
+        scenario.References.DisabledCookingUnitTypeIds.Add(
+            scenario.Request.Ingredients[0].UnitTypeId);
+
+        var result = await service.UpdateAsync(
+            created.Id,
+            new UpdateRecipeRequest(
+                scenario.Request.Name,
+                scenario.Request.EstimatedMinutes,
+                scenario.Request.Ingredients,
+                scenario.Request.Steps,
+                scenario.Request.TagIds,
+                scenario.Request.MealTypeIds),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(created.Id, result.Id);
+    }
+
+    [Fact]
     public async Task Create_ValidRequest_PersistsAndReturnsOrderedRecipe()
     {
         var scenario = RecipeScenario.Create();
@@ -648,6 +689,8 @@ public sealed class RecipeServiceTests
 
         public HashSet<Guid> UnitTypeIds { get; } = [];
 
+        public HashSet<Guid> DisabledCookingUnitTypeIds { get; } = [];
+
         public HashSet<Guid> TagIds { get; } = [];
 
         public HashSet<Guid> MealTypeIds { get; } = [];
@@ -682,6 +725,20 @@ public sealed class RecipeServiceTests
             IReadOnlyCollection<Guid> ids,
             CancellationToken cancellationToken) =>
             ContainsAllAsync(UnitTypeIds, ids, cancellationToken);
+
+        public Task<IReadOnlyList<RecipeUnitTypeReference>> GetUnitTypesAsync(
+            IReadOnlyCollection<Guid> ids,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<RecipeUnitTypeReference>>(
+                ids.Distinct()
+                    .Where(UnitTypeIds.Contains)
+                    .Select(id => new RecipeUnitTypeReference(
+                        id,
+                        !DisabledCookingUnitTypeIds.Contains(id)))
+                    .ToArray());
+        }
 
         public Task<bool> TagsExistAsync(
             IReadOnlyCollection<Guid> ids,

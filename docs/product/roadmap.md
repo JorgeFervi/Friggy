@@ -1,8 +1,8 @@
 # Estado y hoja de ruta
 
-> **Estado:** vigente · **Última revisión:** 22 de agosto de 2026
+> **Estado:** vigente · **Última revisión:** 23 de agosto de 2026
 
-Las fases 1 a 12 están completadas. Las fases 13 a 15 están planificadas. El detalle histórico y futuro se conserva en [planes](../../plans/README.md).
+Las fases 1 a 16 están implementadas en el código actual. El detalle histórico y ejecutable se conserva en [planes](../../plans/README.md) y en la [fase 16](../plans/phases/16-unit-conversions.md).
 
 ## Capacidades entregadas
 
@@ -10,27 +10,26 @@ Las fases 1 a 12 están completadas. Las fases 13 a 15 están planificadas. El d
 * Recetas con ingredientes, pasos, clasificación y asociación de ingredientes a pasos.
 * Planificación diaria por intervalos libres, con raciones, horarios, omisiones y finalización.
 * Inventario por lotes, caducidad, movimientos y cálculo de carencias.
+* Plantillas diarias y lista de la compra calculada por intervalo.
+* Conversiones de masa, volumen y conteo con unidades diferenciadas para cocina y compra.
 * Interfaz responsive, accesible y protegida mediante regresión visual.
 * Automatización local, cinco niveles de pruebas y puerta de calidad.
 
 La descripción funcional vigente está en [Funcionalidades actuales](current-capabilities.md).
 
-## Incrementos planificados
+## Incrementos entregados recientemente
 
-Estos planes describen trabajo futuro y no cambian todavía las funcionalidades actuales:
-
-* [Fase 13: crear y aplicar plantillas de planes diarios](../../plans/phases/13-daily-plan-templates.md).
-* [Fase 14: calcular una lista de la compra por intervalo](../../plans/phases/14-shopping-list.md).
-* [Fase 15: consolidar la UI y UX de los recorridos principales](../../plans/phases/15-ui-ux-consolidation.md).
-
-La [Fase 12](../../plans/completed/phases/12-daily-planning.md) ya proporciona la base diaria estable. Plantillas y lista de la compra son incrementos independientes; la fase 15 depende de ambos para consolidar su experiencia sin cambiar contratos de negocio.
+* [Fase 13: plantillas de planes diarios](../../plans/phases/13-daily-plan-templates.md).
+* [Fase 14: lista de la compra por intervalo](../../plans/phases/14-shopping-list.md).
+* [Fase 15: consolidación de UI y UX](../../plans/phases/15-ui-ux-consolidation.md).
+* [Fase 16: conversiones y usos contextuales de unidades](../plans/phases/16-unit-conversions.md).
 
 ## Posibles evoluciones
 
 Las siguientes ideas no constituyen un compromiso ni tienen orden o fecha asignados:
 
 * Cuentas de usuario, autenticación y aislamiento de datos.
-* Conversiones controladas entre unidades compatibles.
+* Densidades por ingrediente y equivalencias entre masa y volumen.
 * Imágenes de recetas, pasos o ingredientes.
 * Información nutricional.
 * Sugerencias y asistencia mediante inteligencia artificial.

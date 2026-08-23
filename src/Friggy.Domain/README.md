@@ -26,7 +26,9 @@ inventario y planificación diaria.
 | [`Ingredient`](Catalogs/Ingredient.cs) | Ingrediente que puede utilizarse en uno o varios pasos de una receta. |
 | [`MealType`](Catalogs/MealType.cs) | Tipo de comida que permite clasificar recetas y organizar comidas dentro de un plan. |
 | [`RecipeTag`](Catalogs/RecipeTag.cs) | Etiqueta que puede asociarse a una receta. |
-| [`UnitType`](Catalogs/UnitType.cs) | Unidad de medida utilizada para expresar cantidades de ingredientes, junto con su símbolo. |
+| [`UnitType`](Catalogs/UnitType.cs) | Unidad con símbolo, dimensión, factor base y usos permitidos para cocina y compra. |
+| [`MeasurementDimension`](Catalogs/MeasurementDimension.cs) | Dimensiones convertibles de masa, volumen y conteo, más el modo exacto sin conversión. |
+| [`UnitQuantityConverter`](Catalogs/UnitQuantityConverter.cs) | Conversión pura y validada de cantidades mediante la unidad base de cada dimensión. |
 
 ## Inventario
 

@@ -9,6 +9,7 @@ Este índice separa la documentación vigente de los documentos históricos. Si 
 * [Recetas y catálogos](user-guide/recipes.md)
 * [Planificación diaria](user-guide/daily-planning.md)
 * [Inventario doméstico](user-guide/inventory.md)
+* [Lista de la compra](user-guide/shopping-list.md)
 * [Persistencia y gestión de datos](user-guide/data-management.md)
 * [Resolución de problemas](user-guide/troubleshooting.md)
 

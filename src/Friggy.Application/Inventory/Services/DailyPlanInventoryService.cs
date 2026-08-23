@@ -3,6 +3,7 @@ using Friggy.Application.DailyPlans.Interfaces;
 using Friggy.Application.Inventory.Dtos;
 using Friggy.Application.Inventory.Exceptions;
 using Friggy.Application.Inventory.Interfaces;
+using Friggy.Application.Measurements;
 using Friggy.Application.Recipes.Interfaces;
 using Friggy.Domain.Catalogs;
 using Friggy.Domain.DailyPlans;
@@ -80,13 +81,15 @@ public sealed class DailyPlanInventoryService(
         var required = AggregateIngredients(recipe.Ingredients, entry.Servings);
         var inventory = await lots.ListForUpdateAsync(cancellationToken);
         var lotsById = inventory.ToDictionary(lot => lot.Id);
+        var units = await references.ListUnitTypesAsync(cancellationToken);
+        var unitsById = units.ToDictionary(unit => unit.Id);
         var allocations = request.Allocations
             .GroupBy(allocation => allocation.LotId)
             .Select(group => new InventoryLotAllocationRequest(
                 group.Key,
                 group.Sum(allocation => allocation.Quantity)))
             .ToArray();
-        ValidateAllocations(allocations, lotsById, required);
+        ValidateAllocations(allocations, lotsById, required, unitsById);
 
         var consumptions = new List<MealLotConsumptionResponse>(allocations.Length);
         foreach (var allocation in allocations)
@@ -105,6 +108,7 @@ public sealed class DailyPlanInventoryService(
             required,
             consumptions,
             lotsById,
+            units,
             cancellationToken);
         plan.CompleteEntry(mealTypeId, timeProvider.GetUtcNow());
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -172,9 +176,18 @@ public sealed class DailyPlanInventoryService(
     private void ValidateAllocations(
         IReadOnlyCollection<InventoryLotAllocationRequest> allocations,
         Dictionary<Guid, InventoryLot> lotsById,
-        Dictionary<(Guid IngredientId, Guid UnitTypeId), decimal> required)
+        Dictionary<(Guid IngredientId, Guid UnitTypeId), decimal> required,
+        Dictionary<Guid, UnitType> units)
     {
-        var allocatedByRequirement = new Dictionary<(Guid, Guid), decimal>();
+        var normalizedRequired = required
+            .GroupBy(item => MeasurementBucket.Create(
+                item.Key.IngredientId,
+                units[item.Key.UnitTypeId]))
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(item =>
+                    UnitQuantityConverter.ToBase(item.Value, units[item.Key.UnitTypeId])));
+        var allocatedByRequirement = new Dictionary<MeasurementBucket, decimal>();
         foreach (var allocation in allocations)
         {
             if (allocation.Quantity <= 0)
@@ -198,15 +211,24 @@ public sealed class DailyPlanInventoryService(
                     "No se puede consumir un lote caducado.");
             }
 
-            var key = (lot.IngredientId, lot.UnitTypeId);
-            if (!required.TryGetValue(key, out var requiredQuantity))
+            var unit = units[lot.UnitTypeId];
+            var key = MeasurementBucket.Create(lot.IngredientId, unit);
+            if (!normalizedRequired.TryGetValue(key, out var requiredQuantity))
             {
+                if (normalizedRequired.Keys.Any(item => item.IngredientId == lot.IngredientId))
+                {
+                    throw new InventoryConflictException(
+                        "meal-completion.unit.incompatible",
+                        "La unidad del lote no es compatible con la necesidad de la receta.");
+                }
+
                 throw new InventoryConflictException(
                     "meal-completion.lot.not-required",
                     "El lote no corresponde a una necesidad de la receta.");
             }
 
-            var total = allocatedByRequirement.GetValueOrDefault(key) + allocation.Quantity;
+            var total = allocatedByRequirement.GetValueOrDefault(key) +
+                UnitQuantityConverter.ToBase(allocation.Quantity, unit);
             if (total > requiredQuantity)
             {
                 throw new InventoryConflictException(
@@ -225,23 +247,28 @@ public sealed class DailyPlanInventoryService(
     {
         var ingredients = (await references.ListIngredientsAsync(cancellationToken))
             .ToDictionary(item => item.Id);
-        var units = (await references.ListUnitTypesAsync(cancellationToken))
-            .ToDictionary(item => item.Id);
-        return required.Select(item =>
-            {
-                var ingredient = ingredients[item.Key.IngredientId];
-                var unit = units[item.Key.UnitTypeId];
-                var availableQuantity = available.GetValueOrDefault(item.Key);
-                return new InventoryRequirementResponse(
-                    item.Key.IngredientId,
-                    ingredient.Name.Value,
-                    item.Key.UnitTypeId,
-                    unit.Name.Value,
-                    unit.Symbol,
-                    item.Value,
-                    availableQuantity,
-                    Math.Max(0, item.Value - availableQuantity));
-            })
+        var units = await references.ListUnitTypesAsync(cancellationToken);
+        var comparisons = MeasurementCalculator.Compare(
+            required.Select(item => new MeasuredAmount(
+                item.Key.IngredientId,
+                ingredients[item.Key.IngredientId].Name.Value,
+                item.Key.UnitTypeId,
+                item.Value)),
+            available.Select(item => new MeasuredAmount(
+                item.Key.IngredientId,
+                ingredients[item.Key.IngredientId].Name.Value,
+                item.Key.UnitTypeId,
+                item.Value)),
+            units);
+        return comparisons.Select(item => new InventoryRequirementResponse(
+                item.IngredientId,
+                item.IngredientName,
+                item.Unit.Id,
+                item.Unit.Name.Value,
+                item.Unit.Symbol,
+                item.Required,
+                item.Available,
+                item.Missing))
             .OrderBy(item => item.IngredientName, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(item => item.UnitTypeName, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
@@ -251,6 +278,7 @@ public sealed class DailyPlanInventoryService(
         Dictionary<(Guid IngredientId, Guid UnitTypeId), decimal> required,
         IReadOnlyCollection<MealLotConsumptionResponse> consumptions,
         Dictionary<Guid, InventoryLot> lotsById,
+        IReadOnlyCollection<UnitType> units,
         CancellationToken cancellationToken)
     {
         var applied = consumptions
@@ -262,20 +290,30 @@ public sealed class DailyPlanInventoryService(
             .ToDictionary(group => group.Key, group => group.Sum(item => item.AppliedQuantity));
         var ingredients = (await references.ListIngredientsAsync(cancellationToken))
             .ToDictionary(item => item.Id);
-        var units = (await references.ListUnitTypesAsync(cancellationToken))
-            .ToDictionary(item => item.Id);
-        return required
-            .Select(item => (item.Key, Remaining: item.Value - applied.GetValueOrDefault(item.Key)))
-            .Where(item => item.Remaining > 0)
-            .Select(item => new MealCompletionRemainderResponse(
+        var comparisons = MeasurementCalculator.Compare(
+            required.Select(item => new MeasuredAmount(
                 item.Key.IngredientId,
                 ingredients[item.Key.IngredientId].Name.Value,
                 item.Key.UnitTypeId,
-                units[item.Key.UnitTypeId].Name.Value,
-                units[item.Key.UnitTypeId].Symbol,
-                item.Remaining))
+                item.Value)),
+            applied.Select(item => new MeasuredAmount(
+                item.Key.IngredientId,
+                ingredients[item.Key.IngredientId].Name.Value,
+                item.Key.UnitTypeId,
+                item.Value)),
+            units);
+        return comparisons
+            .Where(item => item.Missing > 0)
+            .Select(item => new MealCompletionRemainderResponse(
+                item.IngredientId,
+                item.IngredientName,
+                item.Unit.Id,
+                item.Unit.Name.Value,
+                item.Unit.Symbol,
+                item.Missing))
             .OrderBy(item => item.IngredientName, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(item => item.UnitTypeName, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
     }
+
 }

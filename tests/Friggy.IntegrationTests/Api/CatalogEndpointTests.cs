@@ -100,6 +100,10 @@ public sealed class CatalogEndpointTests(PostgreSqlDatabaseFixture database)
         Assert.Equal(HttpStatusCode.Created, tagResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Created, mealResponse.StatusCode);
         Assert.NotNull(unit);
+        Assert.Equal("unconverted", unit.MeasurementDimension);
+        Assert.Equal(1m, unit.BaseUnitFactor);
+        Assert.True(unit.CanUseForCooking);
+        Assert.True(unit.CanUseForShopping);
         Assert.NotNull(tag);
         Assert.NotNull(meal);
 
@@ -118,5 +122,34 @@ public sealed class CatalogEndpointTests(PostgreSqlDatabaseFixture database)
         Assert.Equal(HttpStatusCode.NoContent, deleteUnit.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, deleteTag.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, deleteMeal.StatusCode);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task UnitTypeEndpoint_FullMetadata_RoundTripsWireContract()
+    {
+        await using var factory = new FriggyApiFactory(Database.ConnectionString);
+        using var client = factory.CreateClient();
+        var request = new CreateUnitTypeRequest("Cucharada", "cda")
+        {
+            MeasurementDimension = "volume",
+            BaseUnitFactor = 15m,
+            CanUseForCooking = true,
+            CanUseForShopping = false,
+        };
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/unit-types",
+            request,
+            TestContext.Current.CancellationToken);
+        var unit = await response.Content.ReadFromJsonAsync<UnitTypeResponse>(
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.NotNull(unit);
+        Assert.Equal("volume", unit.MeasurementDimension);
+        Assert.Equal(15m, unit.BaseUnitFactor);
+        Assert.True(unit.CanUseForCooking);
+        Assert.False(unit.CanUseForShopping);
     }
 }

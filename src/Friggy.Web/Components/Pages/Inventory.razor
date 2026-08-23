@@ -45,7 +45,9 @@
                     <label for="inventory-unit">Unidad</label>
                     <InputSelect id="inventory-unit" @bind-Value="form.UnitTypeId">
                         <option value="">Selecciona una unidad</option>
-                        @foreach (var unit in units.OrderBy(item => item.Name))
+                        @foreach (var unit in units
+                            .Where(item => item.CanUseForShopping)
+                            .OrderBy(item => item.Name))
                         {
                             <option value="@unit.Id">@unit.Name (@unit.Symbol)</option>
                         }

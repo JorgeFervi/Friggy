@@ -52,6 +52,32 @@ public sealed class InventoryLotServiceTests
     }
 
     [Fact]
+    public async Task Create_UnitDisabledForShopping_ThrowsConflict()
+    {
+        var scenario = InventoryScenario.Create();
+        var cookingOnlyUnit = UnitType.Create(
+            "Cucharada",
+            "cda",
+            MeasurementDimension.Volume,
+            15m,
+            canUseForCooking: true,
+            canUseForShopping: false);
+        scenario.References.UnitTypes.Add(cookingOnlyUnit);
+
+        var exception = await Assert.ThrowsAsync<InventoryConflictException>(() =>
+            scenario.Service.CreateAsync(
+                new CreateInventoryLotRequest(
+                    scenario.Ingredient.Id,
+                    cookingOnlyUnit.Id,
+                    1m,
+                    new DateOnly(2026, 8, 20)),
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("inventory-lot.unit-type.not-allowed-for-shopping", exception.Code);
+        Assert.Empty(scenario.Repository.Items);
+    }
+
+    [Fact]
     public async Task ListAvailable_ExcludesExpiredAndExhaustedButIncludesExpiringToday()
     {
         var scenario = InventoryScenario.Create();

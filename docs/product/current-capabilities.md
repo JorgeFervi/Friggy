@@ -1,6 +1,6 @@
 # Funcionalidades actuales
 
-> **Estado:** vigente · **Última revisión:** 22 de agosto de 2026
+> **Estado:** vigente · **Última revisión:** 23 de agosto de 2026
 
 Friggy es una aplicación web local y monousuario para organizar recetas, planes diarios e inventario doméstico. Web y API se ejecutan como procesos separados y los datos se conservan en PostgreSQL.
 
@@ -9,11 +9,11 @@ Friggy es una aplicación web local y monousuario para organizar recetas, planes
 La aplicación permite crear, consultar, editar y eliminar:
 
 * Ingredientes.
-* Tipos de unidad con nombre y símbolo.
+* Tipos de unidad con nombre, símbolo, dimensión, factor de conversión y usos permitidos.
 * Etiquetas de receta.
 * Tipos de comida con un orden configurable.
 
-La base de datos incluye inicialmente unidades de uso común y los tipos desayuno, comida y cena. Un elemento referenciado por recetas, planes o inventario puede estar protegido frente al borrado.
+La base de datos incluye inicialmente unidades de masa, volumen y conteo. Cada unidad puede habilitarse para cocina, compra o ambos contextos. Un elemento referenciado por recetas, planes o inventario puede estar protegido frente al borrado; su dimensión y factor tampoco se reinterpretan mientras esté en uso.
 
 ## Recetas
 
@@ -43,7 +43,7 @@ Las comidas omitidas no consumen inventario. Una comida completada queda cerrada
 
 ## Inventario
 
-Las existencias se registran por lotes independientes con ingrediente, unidad, cantidad y caducidad. Cada lote conserva un historial inmutable de:
+Las existencias se registran por lotes independientes con ingrediente, unidad de compra, cantidad y caducidad. Cada lote conserva un historial inmutable de:
 
 * Alta inicial.
 * Consumo.
@@ -54,9 +54,13 @@ También se puede corregir su caducidad. La lista oculta por defecto los lotes a
 
 ## Necesidades y finalización
 
-El detalle de un plan calcula las cantidades requeridas, disponibles y faltantes para cada combinación exacta de ingrediente y unidad. No realiza conversiones entre unidades y excluye lotes caducados o agotados.
+El detalle de un plan calcula las cantidades requeridas, disponibles y faltantes por ingrediente y dimensión. Convierte masa, volumen y conteo mediante sus factores base, mantiene separadas las dimensiones incompatibles y excluye lotes caducados o agotados.
 
-Al completar una comida, el usuario elige cuánto consumir de cada lote compatible. La operación registra los movimientos y cierra la asignación de forma transaccional. Si no hay existencias suficientes, Friggy puede informar de la necesidad restante; no genera todavía una lista de la compra.
+Al completar una comida, el usuario elige cuánto consumir de cada lote compatible aunque la receta use otra unidad de la misma dimensión. La operación registra el movimiento en la unidad original del lote y cierra la asignación de forma transaccional. Si no hay existencias suficientes, Friggy informa de la necesidad restante en una unidad de compra.
+
+## Lista de la compra
+
+La lista de la compra es una consulta de solo lectura para un intervalo inclusivo. Agrega la demanda de los planes no omitidos, descuenta el inventario utilizable mediante conversiones compatibles y expresa requerido, disponible y faltante en una unidad habilitada para compra. Las unidades exclusivamente culinarias, como cucharadas, no aparecen como propuesta de compra.
 
 ## Límites actuales
 
@@ -67,7 +71,7 @@ La versión actual no incluye:
 * Inteligencia artificial.
 * Imágenes de recetas o ingredientes.
 * Información nutricional.
-* Conversiones automáticas entre unidades.
-* Lista de la compra.
+* Conversión entre masa y volumen mediante densidad.
+* Presentaciones comerciales, tamaños de envase o redondeo a paquetes.
 
 Consulta la [hoja de ruta](roadmap.md) para distinguir capacidades implementadas de posibles evoluciones.

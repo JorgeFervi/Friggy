@@ -75,8 +75,8 @@ capa de infraestructura y los servicios se registran mediante
 
 | Tipo | Representación |
 |---|---|
-| [UnitTypeService](Catalogs/UnitTypes/Services/UnitTypeService.cs) | Servicio que lista, consulta, crea, actualiza y elimina unidades de medida. |
-| [IUnitTypeRepository](Catalogs/UnitTypes/Interfaces/IUnitTypeRepository.cs) | Contrato de persistencia de unidades y de comprobación de nombres normalizados. |
+| [UnitTypeService](Catalogs/UnitTypes/Services/UnitTypeService.cs) | Servicio de catálogo que valida conversión, usos contextuales y metadatos ya referenciados. |
+| [IUnitTypeRepository](Catalogs/UnitTypes/Interfaces/IUnitTypeRepository.cs) | Contrato de persistencia, unicidad y comprobación de referencias de unidades. |
 | [CreateUnitTypeRequest](Catalogs/UnitTypes/Dtos/CreateUnitTypeRequest.cs) | Datos de entrada para crear una unidad de medida. |
 | [UpdateUnitTypeRequest](Catalogs/UnitTypes/Dtos/UpdateUnitTypeRequest.cs) | Datos de entrada para actualizar una unidad de medida. |
 | [UnitTypeResponse](Catalogs/UnitTypes/Dtos/UnitTypeResponse.cs) | Datos de salida de una unidad de medida, incluido su símbolo. |
@@ -123,7 +123,8 @@ capa de infraestructura y los servicios se registran mediante
 | Tipo | Representación |
 |---|---|
 | [InventoryLotService](Inventory/Services/InventoryLotService.cs) | Servicio que lista, consulta, crea, corrige, consume, descarta y ajusta lotes de inventario. |
-| [DailyPlanInventoryService](Inventory/Services/DailyPlanInventoryService.cs) | Servicio que calcula las necesidades de una fecha y coordina el consumo al completar una comida. |
+| [DailyPlanInventoryService](Inventory/Services/DailyPlanInventoryService.cs) | Servicio que normaliza necesidades y coordina consumos compatibles conservando la unidad del lote. |
+| [MeasurementCalculator](Measurements/MeasurementCalculator.cs) | Política compartida para agregar demanda y stock y elegir una unidad de compra determinista. |
 | [IInventoryLotRepository](Inventory/Interfaces/IInventoryLotRepository.cs) | Contrato de persistencia y consulta de lotes de inventario. |
 | [IInventoryReferenceRepository](Inventory/Interfaces/IInventoryReferenceRepository.cs) | Contrato para consultar ingredientes y unidades necesarios para mostrar o validar lotes. |
 | [IInventoryUnitOfWork](Inventory/Interfaces/IInventoryUnitOfWork.cs) | Contrato para persistir una operación completa de inventario. |

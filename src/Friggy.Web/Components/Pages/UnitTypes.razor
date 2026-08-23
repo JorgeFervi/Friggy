@@ -18,6 +18,7 @@
                  Description="El símbolo debe ser breve y fácil de reconocer.">
         <EditForm Model="model" OnValidSubmit="SaveAsync" FormName="unit-form" class="friggy-catalog-page__form">
             <DataAnnotationsValidator />
+            <ValidationSummary />
             <div class="friggy-catalog-page__fields">
                 <div>
                     <label for="unit-name">Nombre</label>
@@ -29,6 +30,23 @@
                     <InputText id="unit-symbol" @bind-Value="model.Symbol" />
                     <ValidationMessage For="() => model.Symbol" />
                 </div>
+                <div>
+                    <label for="unit-dimension">Dimensión</label>
+                    <InputSelect id="unit-dimension" @bind-Value="model.MeasurementDimension" @bind-Value:after="DimensionChanged">
+                        <option value="unconverted">Sin conversión</option>
+                        <option value="mass">Masa</option>
+                        <option value="volume">Volumen</option>
+                        <option value="count">Conteo</option>
+                    </InputSelect>
+                </div>
+                <div>
+                    <label for="unit-factor">Factor respecto a la unidad base</label>
+                    <InputNumber id="unit-factor" @bind-Value="model.BaseUnitFactor"
+                                 disabled="@(model.MeasurementDimension == "unconverted")" min="0.000000001" step="0.001" />
+                    <ValidationMessage For="() => model.BaseUnitFactor" />
+                </div>
+                <label><InputCheckbox @bind-Value="model.CanUseForCooking" /> Cocina</label>
+                <label><InputCheckbox @bind-Value="model.CanUseForShopping" /> Compra e inventario</label>
             </div>
             <FormActions>
                 <FriggyButton Type="FriggyButtonType.Submit" Busy="saving" BusyLabel="Guardando">
@@ -56,7 +74,7 @@
                 @foreach (var item in items)
                 {
                     <article class="friggy-catalog-card" role="listitem" @key="item.Id">
-                        <div><p class="friggy-catalog-card__eyebrow">Unidad</p><h3>@item.Name</h3><p>@item.Symbol</p></div>
+                        <div><p class="friggy-catalog-card__eyebrow">@DimensionLabel(item.MeasurementDimension)</p><h3>@item.Name</h3><p>@item.Symbol · factor @item.BaseUnitFactor</p><p>@UsageLabel(item)</p></div>
                         <div class="friggy-catalog-page__actions">
                             <FriggyIconButton Label="@($"Editar {item.Name}")" Icon="FriggyIconName.Edit" OnClick="() => BeginEdit(item)" />
                             <FriggyIconButton Label="@($"Borrar {item.Name}")" Icon="FriggyIconName.Delete" Variant="FriggyButtonVariant.Danger" OnClick="() => RequestDelete(item)" />
@@ -66,11 +84,11 @@
             </div>
             <div class="friggy-catalog-page__table">
                 <table>
-                    <thead><tr><th>Nombre</th><th>Símbolo</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
+                    <thead><tr><th>Nombre</th><th>Símbolo</th><th>Dimensión</th><th>Usos</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
                     <tbody>
                     @foreach (var item in items)
                     {
-                        <tr @key="item.Id"><td>@item.Name</td><td>@item.Symbol</td><td><div class="friggy-catalog-page__actions">
+                        <tr @key="item.Id"><td>@item.Name</td><td>@item.Symbol</td><td>@DimensionLabel(item.MeasurementDimension) · @item.BaseUnitFactor</td><td>@UsageLabel(item)</td><td><div class="friggy-catalog-page__actions">
                             <FriggyIconButton Label="@($"Editar {item.Name}")" Icon="FriggyIconName.Edit" OnClick="() => BeginEdit(item)" />
                             <FriggyIconButton Label="@($"Borrar {item.Name}")" Icon="FriggyIconName.Delete" Variant="FriggyButtonVariant.Danger" OnClick="() => RequestDelete(item)" />
                         </div></td></tr>
@@ -113,16 +131,37 @@
         saving = true;
         try
         {
-            if (editingId is Guid id) await Api.UpdateAsync(id, new(model.Name, model.Symbol), cancellation.Token);
-            else await Api.CreateAsync(new(model.Name, model.Symbol), cancellation.Token);
+            if (editingId is Guid id)
+            {
+                await Api.UpdateAsync(id, new(model.Name, model.Symbol)
+                {
+                    MeasurementDimension = model.MeasurementDimension,
+                    BaseUnitFactor = model.BaseUnitFactor,
+                    CanUseForCooking = model.CanUseForCooking,
+                    CanUseForShopping = model.CanUseForShopping,
+                }, cancellation.Token);
+            }
+            else
+            {
+                await Api.CreateAsync(new(model.Name, model.Symbol)
+                {
+                    MeasurementDimension = model.MeasurementDimension,
+                    BaseUnitFactor = model.BaseUnitFactor,
+                    CanUseForCooking = model.CanUseForCooking,
+                    CanUseForShopping = model.CanUseForShopping,
+                }, cancellation.Token);
+            }
             CancelEdit();
             await ReloadAsync();
         }
         catch (Exception ex) when (ex is HttpRequestException or ApiProblemException) { error = ex.Message; }
         finally { saving = false; }
     }
-    private void BeginEdit(UnitTypeResponse item) { editingId = item.Id; model.Name = item.Name; model.Symbol = item.Symbol; }
-    private void CancelEdit() { editingId = null; model.Name = string.Empty; model.Symbol = string.Empty; }
+    private void BeginEdit(UnitTypeResponse item) { editingId = item.Id; model.Name = item.Name; model.Symbol = item.Symbol; model.MeasurementDimension = item.MeasurementDimension; model.BaseUnitFactor = item.BaseUnitFactor; model.CanUseForCooking = item.CanUseForCooking; model.CanUseForShopping = item.CanUseForShopping; }
+    private void CancelEdit() { editingId = null; model.Name = string.Empty; model.Symbol = string.Empty; model.MeasurementDimension = "unconverted"; model.BaseUnitFactor = 1m; model.CanUseForCooking = true; model.CanUseForShopping = true; }
+    private void DimensionChanged() { if (model.MeasurementDimension == "unconverted") model.BaseUnitFactor = 1m; }
+    private static string DimensionLabel(string dimension) => dimension switch { "mass" => "Masa", "volume" => "Volumen", "count" => "Conteo", _ => "Sin conversión" };
+    private static string UsageLabel(UnitTypeResponse item) => string.Join(" · ", new[] { item.CanUseForCooking ? "Cocina" : null, item.CanUseForShopping ? "Compra" : null }.Where(value => value is not null)) is { Length: > 0 } value ? value : "Retirada";
     private void RequestDelete(UnitTypeResponse item) { if (!deleting) itemToDelete = item; }
     private void CancelDelete() => itemToDelete = null;
     private async Task DeleteAsync()
@@ -135,7 +174,7 @@
         finally { deleting = false; itemToDelete = null; }
     }
     public void Dispose() { cancellation.Cancel(); cancellation.Dispose(); GC.SuppressFinalize(this); }
-    private sealed class UnitInput
+    private sealed class UnitInput : IValidatableObject
     {
         [Required(ErrorMessage = "El nombre es obligatorio.")]
         [StringLength(120)]
@@ -143,5 +182,22 @@
         [Required(ErrorMessage = "El símbolo es obligatorio.")]
         [StringLength(20)]
         public string Symbol { get; set; } = string.Empty;
+        public string MeasurementDimension { get; set; } = "unconverted";
+        [Range(0.000000001, double.MaxValue, ErrorMessage = "El factor debe ser positivo.")]
+        public decimal BaseUnitFactor { get; set; } = 1m;
+        public bool CanUseForCooking { get; set; } = true;
+        public bool CanUseForShopping { get; set; } = true;
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (MeasurementDimension == "unconverted" &&
+                CanUseForCooking &&
+                !CanUseForShopping)
+            {
+                yield return new ValidationResult(
+                    "Una unidad sin conversión usada en cocina también debe estar disponible para compra.",
+                    [nameof(CanUseForShopping)]);
+            }
+        }
     }
 }

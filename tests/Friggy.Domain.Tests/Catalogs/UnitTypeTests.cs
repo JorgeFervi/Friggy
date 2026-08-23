@@ -31,4 +31,35 @@ public sealed class UnitTypeTests
         Assert.Equal("Kilogramo", unit.Name.Value);
         Assert.Equal("kg", unit.Symbol);
     }
+
+    [Fact]
+    public void Create_Defaults_PreserveExactLegacyBehavior()
+    {
+        var unit = UnitType.Create("Vaso", "vaso");
+
+        Assert.Equal(MeasurementDimension.Unconverted, unit.MeasurementDimension);
+        Assert.Equal(1m, unit.BaseUnitFactor);
+        Assert.True(unit.CanUseForCooking);
+        Assert.True(unit.CanUseForShopping);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Create_NonPositiveBaseFactor_Throws(decimal factor)
+    {
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            UnitType.Create("Peso", "p", MeasurementDimension.Mass, factor, true, true));
+
+        Assert.Equal("unit-type.base-factor.positive", exception.Code);
+    }
+
+    [Fact]
+    public void Create_UnconvertedWithDifferentFactor_Throws()
+    {
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            UnitType.Create("Vaso", "vaso", MeasurementDimension.Unconverted, 250m, true, true));
+
+        Assert.Equal("unit-type.unconverted-factor.invalid", exception.Code);
+    }
 }

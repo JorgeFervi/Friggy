@@ -47,7 +47,7 @@ public sealed class RecipeService(
             request.TagIds,
             request.MealTypeIds);
 
-        await EnsureReferencesExistAsync(recipe, cancellationToken);
+        await EnsureReferencesExistAsync(recipe, null, cancellationToken);
         await EnsureUniqueNameAsync(recipe.Name.Normalized, null, cancellationToken);
         await recipes.AddAsync(recipe, cancellationToken);
         await recipes.SaveChangesAsync(cancellationToken);
@@ -73,7 +73,7 @@ public sealed class RecipeService(
             request.TagIds,
             request.MealTypeIds);
 
-        await EnsureReferencesExistAsync(replacement, cancellationToken);
+        await EnsureReferencesExistAsync(replacement, existing, cancellationToken);
         await EnsureUniqueNameAsync(replacement.Name.Normalized, existing.Id, cancellationToken);
         existing.ReplaceWith(replacement);
         await recipes.SaveChangesAsync(cancellationToken);
@@ -163,6 +163,7 @@ public sealed class RecipeService(
 
     private async Task EnsureReferencesExistAsync(
         Recipe recipe,
+        Recipe? existing,
         CancellationToken cancellationToken)
     {
         var ingredientIds = recipe.Ingredients
@@ -180,11 +181,31 @@ public sealed class RecipeService(
             .Select(item => item.UnitTypeId)
             .Distinct()
             .ToArray();
-        if (!await catalogs.UnitTypesExistAsync(unitTypeIds, cancellationToken))
+        var unitTypes = await catalogs.GetUnitTypesAsync(unitTypeIds, cancellationToken);
+        if (unitTypes.Count != unitTypeIds.Length)
         {
             throw new RecipeReferenceNotFoundException(
                 "recipe.unit-type.not-found",
                 "No se encontró una de las unidades de la receta.");
+        }
+
+        var unitsById = unitTypes.ToDictionary(item => item.Id);
+        foreach (var ingredient in recipe.Ingredients)
+        {
+            if (unitsById[ingredient.UnitTypeId].CanUseForCooking)
+            {
+                continue;
+            }
+
+            var retainedLegacyLine = existing?.Ingredients.Any(item =>
+                item.Id == ingredient.Id &&
+                item.UnitTypeId == ingredient.UnitTypeId) is true;
+            if (!retainedLegacyLine)
+            {
+                throw new RecipeConflictException(
+                    "recipe.unit-type.not-allowed-for-cooking",
+                    "La unidad seleccionada no está habilitada para cocinar.");
+            }
         }
 
         if (!await catalogs.TagsExistAsync(recipe.TagIds, cancellationToken))

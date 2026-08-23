@@ -19,6 +19,7 @@ public interface IUnitTypeRepository
     /// Comprueba si ya existe una unidad con el nombre normalizado indicado.
     /// </summary>
     Task<bool> ExistsByNormalizedNameAsync(string normalizedName, Guid? excludingId, CancellationToken cancellationToken);
+    Task<bool> IsReferencedAsync(Guid id, CancellationToken cancellationToken);
     /// <summary>
     /// Añade una unidad de medida para su persistencia.
     /// </summary>

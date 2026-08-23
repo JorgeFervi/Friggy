@@ -86,6 +86,32 @@ public sealed class DailyPlanInventoryServiceTests
     }
 
     [Fact]
+    public async Task GetRequirements_CompatibleUnits_NormalizesInventoryToShoppingUnit()
+    {
+        var scenario = Scenario.Create(servings: 1, useConvertibleMassUnit: true);
+        var kilogram = scenario.Unit;
+        var gram = UnitType.Create(
+            "Gramo", "g", MeasurementDimension.Mass, 1m, true, true);
+        scenario.References.UnitTypes.Add(gram);
+        scenario.Lots.Items.Add(InventoryLot.Create(
+            scenario.Ingredient.Id,
+            gram.Id,
+            250m,
+            new DateOnly(2026, 8, 20),
+            Now));
+
+        var result = await scenario.Service.GetRequirementsAsync(
+            scenario.Plan.Date,
+            TestContext.Current.CancellationToken);
+
+        var requirement = Assert.Single(result);
+        Assert.Equal(kilogram.Id, requirement.UnitTypeId);
+        Assert.Equal(1m, requirement.RequiredQuantity);
+        Assert.Equal(0.25m, requirement.AvailableQuantity);
+        Assert.Equal(0.75m, requirement.MissingQuantity);
+    }
+
+    [Fact]
     public async Task GetRequirements_CancelledRequest_PropagatesCancellation()
     {
         var scenario = Scenario.Create(servings: 1);
@@ -141,6 +167,34 @@ public sealed class DailyPlanInventoryServiceTests
     }
 
     [Fact]
+    public async Task CompleteMeal_CompatibleLotUnit_ConsumesAndReportsConvertedRemainder()
+    {
+        var scenario = Scenario.Create(servings: 1, useConvertibleMassUnit: true);
+        var kilogram = scenario.Unit;
+        var gram = UnitType.Create(
+            "Gramo", "g", MeasurementDimension.Mass, 1m, true, true);
+        scenario.References.UnitTypes.Add(gram);
+        var lot = InventoryLot.Create(
+            scenario.Ingredient.Id,
+            gram.Id,
+            500m,
+            new DateOnly(2026, 8, 20),
+            Now);
+        scenario.Lots.Items.Add(lot);
+
+        var result = await scenario.Service.CompleteMealAsync(
+            scenario.Plan.Date,
+            scenario.MealType.Id,
+            new CompleteMealRequest([new(lot.Id, 500m)]),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(0m, lot.Quantity);
+        var remainder = Assert.Single(result.RemainingRequirements ?? []);
+        Assert.Equal(kilogram.Id, remainder.UnitTypeId);
+        Assert.Equal(0.5m, remainder.RemainingQuantity);
+    }
+
+    [Fact]
     public async Task CompleteMeal_RepeatedRequest_DoesNotDuplicateConsumption()
     {
         var scenario = Scenario.Create(servings: 1);
@@ -192,6 +246,33 @@ public sealed class DailyPlanInventoryServiceTests
     }
 
     [Fact]
+    public async Task CompleteMeal_SameIngredientWithIncompatibleDimension_RejectsBeforeMutation()
+    {
+        var scenario = Scenario.Create(servings: 1, useConvertibleMassUnit: true);
+        var milliliter = UnitType.Create(
+            "Mililitro", "ml", MeasurementDimension.Volume, 1m, true, true);
+        scenario.References.UnitTypes.Add(milliliter);
+        var lot = InventoryLot.Create(
+            scenario.Ingredient.Id,
+            milliliter.Id,
+            1m,
+            new DateOnly(2026, 8, 20),
+            Now);
+        scenario.Lots.Items.Add(lot);
+
+        var exception = await Assert.ThrowsAsync<InventoryConflictException>(() =>
+            scenario.Service.CompleteMealAsync(
+                scenario.Plan.Date,
+                scenario.MealType.Id,
+                new CompleteMealRequest([new(lot.Id, 1m)]),
+                TestContext.Current.CancellationToken));
+
+        Assert.Equal("meal-completion.unit.incompatible", exception.Code);
+        Assert.Equal(1m, lot.Quantity);
+        Assert.Equal(0, scenario.UnitOfWork.SaveCount);
+    }
+
+    [Fact]
     public async Task GetRequirements_SkippedMeal_DoesNotRequireIngredients()
     {
         var scenario = Scenario.Create(servings: 2);
@@ -233,10 +314,13 @@ public sealed class DailyPlanInventoryServiceTests
 
     private sealed class Scenario
     {
-        private Scenario(int servings)
+        private Scenario(int servings, bool useConvertibleMassUnit)
         {
             Ingredient = Ingredient.Create("Tomate");
-            Unit = UnitType.Create("Kilogramo", "kg");
+            Unit = useConvertibleMassUnit
+                ? UnitType.Create(
+                    "Kilogramo", "kg", MeasurementDimension.Mass, 1000m, true, true)
+                : UnitType.Create("Kilogramo", "kg");
             MealType = MealType.Create("Comida", 1);
             Recipe = Recipe.Create("Ensalada", TimeSpan.Zero);
             Recipe.AddIngredient(Ingredient.Id, Unit.Id, 1m, 0);
@@ -268,7 +352,10 @@ public sealed class DailyPlanInventoryServiceTests
         public DailyPlan Plan { get; }
         public DailyPlanInventoryService Service { get; }
 
-        public static Scenario Create(int servings) => new(servings);
+        public static Scenario Create(
+            int servings,
+            bool useConvertibleMassUnit = false) =>
+            new(servings, useConvertibleMassUnit);
 
         public InventoryLot AddLot(decimal quantity, DateOnly expirationDate)
         {

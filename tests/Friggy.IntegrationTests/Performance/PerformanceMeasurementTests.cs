@@ -189,7 +189,9 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
 
             Assert.Equal(3, shoppingListMeasurement.RootRows);
             Assert.Equal(3, shoppingListMeasurement.RelatedRows);
-            Assert.Equal(2, shoppingListMeasurement.CommandCount);
+            // Demanda, stock y catálogo compacto de unidades se consultan por
+            // separado para evitar concurrencia sobre el mismo DbContext.
+            Assert.Equal(3, shoppingListMeasurement.CommandCount);
             Assert.All(shoppingListMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 

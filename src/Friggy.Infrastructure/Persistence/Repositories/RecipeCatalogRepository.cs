@@ -33,6 +33,21 @@ public sealed class RecipeCatalogRepository(FriggyDbContext context)
             cancellationToken);
 
     /// <summary>
+    /// Obtiene las unidades solicitadas junto con sus capacidades de uso.
+    /// </summary>
+    public async Task<IReadOnlyList<RecipeUnitTypeReference>> GetUnitTypesAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken)
+    {
+        var distinctIds = ids.Distinct().ToArray();
+        return await context.UnitTypes
+            .AsNoTracking()
+            .Where(item => distinctIds.Contains(item.Id))
+            .Select(item => new RecipeUnitTypeReference(item.Id, item.CanUseForCooking))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
     /// Comprueba que existan todas las etiquetas indicadas.
     /// </summary>
     public Task<bool> TagsExistAsync(

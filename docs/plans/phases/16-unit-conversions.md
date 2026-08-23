@@ -1,6 +1,6 @@
 # Fase 16 — Conversiones y usos contextuales de unidades
 
-- **Estado:** Planificada
+- **Estado:** Implementada (validación PostgreSQL/E2E pendiente de entorno con Docker)
 - **Estimación:** 6–9 días
 - **Dependencias:** catálogo de unidades, recetas, inventario, finalización de comidas y lista de compra actuales
 - **Guía ejecutable:** [Implementación de la fase 16](../implementation/16-unit-conversions-implementation.md)

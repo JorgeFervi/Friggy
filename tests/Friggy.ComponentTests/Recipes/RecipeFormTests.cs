@@ -21,6 +21,39 @@ public sealed class RecipeFormTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void IngredientUnitSelector_FiltersCookingUnitsButKeepsHistoricalSelection()
+    {
+        var disabledId = Guid.NewGuid();
+        var disabled = new UnitTypeResponse(disabledId, "Cucharada retirada", "cda")
+        {
+            MeasurementDimension = "volume",
+            BaseUnitFactor = 15m,
+            CanUseForCooking = false,
+            CanUseForShopping = false,
+        };
+        var enabled = new UnitTypeResponse(UnitTypeId, "Gramo", "g");
+        var newLine = new RecipeIngredientFormModel();
+        var persistedLine = new RecipeIngredientFormModel(
+            IngredientOneId, disabledId, 1m, 0, Guid.NewGuid());
+
+        var newRow = Render<RecipeIngredientRow>(parameters => parameters
+            .Add(item => item.Model, newLine)
+            .Add(item => item.Ingredients, Ingredients)
+            .Add(item => item.UnitTypes, [enabled, disabled])
+            .Add(item => item.IsExpanded, true));
+        var historicalRow = Render<RecipeIngredientRow>(parameters => parameters
+            .Add(item => item.Model, persistedLine)
+            .Add(item => item.Ingredients, Ingredients)
+            .Add(item => item.UnitTypes, [enabled, disabled])
+            .Add(item => item.IsExpanded, true));
+
+        Assert.DoesNotContain(disabledId.ToString(), newRow.Find("select[data-field='unit-type']").InnerHtml);
+        Assert.Contains(disabledId.ToString(), historicalRow.Find("select[data-field='unit-type']").InnerHtml);
+        Assert.Contains("no disponible", historicalRow.Markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void RemoveIngredient_TwoRows_RemovesOnlySelectedRowAndReindexesOrder()
     {
         var first = new RecipeIngredientFormModel(IngredientOneId, UnitTypeId, 1m, 0);

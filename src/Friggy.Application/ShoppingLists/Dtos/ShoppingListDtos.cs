@@ -1,3 +1,5 @@
+using Friggy.Domain.Catalogs;
+
 namespace Friggy.Application.ShoppingLists.Dtos;
 
 public sealed record ShoppingListResponse(DateOnly From, DateOnly To, DateOnly CalculatedOn, IReadOnlyList<ShoppingListItemResponse> Items);
@@ -12,4 +14,9 @@ public sealed record PlannedIngredientDemand(
 
 public sealed record AvailableIngredientStock(Guid IngredientId, Guid UnitTypeId, decimal AvailableQuantity);
 
-public sealed record ShoppingListSnapshot(IReadOnlyList<PlannedIngredientDemand> Demands, IReadOnlyList<AvailableIngredientStock> Stock);
+public sealed record ShoppingListSnapshot(
+    IReadOnlyList<PlannedIngredientDemand> Demands,
+    IReadOnlyList<AvailableIngredientStock> Stock)
+{
+    public IReadOnlyList<UnitType> Units { get; init; } = [];
+}

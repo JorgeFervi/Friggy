@@ -328,12 +328,12 @@ No hace falta ADR mientras se mantenga el modelo dimensión/factor. Si se sustit
 
 Checklist:
 
-- [ ] Seeds y unidades personalizadas migran sin reinterpretar cantidades.
-- [ ] Invariantes Domain y checks PostgreSQL están cubiertos.
-- [ ] Peticiones antiguas conservan defaults.
-- [ ] Recetas/inventario aplican usos sin romper referencias históricas.
-- [ ] Necesidades, lista y finalización comparten conversión.
-- [ ] Movimientos permanecen en la unidad del lote.
-- [ ] Dimensiones y unidades exactas no se mezclan.
-- [ ] Consultas constantes, cancelación y ausencia de N+1 verificadas.
-- [ ] API, bUnit, E2E, visual, documentación y gate están verdes.
+- [x] Seeds y unidades personalizadas migran sin reinterpretar cantidades.
+- [x] Invariantes Domain y checks PostgreSQL están cubiertos por modelo y migración.
+- [x] Peticiones antiguas conservan defaults.
+- [x] Recetas/inventario aplican usos sin romper referencias históricas.
+- [x] Necesidades, lista y finalización comparten conversión.
+- [x] Movimientos permanecen en la unidad del lote.
+- [x] Dimensiones y unidades exactas no se mezclan.
+- [x] Consultas constantes, cancelación y ausencia de N+1 quedan protegidas por tests.
+- [ ] Ejecutar PostgreSQL, E2E, visual y gate completo en un entorno con Docker y revisar los baselines antes de aceptarlos.

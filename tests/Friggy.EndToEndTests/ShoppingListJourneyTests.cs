@@ -8,7 +8,7 @@ public sealed class ShoppingListJourneyTests(FullStackFixture fixture) : FriggyP
 {
     [Fact]
     [Trait("Category", "E2E")]
-    public async Task User_CalculatesShoppingList_FromPlannedMealsAndAvailableInventory()
+    public async Task User_CalculatesShoppingList_ConvertingCookingUnitToShoppingUnit()
     {
         ArgumentNullException.ThrowIfNull(fixture);
         const string ingredientName = "Tomate E2E lista compra";
@@ -25,8 +25,9 @@ public sealed class ShoppingListJourneyTests(FullStackFixture fixture) : FriggyP
             await Page.GetByRole(AriaRole.Button, new() { Name = "Calcular lista", Exact = true }).ClickAsync();
 
             var row = Page.GetByRole(AriaRole.Row).Filter(new LocatorFilterOptions { HasText = ingredientName });
-            await Expect(row).ToContainTextAsync("1 g");
-            await Expect(row).ToContainTextAsync("2 g");
+            await Expect(row).ToContainTextAsync("15 ml");
+            await Expect(row).ToContainTextAsync("1000 ml");
+            await Expect(row).Not.ToContainTextAsync("cda");
             await Expect(row).ToContainTextAsync("Cubierto");
         });
     }
@@ -35,8 +36,8 @@ public sealed class ShoppingListJourneyTests(FullStackFixture fixture) : FriggyP
     {
         await NavigateToInteractivePageAsync("/inventory");
         await Page.GetByLabel("Ingrediente", new() { Exact = true }).SelectOptionAsync(new SelectOptionValue { Label = ingredientName });
-        await Page.GetByLabel("Unidad", new() { Exact = true }).SelectOptionAsync(new SelectOptionValue { Label = "Gramo (g)" });
-        await Page.GetByLabel("Cantidad", new() { Exact = true }).FillAsync("2");
+        await Page.GetByLabel("Unidad", new() { Exact = true }).SelectOptionAsync(new SelectOptionValue { Label = "Litro (l)" });
+        await Page.GetByLabel("Cantidad", new() { Exact = true }).FillAsync("1");
         await Page.GetByLabel("Caducidad", new() { Exact = true }).FillAsync("2030-12-31");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir lote", Exact = true }).ClickAsync();
         await Expect(Page.GetByText(ingredientName, new() { Exact = true }).First).ToBeVisibleAsync();
@@ -64,7 +65,7 @@ public sealed class ShoppingListJourneyTests(FullStackFixture fixture) : FriggyP
         await Page.GetByLabel("Tiempo estimado (minutos)", new() { Exact = true }).FillAsync("25");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir ingrediente", Exact = true }).ClickAsync();
         await Page.GetByLabel("Ingrediente", new() { Exact = true }).SelectOptionAsync(new SelectOptionValue { Label = ingredientName });
-        await Page.GetByLabel("Unidad", new() { Exact = true }).SelectOptionAsync(new SelectOptionValue { Label = "Gramo (g)" });
+        await Page.GetByLabel("Unidad", new() { Exact = true }).SelectOptionAsync(new SelectOptionValue { Label = "Cucharada (cda)" });
         await Page.GetByLabel("Cantidad", new() { Exact = true }).FillAsync("1");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Añadir paso", Exact = true }).ClickAsync();
         await Page.GetByLabel("Descripción", new() { Exact = true }).FillAsync("Preparar");

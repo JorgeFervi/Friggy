@@ -7,7 +7,7 @@
 Antes de crear una receta puedes preparar:
 
 * **Ingredientes:** los alimentos utilizados por recetas e inventario.
-* **Unidades:** nombre y símbolo de la medida.
+* **Unidades:** nombre, símbolo, dimensión y factor respecto a gramos, mililitros o unidades. También se indica si cada medida puede usarse al cocinar, al comprar o en ambos contextos.
 * **Etiquetas:** clasificación libre, como vegetariana o rápida.
 * **Tipos de comida:** desayuno, comida, cena u otros momentos configurables.
 
@@ -33,4 +33,4 @@ Una receta asignada a otros datos puede estar protegida frente al borrado. Si la
 
 ## Relación con inventario y planificación
 
-Las cantidades se multiplican por los comensales asignados en los planes diarios. Para que un lote cubra una necesidad, ingrediente y unidad deben coincidir exactamente; Friggy no convierte unidades.
+Las cantidades se multiplican por los comensales asignados en los planes diarios. Para que un lote cubra una necesidad debe coincidir el ingrediente y ser compatible la dimensión de la unidad. Por ejemplo, un lote en litros puede cubrir una receta expresada en mililitros o cucharadas; masa y volumen nunca se compensan.

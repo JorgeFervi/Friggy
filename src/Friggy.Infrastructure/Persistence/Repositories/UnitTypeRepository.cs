@@ -21,6 +21,10 @@ public sealed class UnitTypeRepository(FriggyDbContext context) : IUnitTypeRepos
     /// Comprueba si existe una unidad con el nombre normalizado indicado.
     /// </summary>
     public Task<bool> ExistsByNormalizedNameAsync(string normalizedName, Guid? excludingId, CancellationToken cancellationToken) => context.UnitTypes.AnyAsync(item => item.Name.Normalized == normalizedName && (!excludingId.HasValue || item.Id != excludingId.Value), cancellationToken);
+    public async Task<bool> IsReferencedAsync(Guid id, CancellationToken cancellationToken) =>
+        await context.Set<Friggy.Domain.Recipes.RecipeIngredient>()
+            .AnyAsync(item => item.UnitTypeId == id, cancellationToken) ||
+        await context.InventoryLots.AnyAsync(item => item.UnitTypeId == id, cancellationToken);
     /// <summary>
     /// Añade una unidad al contexto.
     /// </summary>

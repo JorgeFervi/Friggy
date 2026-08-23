@@ -17,9 +17,9 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
         var migrations = (await context.Database.GetAppliedMigrationsAsync(
             TestContext.Current.CancellationToken)).ToArray();
 
-        Assert.Equal(11, migrations.Length);
+        Assert.Equal(13, migrations.Length);
         Assert.EndsWith(
-            "_ReplaceWeeklyPlansWithDailyPlans",
+            "_AddUnitConversionMetadata",
             migrations[^1],
             StringComparison.Ordinal);
         Assert.Equal(true, await ScalarAsync(
@@ -47,7 +47,7 @@ public sealed class PostgreSqlHarnessTests(PostgreSqlDatabaseFixture database)
         Assert.Equal(true, await ScalarAsync(
             resetContext,
             "SELECT to_regclass('public.temporary_harness_state') IS NULL"));
-        Assert.Equal(11, (await resetContext.Database.GetAppliedMigrationsAsync(
+        Assert.Equal(13, (await resetContext.Database.GetAppliedMigrationsAsync(
             TestContext.Current.CancellationToken)).Count());
     }
 

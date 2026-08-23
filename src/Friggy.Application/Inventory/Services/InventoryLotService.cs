@@ -165,11 +165,19 @@ public sealed class InventoryLotService(
                 "No se encontró el ingrediente.");
         }
 
-        if (!units.Any(item => item.Id == unitTypeId))
+        var unit = units.SingleOrDefault(item => item.Id == unitTypeId);
+        if (unit is null)
         {
             throw new InventoryReferenceNotFoundException(
                 "inventory-lot.unit-type.not-found",
                 "No se encontró la unidad.");
+        }
+
+        if (!unit.CanUseForShopping)
+        {
+            throw new InventoryConflictException(
+                "inventory-lot.unit-type.not-allowed-for-shopping",
+                "La unidad seleccionada no está habilitada para inventario y compra.");
         }
     }
 

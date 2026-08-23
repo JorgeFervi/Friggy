@@ -75,6 +75,49 @@ public sealed class CatalogPagesTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void UnitTypes_CreateConvertibleUnit_SendsDimensionFactorAndUsages()
+    {
+        var api = new StubUnitTypesApiClient();
+        Services.AddSingleton<IUnitTypesApiClient>(api);
+        var component = Render<global::Friggy.Web.Components.Pages.UnitTypes>();
+        component.WaitForElement("form");
+
+        component.Find("#unit-name").Change("Cucharada");
+        component.Find("#unit-symbol").Change("cda");
+        component.Find("#unit-dimension").Change("volume");
+        component.Find("#unit-factor").Change("15");
+        component.FindAll("input[type='checkbox']")[1].Change(false);
+        component.Find("form").Submit();
+
+        component.WaitForAssertion(() =>
+        {
+            Assert.NotNull(api.LastCreate);
+            Assert.Equal("volume", api.LastCreate.MeasurementDimension);
+            Assert.Equal(15m, api.LastCreate.BaseUnitFactor);
+            Assert.True(api.LastCreate.CanUseForCooking);
+            Assert.False(api.LastCreate.CanUseForShopping);
+        });
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void UnitTypes_UnconvertedDimension_ForcesFactorOne()
+    {
+        var api = new StubUnitTypesApiClient();
+        Services.AddSingleton<IUnitTypesApiClient>(api);
+        var component = Render<global::Friggy.Web.Components.Pages.UnitTypes>();
+        component.WaitForElement("form");
+
+        component.Find("#unit-dimension").Change("mass");
+        component.Find("#unit-factor").Change("1000");
+        component.Find("#unit-dimension").Change("unconverted");
+
+        Assert.Equal("1", component.Find("#unit-factor").GetAttribute("value"));
+        Assert.True(component.Find("#unit-factor").HasAttribute("disabled"));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void RecipeTags_ApiReturnsEmpty_ShowsEmptyState()
     {
         Api.RespondWith("application/json", "[]");
@@ -326,6 +369,7 @@ public sealed class CatalogPagesTests : ComponentTest
         public Exception? CreateException { get; init; }
         public Exception? DeleteException { get; init; }
         public CancellationToken ListCancellationToken { get; private set; }
+        public CreateUnitTypeRequest? LastCreate { get; private set; }
 
         public Task<IReadOnlyList<UnitTypeResponse>> ListAsync(CancellationToken cancellationToken)
         {
@@ -337,10 +381,13 @@ public sealed class CatalogPagesTests : ComponentTest
 
         public Task<UnitTypeResponse> CreateAsync(
             CreateUnitTypeRequest request,
-            CancellationToken cancellationToken) =>
-            CreateException is null
+            CancellationToken cancellationToken)
+        {
+            LastCreate = request;
+            return CreateException is null
                 ? Task.FromResult(new UnitTypeResponse(Guid.NewGuid(), request.Name, request.Symbol))
                 : Task.FromException<UnitTypeResponse>(CreateException);
+        }
 
         public Task<UnitTypeResponse> UpdateAsync(
             Guid id,

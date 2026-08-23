@@ -2,6 +2,7 @@
 @implements IDisposable
 @using System.Globalization
 @using Friggy.Application.Catalogs.MealTypes.Dtos
+@using Friggy.Application.Catalogs.UnitTypes.Dtos
 @using Friggy.Application.DailyPlans.Dtos
 @using Friggy.Application.Inventory.Dtos
 @using Friggy.Application.Recipes.Dtos
@@ -12,6 +13,7 @@
 @inject IRecipesApiClient RecipesApi
 @inject IMealTypesApiClient MealTypesApi
 @inject IInventoryApiClient LotsApi
+@inject IUnitTypesApiClient UnitTypesApi
 
 <PageTitle>Plan diario</PageTitle>
 @if (loading)
@@ -158,12 +160,16 @@ else
             completionQuantities.Clear();
             var lotsTask = LotsApi.ListAsync(false, cancellation.Token);
             var recipeTask = RecipesApi.GetAsync(recipeId, cancellation.Token);
-            await Task.WhenAll(lotsTask, recipeTask);
-            var requiredKeys = (await recipeTask).Ingredients
-                .Select(item => (item.IngredientId, item.UnitTypeId))
-                .ToHashSet();
+            var unitsTask = UnitTypesApi.ListAsync(cancellation.Token);
+            await Task.WhenAll(lotsTask, recipeTask, unitsTask);
+            var recipe = await recipeTask;
+            var unitsById = (await unitsTask).ToDictionary(item => item.Id);
             completionLots = (await lotsTask)
-                .Where(lot => requiredKeys.Contains((lot.IngredientId, lot.UnitTypeId)))
+                .Where(lot => recipe.Ingredients.Any(required =>
+                    required.IngredientId == lot.IngredientId &&
+                    AreCompatible(
+                        unitsById[required.UnitTypeId],
+                        unitsById[lot.UnitTypeId])))
                 .ToArray();
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
@@ -181,6 +187,10 @@ else
         completionQuantities[change.LotId] = decimal.TryParse(change.Value, NumberStyles.Number, CultureInfo.GetCultureInfo("es-ES"), out var value)
             ? value
             : 0m;
+
+    private static bool AreCompatible(UnitTypeResponse first, UnitTypeResponse second) =>
+        first.MeasurementDimension == second.MeasurementDimension &&
+        (first.MeasurementDimension != "unconverted" || first.Id == second.Id);
 
     private async Task ConfirmCompletionAsync()
     {

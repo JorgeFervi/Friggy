@@ -38,6 +38,7 @@ public sealed class ShoppingListReadRepository(FriggyDbContext context) : IShopp
             .GroupBy(lot => new { lot.IngredientId, lot.UnitTypeId })
             .Select(group => new AvailableIngredientStock(group.Key.IngredientId, group.Key.UnitTypeId, group.Sum(lot => lot.Quantity)))
             .ToListAsync(cancellationToken);
-        return new ShoppingListSnapshot(demands, stock);
+        var units = await context.UnitTypes.AsNoTracking().ToListAsync(cancellationToken);
+        return new ShoppingListSnapshot(demands, stock) { Units = units };
     }
 }

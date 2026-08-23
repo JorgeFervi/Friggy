@@ -12,6 +12,20 @@ public sealed class InventoryPageTests : ComponentTest
 {
     private static readonly Guid IngredientId = Guid.Parse("10000000-0000-0000-0000-000000000001");
     private static readonly Guid UnitTypeId = Guid.Parse("20000000-0000-0000-0000-000000000001");
+    private static readonly Guid CookingOnlyUnitTypeId = Guid.Parse("20000000-0000-0000-0000-000000000002");
+
+    [Fact]
+    [Trait("Category", "Component")]
+    public void Inventory_UnitSelector_ShowsOnlyShoppingUnits()
+    {
+        RegisterApis();
+
+        var component = Render<global::Friggy.Web.Components.Pages.Inventory>();
+        var selector = component.WaitForElement("#inventory-unit");
+
+        Assert.Contains(UnitTypeId.ToString(), selector.InnerHtml);
+        Assert.DoesNotContain(CookingOnlyUnitTypeId.ToString(), selector.InnerHtml);
+    }
 
     [Fact]
     [Trait("Category", "Component")]
@@ -317,7 +331,16 @@ public sealed class InventoryPageTests : ComponentTest
     private sealed class StubUnitTypesApiClient : IUnitTypesApiClient
     {
         public Task<IReadOnlyList<UnitTypeResponse>> ListAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<UnitTypeResponse>>([new(UnitTypeId, "Kilogramo", "kg")]);
+            Task.FromResult<IReadOnlyList<UnitTypeResponse>>([
+                new(UnitTypeId, "Kilogramo", "kg"),
+                new UnitTypeResponse(CookingOnlyUnitTypeId, "Cucharada", "cda")
+                {
+                    MeasurementDimension = "volume",
+                    BaseUnitFactor = 15m,
+                    CanUseForCooking = true,
+                    CanUseForShopping = false,
+                },
+            ]);
         public Task<UnitTypeResponse> CreateAsync(CreateUnitTypeRequest request, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
         public Task<UnitTypeResponse> UpdateAsync(Guid id, UpdateUnitTypeRequest request, CancellationToken cancellationToken) =>
