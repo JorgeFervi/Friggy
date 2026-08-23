@@ -73,8 +73,11 @@ public sealed class PerformanceMeasurementTests(PostgreSqlDatabaseFixture databa
             Assert.Equal(scenario.RecipeCount, recipeSummaryMeasurement.RootRows);
             var firstRecipe = recipes.Single(item => item.Name == "Medición receta 00");
             Assert.Equal(15, firstRecipe.EstimatedMinutes);
+            Assert.NotEmpty(firstRecipe.IngredientIds ?? []);
+            Assert.NotEmpty(firstRecipe.TagIds ?? []);
+            Assert.NotEmpty(firstRecipe.MealTypeIds ?? []);
             Assert.Equal(0, recipeSummaryMeasurement.RelatedRows);
-            Assert.Equal(1, recipeSummaryMeasurement.CommandCount);
+            Assert.Equal(4, recipeSummaryMeasurement.CommandCount);
             Assert.All(recipeSummaryMeasurement.Sql, sql => Assert.Contains("SELECT", sql, StringComparison.OrdinalIgnoreCase));
         }
 

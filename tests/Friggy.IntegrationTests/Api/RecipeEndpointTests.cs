@@ -129,7 +129,11 @@ public sealed class RecipeEndpointTests(PostgreSqlDatabaseFixture database)
             [secondLineId, firstLineId],
             updated.Steps[0].RecipeIngredientIds);
         Assert.Equal(CatalogSeedIds.Dinner, Assert.Single(updated.MealTypeIds));
-        Assert.Contains(listed ?? [], item => item.Id == created.Id && item.Name == "Salmorejo");
+        var listedRecipe = Assert.Single(listed ?? [], item => item.Id == created.Id);
+        Assert.Equal("Salmorejo", listedRecipe.Name);
+        Assert.Equal([ingredient.Id], listedRecipe.IngredientIds);
+        Assert.Empty(listedRecipe.TagIds ?? []);
+        Assert.Equal([CatalogSeedIds.Dinner], listedRecipe.MealTypeIds);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, missingResponse.StatusCode);
     }

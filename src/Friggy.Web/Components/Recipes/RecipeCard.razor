@@ -8,16 +8,17 @@
         <p class="friggy-recipe-card__time"><FriggyIcon Name="FriggyIconName.Time" /><span>@Recipe.EstimatedMinutes min</span></p>
     </div>
     <footer class="friggy-recipe-card__actions">
-        <a class="friggy-recipe-card__detail" data-testid="recipe-detail" href="recipes/@Recipe.Id">Ver receta</a>
         @if (ShowManagementActions)
         {
-            <a class="friggy-recipe-card__edit" href="recipes/@Recipe.Id/edit">Editar</a>
-            <FriggyButton Variant="FriggyButtonVariant.Ghost" Size="FriggyButtonSize.Compact"
+            <FriggyButton Variant="FriggyButtonVariant.Danger" Size="FriggyButtonSize.Compact"
+                          CssClass="friggy-recipe-card__delete"
                           Disabled="Deleting" Busy="Deleting" BusyLabel="Borrando…"
                           DataAction="delete-recipe" OnClick="RequestDeleteAsync">
                 Borrar
             </FriggyButton>
+            <a class="friggy-recipe-card__edit" href="recipes/@Recipe.Id/edit">Editar</a>
         }
+        <a class="friggy-recipe-card__detail" data-testid="recipe-detail" href="recipes/@Recipe.Id">Ver receta</a>
     </footer>
 </article>
 

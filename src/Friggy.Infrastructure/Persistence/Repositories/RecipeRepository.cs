@@ -27,12 +27,23 @@ public sealed class RecipeRepository(FriggyDbContext context) : IRecipeRepositor
     {
         var items = await context.Recipes
             .AsNoTracking()
+            .AsSplitQuery()
             .OrderBy(recipe => recipe.Name.Normalized)
             .Select(recipe => new
             {
                 recipe.Id,
                 Name = recipe.Name.Value,
                 recipe.EstimatedTime,
+                IngredientIds = recipe.Ingredients
+                    .Select(ingredient => ingredient.IngredientId)
+                    .Distinct()
+                    .ToArray(),
+                TagIds = recipe.Tags
+                    .Select(tag => tag.RecipeTagId)
+                    .ToArray(),
+                MealTypeIds = recipe.MealTypes
+                    .Select(mealType => mealType.MealTypeId)
+                    .ToArray(),
             })
             .ToListAsync(cancellationToken);
 
@@ -40,7 +51,10 @@ public sealed class RecipeRepository(FriggyDbContext context) : IRecipeRepositor
             .Select(item => new RecipeListItemResponse(
                 item.Id,
                 item.Name,
-                checked((int)item.EstimatedTime.TotalMinutes)))
+                checked((int)item.EstimatedTime.TotalMinutes),
+                item.IngredientIds,
+                item.TagIds,
+                item.MealTypeIds))
             .ToArray();
     }
 

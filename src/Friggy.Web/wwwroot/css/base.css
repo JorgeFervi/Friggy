@@ -477,6 +477,19 @@ table {
     width: 100%;
 }
 
+th {
+    text-align: left;
+}
+
+.friggy-page-stack {
+    display: grid;
+    gap: var(--space-5);
+}
+
+.friggy-page-stack.friggy-page-stack > :is(.page-header, .page-section) {
+    margin-block: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

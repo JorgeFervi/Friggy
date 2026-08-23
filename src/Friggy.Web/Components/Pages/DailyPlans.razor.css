@@ -1,4 +1,4 @@
-.friggy-daily-plans { display: grid; gap: var(--space-7); }
+.friggy-daily-plans { min-width: 0; }
 .friggy-daily-plans__range { display: flex; align-items: end; gap: var(--space-4); flex-wrap: wrap; }
 .friggy-daily-plans__range > div { display: grid; gap: var(--space-2); }
 .friggy-daily-plans__grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }

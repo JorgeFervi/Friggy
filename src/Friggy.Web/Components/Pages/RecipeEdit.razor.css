@@ -1,2 +1,2 @@
-.friggy-recipe-edit { display: grid; gap: var(--space-6); }
+.friggy-recipe-edit { display: grid; gap: var(--space-4); }
 .friggy-recipe-edit ::deep .page-header__breadcrumb span { color: var(--color-text-muted); margin-inline: var(--space-1); }

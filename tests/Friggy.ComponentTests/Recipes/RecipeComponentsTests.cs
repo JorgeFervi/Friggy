@@ -46,6 +46,23 @@ public sealed class RecipeComponentsTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void RecipeCard_ManagementActions_PutsDangerOnTheLeftAndDetailOnTheRight()
+    {
+        var component = Render<RecipeCard>(parameters => parameters
+            .Add(card => card.Recipe, Recipe)
+            .Add(card => card.ShowManagementActions, true));
+
+        var actions = component.FindAll(".friggy-recipe-card__actions > *");
+
+        Assert.Equal("delete-recipe", actions[0].GetAttribute("data-action"));
+        Assert.Contains("friggy-button--danger", actions[0].ClassList);
+        Assert.Equal("Editar", actions[1].TextContent.Trim());
+        Assert.Equal("recipe-detail", actions[2].GetAttribute("data-testid"));
+        Assert.Contains("friggy-recipe-card__detail", actions[2].ClassList);
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void RecipeCard_DeletingState_DisablesDestructiveAction()
     {
         var component = Render<RecipeCard>(parameters => parameters

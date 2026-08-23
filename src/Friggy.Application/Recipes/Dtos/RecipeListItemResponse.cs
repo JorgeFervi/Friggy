@@ -6,4 +6,7 @@ namespace Friggy.Application.Recipes.Dtos;
 public sealed record RecipeListItemResponse(
     Guid Id,
     string Name,
-    int EstimatedMinutes);
+    int EstimatedMinutes,
+    IReadOnlyList<Guid>? IngredientIds = null,
+    IReadOnlyList<Guid>? TagIds = null,
+    IReadOnlyList<Guid>? MealTypeIds = null);

@@ -1,13 +1,18 @@
 @page "/recipes"
 @implements IDisposable
 @using Friggy.Application.Recipes.Dtos
+@using Friggy.Application.Catalogs.Ingredients.Dtos
+@using Friggy.Application.Catalogs.MealTypes.Dtos
+@using Friggy.Application.Catalogs.RecipeTags.Dtos
 @using Friggy.Web.Api
 @using Friggy.Web.Components.Recipes
+@using Microsoft.Extensions.DependencyInjection
 @inject IRecipesApiClient Api
+@inject IServiceProvider Services
 
 <PageTitle>Recetas</PageTitle>
 
-<div class="friggy-recipes-page">
+<div class="friggy-recipes-page friggy-page-stack">
     <PageHeader Title="Recetas"
                 Eyebrow="Tu recetario"
                 Description="Encuentra tus platos y conserva cada preparación en un único lugar.">
@@ -32,10 +37,79 @@
     }
     else if (recipes.Count > 0)
     {
-        <RecipeGrid Recipes="recipes"
-                    ShowManagementActions="true"
-                    DeletingRecipeIds="pendingDeletes"
-                    OnDeleteRequested="RequestDelete" />
+        <section class="friggy-recipes-page__filters" data-testid="recipe-filters" aria-labelledby="recipe-filters-heading">
+            <header>
+                <div><h2 id="recipe-filters-heading">Buscar y ordenar</h2><p>Combina varios filtros para encontrar exactamente la receta que necesitas.</p></div>
+                <FriggyButton Variant="FriggyButtonVariant.Ghost" Size="FriggyButtonSize.Compact"
+                              DataAction="clear-recipe-filters" Disabled="@(!HasActiveFilters)"
+                              OnClick="ClearFilters">Limpiar filtros</FriggyButton>
+            </header>
+            <div class="friggy-recipes-page__filter-grid">
+                <label class="friggy-recipes-page__name-filter" for="recipe-name-filter">
+                    <span>Nombre</span>
+                    <input id="recipe-name-filter" type="search" placeholder="Buscar por nombre"
+                           @bind="nameFilter" @bind:event="oninput" />
+                </label>
+                <label for="recipe-sort">
+                    <span>Ordenar por</span>
+                    <select id="recipe-sort" @bind="sortOrder">
+                        <option value="name-asc">Nombre (A–Z)</option>
+                        <option value="name-desc">Nombre (Z–A)</option>
+                        <option value="time-asc">Tiempo (menor a mayor)</option>
+                        <option value="time-desc">Tiempo (mayor a menor)</option>
+                    </select>
+                </label>
+            </div>
+            <div class="friggy-recipes-page__facets">
+                <details>
+                    <summary>Ingredientes <span>@SelectionCount(selectedIngredientIds)</span></summary>
+                    <div class="friggy-recipes-page__options">
+                        @foreach (var ingredient in ingredients.OrderBy(item => item.Name))
+                        {
+                            <label><input type="checkbox" checked="@selectedIngredientIds.Contains(ingredient.Id)"
+                                          data-filter-ingredient="@ingredient.Id"
+                                          @onchange="args => ToggleSelection(selectedIngredientIds, ingredient.Id, args)" />@ingredient.Name</label>
+                        }
+                    </div>
+                </details>
+                <details>
+                    <summary>Clasificación <span>@SelectionCount(selectedTagIds, selectedMealTypeIds)</span></summary>
+                    <div class="friggy-recipes-page__classification-group">
+                        <strong>Etiquetas</strong>
+                        <div class="friggy-recipes-page__options">
+                            @foreach (var tag in tags.OrderBy(item => item.Name))
+                            {
+                                <label><input type="checkbox" checked="@selectedTagIds.Contains(tag.Id)"
+                                              data-filter-classification="tag:@tag.Id"
+                                              @onchange="args => ToggleSelection(selectedTagIds, tag.Id, args)" />@tag.Name</label>
+                            }
+                        </div>
+                        <strong>Tipos de comida</strong>
+                        <div class="friggy-recipes-page__options">
+                            @foreach (var mealType in mealTypes.OrderBy(item => item.Order))
+                            {
+                                <label><input type="checkbox" checked="@selectedMealTypeIds.Contains(mealType.Id)"
+                                              data-filter-classification="meal-type:@mealType.Id"
+                                              @onchange="args => ToggleSelection(selectedMealTypeIds, mealType.Id, args)" />@mealType.Name</label>
+                            }
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <p class="friggy-recipes-page__result-status" role="status">@ResultStatus</p>
+        @if (VisibleRecipes.Count == 0)
+        {
+            <FeedbackPanel Title="No hay coincidencias" Tone="FriggyTone.Neutral">Prueba a quitar algún filtro o utiliza otro término de búsqueda.</FeedbackPanel>
+        }
+        else
+        {
+            <RecipeGrid Recipes="VisibleRecipes"
+                        ShowManagementActions="true"
+                        DeletingRecipeIds="pendingDeletes"
+                        OnDeleteRequested="RequestDelete" />
+        }
     }
 </div>
 
@@ -53,16 +127,71 @@
 @code {
     private readonly CancellationTokenSource cancellation = new();
     private readonly HashSet<Guid> pendingDeletes = [];
+    private readonly HashSet<Guid> selectedIngredientIds = [];
+    private readonly HashSet<Guid> selectedTagIds = [];
+    private readonly HashSet<Guid> selectedMealTypeIds = [];
     private IReadOnlyList<RecipeListItemResponse> recipes = [];
+    private IReadOnlyList<IngredientResponse> ingredients = [];
+    private IReadOnlyList<RecipeTagResponse> tags = [];
+    private IReadOnlyList<MealTypeResponse> mealTypes = [];
     private RecipeListItemResponse? recipeToDelete;
     private string? error;
+    private string nameFilter = string.Empty;
+    private string sortOrder = "name-asc";
     private bool loading = true;
+
+    private IReadOnlyList<RecipeListItemResponse> VisibleRecipes
+    {
+        get
+        {
+            var filtered = recipes
+                .Where(recipe => string.IsNullOrWhiteSpace(nameFilter) ||
+                    recipe.Name.Contains(nameFilter.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Where(recipe => selectedIngredientIds.All(id =>
+                    (recipe.IngredientIds ?? []).Contains(id)))
+                .Where(recipe => selectedTagIds.All(id =>
+                    (recipe.TagIds ?? []).Contains(id)))
+                .Where(recipe => selectedMealTypeIds.All(id =>
+                    (recipe.MealTypeIds ?? []).Contains(id)));
+
+            return sortOrder switch
+            {
+                "name-desc" => filtered.OrderByDescending(item => item.Name, StringComparer.CurrentCultureIgnoreCase).ToArray(),
+                "time-asc" => filtered.OrderBy(item => item.EstimatedMinutes).ThenBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase).ToArray(),
+                "time-desc" => filtered.OrderByDescending(item => item.EstimatedMinutes).ThenBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase).ToArray(),
+                _ => filtered.OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase).ToArray(),
+            };
+        }
+    }
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(nameFilter) ||
+        selectedIngredientIds.Count > 0 ||
+        selectedTagIds.Count > 0 ||
+        selectedMealTypeIds.Count > 0 ||
+        sortOrder != "name-asc";
+
+    private string ResultStatus => VisibleRecipes.Count == recipes.Count
+        ? $"{recipes.Count} recetas"
+        : $"{VisibleRecipes.Count} de {recipes.Count} recetas";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            recipes = await Api.ListAsync(cancellation.Token);
+            var recipesTask = Api.ListAsync(cancellation.Token);
+            var ingredientsTask = Services.GetService<IIngredientsApiClient>()?.ListAsync(cancellation.Token) ??
+                Task.FromResult<IReadOnlyList<IngredientResponse>>([]);
+            var tagsTask = Services.GetService<IRecipeTagsApiClient>()?.ListAsync(cancellation.Token) ??
+                Task.FromResult<IReadOnlyList<RecipeTagResponse>>([]);
+            var mealTypesTask = Services.GetService<IMealTypesApiClient>()?.ListAsync(cancellation.Token) ??
+                Task.FromResult<IReadOnlyList<MealTypeResponse>>([]);
+
+            await Task.WhenAll(recipesTask, ingredientsTask, tagsTask, mealTypesTask);
+            recipes = await recipesTask;
+            ingredients = await ingredientsTask;
+            tags = await tagsTask;
+            mealTypes = await mealTypesTask;
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException)
         {
@@ -83,6 +212,33 @@
     }
 
     private void CancelDelete() => recipeToDelete = null;
+
+    private static string SelectionCount(params IReadOnlyCollection<Guid>[] selections)
+    {
+        var count = selections.Sum(selection => selection.Count);
+        return count == 0 ? string.Empty : $"({count})";
+    }
+
+    private static void ToggleSelection(HashSet<Guid> selection, Guid id, ChangeEventArgs args)
+    {
+        if (args.Value is true)
+        {
+            selection.Add(id);
+        }
+        else
+        {
+            selection.Remove(id);
+        }
+    }
+
+    private void ClearFilters()
+    {
+        nameFilter = string.Empty;
+        sortOrder = "name-asc";
+        selectedIngredientIds.Clear();
+        selectedTagIds.Clear();
+        selectedMealTypeIds.Clear();
+    }
 
     private async Task DeleteAsync()
     {

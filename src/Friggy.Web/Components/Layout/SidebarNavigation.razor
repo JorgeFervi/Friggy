@@ -10,8 +10,8 @@
             <h2 id="@PlanningHeadingId">Planificación</h2>
             <nav aria-label="Planificación">
         <NavLink href="/daily-plans" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Calendar" /><span>Planes diarios</span></NavLink>
-        <NavLink href="/daily-plan-templates" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Calendar" /><span>Plantillas</span></NavLink>
-        <NavLink href="/shopping-list" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Inventory" /><span>Lista de la compra</span></NavLink>
+        <NavLink href="/daily-plan-templates" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Template" /><span>Plantillas</span></NavLink>
+        <NavLink href="/shopping-list" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Shopping" /><span>Lista de la compra</span></NavLink>
             </nav>
         </section>
         <NavLink href="/inventory" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Inventory" /><span>Inventario</span></NavLink>
@@ -19,10 +19,10 @@
     <section class="friggy-sidebar-navigation__catalogs" data-navigation-group="catalogs" aria-labelledby="@CatalogsHeadingId">
         <h2 id="@CatalogsHeadingId">Catálogos</h2>
         <nav aria-label="Catálogos">
-            <NavLink href="/ingredients" @onclick="HandleNavigateAsync">Ingredientes</NavLink>
-            <NavLink href="/unit-types" @onclick="HandleNavigateAsync">Unidades</NavLink>
-            <NavLink href="/recipe-tags" @onclick="HandleNavigateAsync">Etiquetas</NavLink>
-            <NavLink href="/meal-types" @onclick="HandleNavigateAsync">Tipos de comida</NavLink>
+            <NavLink href="/ingredients" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Ingredient" /><span>Ingredientes</span></NavLink>
+            <NavLink href="/unit-types" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Unit" /><span>Unidades</span></NavLink>
+            <NavLink href="/recipe-tags" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Tag" /><span>Etiquetas</span></NavLink>
+            <NavLink href="/meal-types" @onclick="HandleNavigateAsync"><FriggyIcon Name="FriggyIconName.Meal" /><span>Tipos de comida</span></NavLink>
         </nav>
     </section>
 </div>

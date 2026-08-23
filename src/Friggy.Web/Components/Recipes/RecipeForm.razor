@@ -4,6 +4,7 @@
 @using Friggy.Application.Catalogs.UnitTypes.Dtos
 @using Friggy.Web.Recipes
 
+<div class="friggy-recipe-form-host">
 <EditForm class="friggy-recipe-form" Model="Model" OnValidSubmit="OnValidSubmit" FormName="recipe-form">
     <DataAnnotationsValidator />
     <ValidationSummary class="friggy-recipe-form__validation" />
@@ -95,6 +96,7 @@
         <FriggyButton Type="FriggyButtonType.Submit" Busy="IsSaving" BusyLabel="Guardando…">Guardar receta</FriggyButton>
     </FormActions>
 </EditForm>
+</div>
 
 @code {
     [Parameter, EditorRequired]

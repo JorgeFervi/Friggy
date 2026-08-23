@@ -39,6 +39,15 @@ public sealed class MainLayoutTests : ComponentTest
             link => AssertNavigationLink(link, "Tipos de comida", "/meal-types", active: false));
         Assert.Equal("main-content", component.Find("main").Id);
         Assert.Equal("-1", component.Find("main").GetAttribute("tabindex"));
+
+        var navigationLinks = sidebar.QuerySelectorAll("nav a");
+        Assert.All(navigationLinks, link => Assert.NotNull(link.QuerySelector("svg")));
+        Assert.Equal(
+            navigationLinks.Length,
+            navigationLinks
+                .Select(link => link.QuerySelector("svg path")?.GetAttribute("d"))
+                .Distinct(StringComparer.Ordinal)
+                .Count());
     }
 
     [Fact]

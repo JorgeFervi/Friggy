@@ -5,7 +5,7 @@
 @inject IShoppingListApiClient Api
 
 <PageTitle>Lista de la compra</PageTitle>
-<div class="friggy-shopping-list">
+<div class="friggy-shopping-list friggy-page-stack">
     <PageHeader Title="Lista de la compra" Eyebrow="Planificación" Description="Compara las comidas planificadas con el inventario disponible hoy." />
     <PageSection Heading="Intervalo a calcular">
         <EditForm Model="range" OnValidSubmit="CalculateAsync" FormName="shopping-list-range" class="friggy-shopping-list__form">

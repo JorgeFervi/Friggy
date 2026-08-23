@@ -84,6 +84,53 @@ public sealed class RecipePageTests : ComponentTest
 
     [Fact]
     [Trait("Category", "Component")]
+    public void Recipes_FiltersByNameIngredientAndClassificationAndSortsBothWays()
+    {
+        var onionId = Guid.Parse("10000000-0000-0000-0000-000000000002");
+        var dinnerId = Guid.Parse("40000000-0000-0000-0000-000000000002");
+        var recipes = new StubRecipesApiClient
+        {
+            Recipes =
+            [
+                new(RecipeId, "Gazpacho", 20, [IngredientId], [TagId], [MealTypeId]),
+                new(Guid.Parse("50000000-0000-0000-0000-000000000002"), "Sopa de cebolla", 45, [onionId], [], [dinnerId]),
+                new(Guid.Parse("50000000-0000-0000-0000-000000000003"), "Ensalada", 10, [IngredientId, onionId], [TagId], [dinnerId]),
+            ],
+        };
+        Services.AddSingleton<IRecipesApiClient>(recipes);
+        Services.AddSingleton<IIngredientsApiClient>(new IngredientsApiClientStub
+        {
+            Items = [new(IngredientId, "Tomate"), new(onionId, "Cebolla")],
+        });
+        Services.AddSingleton<IRecipeTagsApiClient>(new RecipeTagsApiClientStub());
+        Services.AddSingleton<IMealTypesApiClient>(new MealTypesApiClientStub
+        {
+            Items = [new(MealTypeId, "Comida", 1), new(dinnerId, "Cena", 2)],
+        });
+
+        var component = Render<global::Friggy.Web.Components.Pages.Recipes>();
+        component.WaitForElement("[data-testid='recipe-filters']");
+
+        component.Find("#recipe-name-filter").Input("sopa");
+        Assert.Equal(["Sopa de cebolla"], VisibleRecipeNames(component));
+
+        component.Find("#recipe-name-filter").Input(string.Empty);
+        component.Find($"input[data-filter-ingredient='{IngredientId}']").Change(true);
+        Assert.Equal(["Ensalada", "Gazpacho"], VisibleRecipeNames(component));
+
+        component.Find($"input[data-filter-classification='meal-type:{dinnerId}']").Change(true);
+        Assert.Equal(["Ensalada"], VisibleRecipeNames(component));
+
+        component.Find("button[data-action='clear-recipe-filters']").Click();
+        component.Find("#recipe-sort").Change("time-desc");
+        Assert.Equal(["Sopa de cebolla", "Gazpacho", "Ensalada"], VisibleRecipeNames(component));
+
+        component.Find("#recipe-sort").Change("time-asc");
+        Assert.Equal(["Ensalada", "Gazpacho", "Sopa de cebolla"], VisibleRecipeNames(component));
+    }
+
+    [Fact]
+    [Trait("Category", "Component")]
     public void Recipes_DeleteConfirmed_DeletesOnceAndRemovesRecipeFromList()
     {
         var recipes = new StubRecipesApiClient
@@ -430,6 +477,12 @@ public sealed class RecipePageTests : ComponentTest
         component.Find("[data-testid='step-row'] textarea").Change("Triturar");
     }
 
+    private static string[] VisibleRecipeNames(
+        IRenderedComponent<global::Friggy.Web.Components.Pages.Recipes> component) =>
+        component.FindAll(".friggy-recipe-card h3")
+            .Select(item => item.TextContent.Trim())
+            .ToArray();
+
     private static RecipeResponse CompleteRecipe(bool associateIngredient = true) =>
         new(
             RecipeId,
@@ -523,6 +576,7 @@ public sealed class RecipePageTests : ComponentTest
     private sealed class IngredientsApiClientStub : IIngredientsApiClient
     {
         public Exception? ListException { get; init; }
+        public IReadOnlyList<IngredientResponse> Items { get; init; } = [new(IngredientId, "Tomate")];
 
         public Task<IReadOnlyList<IngredientResponse>> ListAsync(CancellationToken cancellationToken)
         {
@@ -531,7 +585,7 @@ public sealed class RecipePageTests : ComponentTest
                 throw ListException;
             }
 
-            return Task.FromResult<IReadOnlyList<IngredientResponse>>([new(IngredientId, "Tomate")]);
+            return Task.FromResult(Items);
         }
         public Task<IngredientResponse> CreateAsync(CreateIngredientRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IngredientResponse> UpdateAsync(Guid id, UpdateIngredientRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -559,8 +613,9 @@ public sealed class RecipePageTests : ComponentTest
 
     private sealed class MealTypesApiClientStub : IMealTypesApiClient
     {
+        public IReadOnlyList<MealTypeResponse> Items { get; init; } = [new(MealTypeId, "Comida", 1)];
         public Task<IReadOnlyList<MealTypeResponse>> ListAsync(CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<MealTypeResponse>>([new(MealTypeId, "Comida", 1)]);
+            Task.FromResult(Items);
         public Task<MealTypeResponse> CreateAsync(CreateMealTypeRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<MealTypeResponse> UpdateAsync(Guid id, UpdateMealTypeRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();

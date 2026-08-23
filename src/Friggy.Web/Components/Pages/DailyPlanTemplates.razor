@@ -9,7 +9,7 @@
 @inject IRecipesApiClient RecipesApi
 
 <PageTitle>Plantillas de planes</PageTitle>
-<div class="friggy-templates">
+<div class="friggy-templates friggy-page-stack">
     <PageHeader Title="Plantillas" Eyebrow="Planificación" Description="Guarda una configuración y aplícala a los días que elijas." />
     @if (error is not null) { <FeedbackPanel Title="@error.Title" Tone="FriggyTone.Danger"><ChildContent>@error.Message</ChildContent><Actions>@if (error.CanRetry) { <FriggyButton Variant="FriggyButtonVariant.Secondary" OnClick="ReloadAsync">Reintentar</FriggyButton> }</Actions></FeedbackPanel> }
     <PageSection Heading="@(editingId.HasValue ? "Editar plantilla" : "Nueva plantilla")" Description="Define las comidas y su orden.">
