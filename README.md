@@ -2,7 +2,7 @@
 
 Friggy es una aplicación web para organizar la cocina doméstica desde un único lugar: recetas, planificación diaria e inventario de alimentos. Su objetivo es facilitar la decisión de qué cocinar, aprovechar lo que ya hay disponible y reducir el desperdicio.
 
-Actualmente se ejecuta de forma local y está orientada a un único usuario. Incluye inventario, lista de la compra y conversiones controladas de masa, volumen y conteo. La autenticación, la inteligencia artificial, la información nutricional, las imágenes y el despliegue público no forman parte de la versión actual.
+Actualmente se ejecuta de forma local y está orientada a un único usuario. Incluye inventario, lista de la compra y conversiones controladas de masa, volumen y conteo.
 
 ## ¿Qué puedes hacer con Friggy?
 
