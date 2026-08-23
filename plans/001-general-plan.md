@@ -1,5 +1,7 @@
 # Plan general post-MVP de Friggy
 
+> **Estado:** histórico y completado · **Sustituido por:** fases 12 a 16 documentadas en [Planificación de Friggy](README.md)
+
 ## Objetivo
 
 Evolucionar el MVP validado hasta un producto local que permita mantener el inventario doméstico, completar comidas con consumo trazable y ofrecer una experiencia visual coherente y responsive, sin mezclar reglas funcionales con detalles de presentación.
@@ -70,4 +72,4 @@ Una fase está terminada cuando su comportamiento está cubierto en la capa más
 
 ## Estado actual
 
-Las fases 1 a 11 están completadas. La siguiente evolución del producto requiere definir una fase nueva.
+Las fases 1 a 11 quedaron completadas antes de abrir la evolución basada en planes diarios. Las fases 12 a 16 sustituyeron y ampliaron este itinerario con planificación diaria, plantillas, lista de la compra, consolidación de UI/UX y conversiones de unidades. Este documento conserva el alcance post-MVP original y no define el estado vigente del producto.

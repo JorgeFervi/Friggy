@@ -10,10 +10,12 @@ Actualmente se ejecuta de forma local y está orientada a un único usuario. Inc
 * Crear, editar y eliminar recetas con cantidades, unidades, etiquetas, tipos de comida y pasos ordenados.
 * Asociar las líneas de ingredientes de una receta con los pasos en los que se utilizan.
 * Crear un plan independiente por fecha y configurar sus comidas, orden, horario, receta y comensales.
+* Guardar plantillas de planes diarios y aplicarlas de forma atómica a una o varias fechas libres.
 * Omitir una comida con un motivo o completarla seleccionando los lotes que se consumen del inventario.
 * Registrar existencias por lotes con cantidad, unidad y fecha de caducidad.
 * Consumir, descartar o ajustar un lote, corregir su caducidad y consultar su historial de movimientos.
-* Comparar las necesidades de un día planificado con el inventario disponible y detectar cantidades faltantes.
+* Comparar necesidades e inventario mediante conversiones compatibles de masa, volumen y conteo.
+* Calcular la lista de la compra para un intervalo a partir de las comidas pendientes y el inventario utilizable.
 
 Consulta [Funcionalidades actuales](docs/product/current-capabilities.md) para conocer el alcance y las limitaciones con más detalle.
 
@@ -69,6 +71,8 @@ El recorrido recomendado es:
 3. Registrar las existencias disponibles en el inventario.
 4. Crear planes para las fechas necesarias y asignar recetas y comensales.
 5. Revisar las cantidades faltantes y completar una comida seleccionando los lotes consumidos.
+6. Guardar una configuración frecuente como plantilla y aplicarla a otras fechas libres.
+7. Calcular la lista de la compra para los planes que continúan pendientes.
 
 Sigue el tutorial [Tu primera semana con Friggy](docs/user-guide/first-steps.md) para completar el recorrido desde la interfaz.
 
@@ -119,6 +123,7 @@ El gate restaura dependencias, compila Release, verifica formato, ejecuta Domain
 
 * [Índice de documentación](docs/README.md)
 * [Guías para usuarios](docs/user-guide/getting-started.md)
+* [Plantillas de planes diarios](docs/user-guide/daily-plan-templates.md)
 * [Guía de contribución](CONTRIBUTING.md)
 * [Estado y hoja de ruta](docs/product/roadmap.md)
 * [Decisiones arquitectónicas](docs/adr)

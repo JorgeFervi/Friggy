@@ -2,9 +2,12 @@
 
 - **Fase relacionada:** [Fase 13 — Plantillas de planes diarios](../phases/13-daily-plan-templates.md)
 - **Dependencia ejecutable:** gate verde de la Fase 12
+- **Estado:** implementación presente; checklist, E2E/visual y gate final pendientes
 - **Skills aplicables:** `architecture`, `modern-csharp`, `entity-framework-core`, `minimal-apis`, `blazor`, `run-tests`
 
 La plantilla es una raíz independiente y reutilizable. Aplicarla materializa planes diarios nuevos; no mantiene relaciones con ellos ni participa en finalización o inventario.
+
+> **Evidencia actual:** existen `DailyPlanTemplateTests`, `DailyPlanTemplateServiceTests`, `DailyPlanTemplateEndpointTests` y `DailyPlanTemplatesApiClientTests`. No existen todavía las clases previstas `DailyPlanTemplateRepositoryTests`, `DailyPlanTemplatePageTests` ni `DailyPlanTemplateJourneyTests`; los comandos que las mencionan permanecen como trabajo pendiente y no como evidencia ejecutada.
 
 ## Matriz de comportamiento
 

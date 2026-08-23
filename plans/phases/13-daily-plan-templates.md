@@ -1,6 +1,8 @@
 # Fase 13 — Plantillas de planes diarios
 
-- **Estado:** Planificada
+- **Estado:** Implementada en código; cierre formal pendiente
+- **Implementación observada:** 22 de agosto de 2026
+- **Validación pendiente:** recorrido E2E/visual específico de plantillas y gate completo
 - **Estimación:** 3–4 días
 - **Dependencias:** [Fase 12](../completed/phases/12-daily-planning.md)
 - **Guía ejecutable:** [Implementación de la fase 13](../implementation/13-daily-plan-templates-implementation.md)
@@ -8,6 +10,8 @@
 ## Resultado esperado
 
 Permitir guardar configuraciones reutilizables de un día y aplicarlas a una o varias fechas elegidas, creando planes diarios independientes sin sobrescribir planificación existente.
+
+La implementación actual incluye Domain, Application, migración PostgreSQL, repositorio, API, cliente y página Blazor. Existen pruebas de Domain, Application, endpoint y cliente HTTP, pero no el recorrido E2E de plantillas exigido por estos criterios; por ello la fase no se mueve todavía a `completed/`.
 
 ## Decisiones vinculantes
 

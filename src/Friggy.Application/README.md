@@ -20,6 +20,9 @@ capa de infraestructura y los servicios se registran mediante
 | [Recipes](Recipes) | Casos de uso, DTOs y contratos relacionados con recetas. |
 | [Inventory](Inventory) | Casos de uso, DTOs y contratos relacionados con lotes y operaciones de inventario. |
 | [DailyPlans](DailyPlans) | Casos de uso, DTOs y contratos relacionados con la planificación por fecha. |
+| [DailyPlanTemplates](DailyPlanTemplates) | Casos de uso, DTOs y contratos para guardar y aplicar configuraciones reutilizables. |
+| [ShoppingLists](ShoppingLists) | Consulta calculada de necesidades pendientes por intervalo. |
+| [Measurements](Measurements) | Política compartida de agregación, compatibilidad y selección de unidades de salida. |
 
 ## Elementos compartidos
 
@@ -193,6 +196,29 @@ capa de infraestructura y los servicios se registran mediante
 | [DailyPlanNotFoundException](DailyPlans/Exceptions/DailyPlanExceptions.cs) | Indica que no existe plan para la fecha solicitada. |
 | [DailyPlanReferenceNotFoundException](DailyPlans/Exceptions/DailyPlanExceptions.cs) | Indica que falta una receta o tipo de comida referenciado. |
 | [DailyPlanFailureClassifier](DailyPlans/Exceptions/DailyPlanExceptions.cs) | Traduce excepciones diarias a fallos reconocibles por la API. |
+
+## Plantillas de planes diarios
+
+| Tipo | Representación |
+|---|---|
+| [DailyPlanTemplateService](DailyPlanTemplates/Services/DailyPlanTemplateService.cs) | Gestiona plantillas y materializa planes independientes en varias fechas sin sobrescribir planificación existente. |
+| [IDailyPlanTemplateRepository](DailyPlanTemplates/Interfaces/IDailyPlanTemplateRepository.cs) | Contrato de persistencia, unicidad de nombre y carga de plantillas. |
+| [DailyPlanTemplateDtos](DailyPlanTemplates/Dtos/DailyPlanTemplateDtos.cs) | Peticiones y respuestas de CRUD, comidas ordenadas y aplicación multifecha. |
+| [DailyPlanTemplateExceptions](DailyPlanTemplates/Exceptions/DailyPlanTemplateExceptions.cs) | Errores estables de ausencia y conflicto de fechas. |
+
+## Lista de la compra
+
+| Tipo | Representación |
+|---|---|
+| [ShoppingListService](ShoppingLists/Services/ShoppingListService.cs) | Valida el intervalo y compara demanda pendiente con inventario utilizable mediante conversiones compatibles. |
+| [IShoppingListReadRepository](ShoppingLists/Interfaces/IShoppingListReadRepository.cs) | Contrato del read model que obtiene demanda planificada, existencias y unidades sin escribir datos. |
+| [ShoppingListDtos](ShoppingLists/Dtos/ShoppingListDtos.cs) | Snapshot interno y respuesta pública de cantidades requeridas, disponibles y faltantes. |
+
+## Mediciones
+
+| Tipo | Representación |
+|---|---|
+| [MeasurementCalculator](Measurements/MeasurementCalculator.cs) | Normaliza masa, volumen y conteo, conserva unidades sin conversión y elige una unidad de compra determinista. |
 
 ## Flujo general
 

@@ -1,13 +1,17 @@
 # Fase 15 — Consolidación de UI y UX
 
-- **Estado:** Planificada
+- **Estado:** Implementación presente; cierre formal pendiente
+- **Implementación observada:** 22–23 de agosto de 2026
+- **Validación pendiente:** completar checklist y registrar gate responsive, accesible y visual
 - **Estimación:** 10–15 días
-- **Dependencias:** fases 13 y 14 implementadas, documentadas y con el gate verde
+- **Dependencias:** implementación funcional de las fases 13 y 14; sus cierres formales continúan pendientes
 - **Guía ejecutable:** [Implementación de la fase 15](../implementation/15-ui-ux-consolidation-implementation.md)
 
 ## Resultado esperado
 
 Consolidar la experiencia de Friggy para que los recorridos de uso frecuente sean claros, compactos y consistentes en móvil y escritorio, sin modificar el dominio ni los contratos HTTP. La fase aprovecha el sistema visual existente, completa la experiencia de plantillas y lista de la compra y convierte Inicio, navegación, formularios y estados de interacción en un conjunto coherente y accesible.
+
+Los componentes, estilos y recorridos descritos están presentes en la interfaz actual, incluidos Inicio, navegación, selectores buscables y comparaciones de cantidades. La fase permanece fuera de `completed/` porque su checklist y el gate final no contienen evidencia de cierre.
 
 ## Diagnóstico vinculante
 

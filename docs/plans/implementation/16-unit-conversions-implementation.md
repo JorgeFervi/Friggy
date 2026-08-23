@@ -2,6 +2,7 @@
 
 - **Fase relacionada:** [Conversiones y usos contextuales de unidades](../phases/16-unit-conversions.md)
 - **Dependencia ejecutable:** gate verde de catálogos, recetas, inventario, planificación diaria y lista de compra
+- **Estado:** implementación presente; PostgreSQL, E2E, visual y gate completo pendientes en un entorno con Docker accesible
 - **Skills aplicables:** `architecture`, `modern-csharp`, `entity-framework-core`, `minimal-apis`, `blazor`, `xunit`, `run-tests`
 - **Plataforma detectada:** .NET SDK 10.0.302, C# 14, xUnit v3 y Microsoft Testing Platform
 

@@ -1,6 +1,8 @@
 # Fase 14 — Lista de la compra calculada
 
-- **Estado:** En curso
+- **Estado:** Implementada en código; cierre formal pendiente
+- **Implementación observada:** 22 de agosto de 2026
+- **Validación pendiente:** registrar el gate final de la fase
 - **Estimación:** 3–5 días
 - **Dependencias:** [Fase 12](../completed/phases/12-daily-planning.md); puede ejecutarse independientemente de la Fase 13
 - **Guía ejecutable:** [Implementación de la fase 14](../implementation/14-shopping-list-implementation.md)
@@ -8,6 +10,8 @@
 ## Resultado esperado
 
 Ofrecer una vista calculada para un intervalo inclusivo de fechas que compare las necesidades de las comidas planificadas con el inventario actual y muestre cuánto comprar por combinación exacta de ingrediente y unidad.
+
+La consulta, API, página, pruebas de Application/Integration/Component y recorridos E2E/visuales están presentes. La semántica de coincidencia exacta descrita a continuación corresponde al incremento original y fue sustituida por las conversiones compatibles de la [Fase 16](../../docs/plans/phases/16-unit-conversions.md). El cierre continúa pendiente hasta registrar un gate completo.
 
 ## Fórmula vinculante
 

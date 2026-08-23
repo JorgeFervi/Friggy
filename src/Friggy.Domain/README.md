@@ -5,7 +5,7 @@
 La capa `Friggy.Domain` contiene las reglas de negocio y los modelos propios
 del dominio de Friggy. No depende de la infraestructura, de la API ni de la
 interfaz web. Sus clases protegen las invariantes de catálogos, recetas,
-inventario y planificación diaria.
+inventario, planificación diaria y plantillas.
 
 ## Organización
 
@@ -15,6 +15,7 @@ inventario y planificación diaria.
 | [`Inventory`](Inventory) | Lotes, movimientos y resultados de operaciones de inventario. |
 | [`Recipes`](Recipes) | Recetas, ingredientes, pasos y asociaciones de recetas. |
 | [`DailyPlans`](DailyPlans) | Planes por fecha, huecos, asignaciones y estados de comidas. |
+| [`DailyPlanTemplates`](DailyPlanTemplates) | Configuraciones reutilizables y ordenadas para materializar planes diarios. |
 
 ## Catálogos
 
@@ -60,12 +61,20 @@ inventario y planificación diaria.
 | [`MealPlanEntry`](DailyPlans/MealPlanEntry.cs) | Receta asignada a un tipo de comida, con comensales y estado de ejecución. |
 | [`MealPlanEntryStatus`](DailyPlans/MealPlanEntryStatus.cs) | Enumeración que indica si una asignación está planificada, completada u omitida. |
 
+## Plantillas de planes diarios
+
+| Tipo | Representación |
+|---|---|
+| [`DailyPlanTemplate`](DailyPlanTemplates/DailyPlanTemplate.cs) | Raíz independiente con nombre y colección ordenada de comidas reutilizables. |
+| [`DailyPlanTemplateMeal`](DailyPlanTemplates/DailyPlanTemplateMeal.cs) | Configuración de tipo de comida, receta opcional, raciones, hora y orden que se copia al materializar un plan. |
+
 ## Relaciones principales
 
 - `Recipe` contiene `RecipeIngredient` y `RecipeStep`, y se puede clasificar usando sus asociaciones con `RecipeTagLink` y `RecipeMealTypeLink`.
 - `RecipeStep` relaciona sus pasos con las líneas de ingredientes mediante `RecipeStepIngredientLink`.
 - `InventoryLot` registra cada cambio de existencias mediante `InventoryMovement`.
 - `DailyPlan` contiene `MealPlanSlot` y `MealPlanEntry`; la fecha solo pertenece a la raíz y los hijos no la duplican.
+- `DailyPlanTemplate` crea planes independientes y no conserva relaciones con los planes materializados.
 - `CatalogName` se utiliza como value object para mantener válidos los nombres de las entidades de catálogo.
 
 Las clases del dominio crean y modifican sus entidades mediante métodos que validan

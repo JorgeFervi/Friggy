@@ -31,22 +31,25 @@ Componente Blazor
     -> llamada a un endpoint de tipo minimal API
     -> uso de un servicio de la capa de application
     -> uso de un puerto de repositorio
-    -> ejecución del adaptador de que se conecta a PostgreSQL
+    -> ejecución del adaptador que se conecta a PostgreSQL
     -> recupera los datos o realiza una operación
 ```
 
-- API registra Application e Infrastructure. 
-- Un endpoint traduce HTTP y delega; no contiene reglas de negocio ni ejecuta migraciones. 
+- API registra Application e Infrastructure.
+- Un endpoint traduce HTTP y delega; no contiene reglas de negocio ni ejecuta migraciones.
 - Application coordina casos de uso mediante interfaces.
 - Domain conserva las reglas de negocio.
 
 ## Capacidades de negocio
 
-El código se organiza alrededor de tres capacidades principales:
+El código se organiza alrededor de cuatro capacidades principales y una política transversal de mediciones:
 
 * **Catálogos y recetas:** referencias compartidas, entidad principal receta y sus clasificaciones.
-* **Planificación diaria:** planes por fecha, huecos de comidas, asignaciones, raciones, horarios y estados.
-* **Inventario:** lotes, movimientos y carencias.
+* **Planificación diaria:** planes por fecha, huecos, asignaciones, raciones, horarios, estados y plantillas reutilizables.
+* **Inventario y finalización:** lotes, movimientos, comparación de necesidades y consumo transaccional.
+* **Lista de la compra:** read model por intervalo que agrega comidas pendientes y descuenta inventario utilizable.
+
+`MeasurementCalculator` y los objetos de valor de unidades proporcionan una política compartida para masa, volumen, conteo y unidades sin conversión. No constituyen una capa ni un servicio externo.
 
 ## Reglas de cambio
 

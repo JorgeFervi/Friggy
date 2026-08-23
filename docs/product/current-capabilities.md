@@ -43,6 +43,12 @@ Cada plan corresponde a una fecha y solo puede existir uno por día. Se puede co
 
 Las comidas omitidas no consumen inventario. Una comida completada queda cerrada y no se vuelve a consumir si se repite la petición.
 
+## Plantillas de planes diarios
+
+Una plantilla guarda un nombre y una colección ordenada de comidas con tipo, receta opcional, raciones y hora prevista. Se puede crear, consultar, editar y eliminar desde la interfaz.
+
+Al aplicarla a una o varias fechas, Friggy crea planes diarios independientes. La operación no sobrescribe planes existentes: si alguna fecha ya está planificada, no crea ningún plan y devuelve el conflicto. Los planes creados no mantienen una relación viva con la plantilla y no cambian si esta se edita después.
+
 ## Inventario
 
 Las existencias se registran por lotes independientes con ingrediente, unidad de compra, cantidad y caducidad. Cada lote conserva un historial inmutable de:
@@ -62,7 +68,7 @@ Al completar una comida, el usuario elige cuánto consumir de cada lote compatib
 
 ## Lista de la compra
 
-La lista de la compra es una consulta de solo lectura para un intervalo inclusivo. Agrega la demanda de los planes no omitidos, descuenta el inventario utilizable mediante conversiones compatibles y expresa requerido, disponible y faltante en una unidad habilitada para compra. Las unidades exclusivamente culinarias, como cucharadas, no aparecen como propuesta de compra.
+La lista de la compra es una consulta de solo lectura para un intervalo inclusivo. Agrega únicamente la demanda de las comidas que continúan en estado planificado; excluye comidas omitidas, completadas y huecos sin receta. Después descuenta el inventario utilizable mediante conversiones compatibles y expresa requerido, disponible y faltante en una unidad habilitada para compra. Las unidades exclusivamente culinarias, como cucharadas, no aparecen como propuesta de compra.
 
 ## Límites actuales
 

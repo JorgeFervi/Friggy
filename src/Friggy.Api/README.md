@@ -37,7 +37,9 @@ entrada HTTP, la traducción de errores y la exposición de las respuestas.
 | [UnitTypeEndpoints](Endpoints/UnitTypeEndpoints.cs) | Grupo de endpoints para gestionar unidades de medida en /api/unit-types. |
 | [RecipeEndpoints](Endpoints/RecipeEndpoints.cs) | Grupo de endpoints para listar, consultar, crear, actualizar y eliminar recetas en /api/recipes, incluidas sus asociaciones. |
 | [DailyPlanEndpoints](Endpoints/DailyPlanEndpoints.cs) | Endpoints por fecha para gestionar planes diarios, asignaciones, huecos, necesidades y finalización en /api/daily-plans. |
+| [DailyPlanTemplateEndpoints](Endpoints/DailyPlanTemplateEndpoints.cs) | CRUD de plantillas y aplicación atómica a fechas libres en /api/daily-plan-templates. |
 | [InventoryEndpoints](Endpoints/InventoryEndpoints.cs) | Grupo de endpoints para consultar y operar sobre lotes de inventario en /api/inventory-lots. |
+| [ShoppingListEndpoints](Endpoints/ShoppingListEndpoints.cs) | Consulta calculada y de solo lectura por intervalo en /api/shopping-list. |
 
 ## Manejo de errores
 

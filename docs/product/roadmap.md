@@ -2,7 +2,7 @@
 
 > **Estado:** vigente · **Última revisión:** 23 de agosto de 2026
 
-Las fases 1 a 16 están implementadas en el código actual. El detalle histórico y ejecutable se conserva en [planes](../../plans/README.md) y en la [fase 16](../plans/phases/16-unit-conversions.md).
+Las fases 1 a 16 están implementadas en el código actual. Las fases 1 a 12 tienen cierre formal documentado; las fases 13 a 16 conservan pendiente registrar o completar su gate final y no se consideran cerradas todavía. El detalle histórico y ejecutable se conserva en [planes](../../plans/README.md) y en la [fase 16](../plans/phases/16-unit-conversions.md).
 
 ## Capacidades entregadas
 
@@ -23,6 +23,8 @@ La descripción funcional vigente está en [Funcionalidades actuales](current-ca
 * [Fase 14: lista de la compra por intervalo](../../plans/phases/14-shopping-list.md).
 * [Fase 15: consolidación de UI y UX](../../plans/phases/15-ui-ux-consolidation.md).
 * [Fase 16: conversiones y usos contextuales de unidades](../plans/phases/16-unit-conversions.md).
+
+Estas capacidades están disponibles en la implementación. Su presencia en esta lista no sustituye los criterios de cierre de cada plan ni confirma por sí sola PostgreSQL, E2E, visuales y gate completo.
 
 ## Posibles evoluciones
 

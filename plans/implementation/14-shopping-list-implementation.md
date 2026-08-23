@@ -2,9 +2,12 @@
 
 - **Fase relacionada:** [Fase 14 — Lista de la compra calculada](../phases/14-shopping-list.md)
 - **Dependencia ejecutable:** modelo diario y gate verde de la Fase 12
+- **Estado:** implementación y recorridos presentes; checklist y gate final no registrados
 - **Skills aplicables:** `architecture`, `modern-csharp`, `entity-framework-core`, `minimal-apis`, `blazor`, `run-tests`
 
 La lista de la compra es un read model calculado. No se añade un agregado, repositorio de escritura, tabla, migración ni `SaveChangesAsync`.
+
+> **Evolución posterior:** esta guía conserva la semántica exacta con la que se implementó la fase. La [Fase 16](../../docs/plans/phases/16-unit-conversions.md) sustituyó la agrupación pública por dimensión compatible y unidad de compra determinista, sin convertir la lista en una entidad persistida.
 
 ## Semántica cerrada
 

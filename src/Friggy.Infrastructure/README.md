@@ -52,6 +52,8 @@ como parte del composition root mediante [DependencyInjection](DependencyInjecti
 | [DailyPlanConfiguration](Persistence/Configurations/DailyPlanConfiguration.cs) | Configuración del agregado diario y de la unicidad de su fecha. |
 | [DailyMealPlanEntryConfiguration](Persistence/Configurations/DailyMealPlanEntryConfiguration.cs) | Configuración de asignaciones de comidas, estados, restricciones y relaciones. |
 | [DailyMealPlanSlotConfiguration](Persistence/Configurations/DailyMealPlanSlotConfiguration.cs) | Configuración de huecos de comida, orden, horario y claves alternativas. |
+| [DailyPlanTemplateConfiguration](Persistence/Configurations/DailyPlanTemplateConfiguration.cs) | Configuración de plantillas, nombre normalizado y colección de comidas. |
+| [DailyPlanTemplateMealConfiguration](Persistence/Configurations/DailyPlanTemplateMealConfiguration.cs) | Configuración de comidas de plantilla, orden, referencias y restricciones. |
 | [InventoryLotConfiguration](Persistence/Configurations/InventoryLotConfiguration.cs) | Configuración de lotes de inventario, cantidades, caducidad, concurrencia y movimientos. |
 | [InventoryMovementConfiguration](Persistence/Configurations/InventoryMovementConfiguration.cs) | Configuración de movimientos, variaciones, cantidades resultantes y relaciones. |
 
@@ -86,6 +88,13 @@ como parte del composition root mediante [DependencyInjection](DependencyInjecti
 |---|---|
 | [DailyPlanRepository](Persistence/Repositories/DailyPlanRepository.cs) | Implementación EF Core que consulta por fecha o intervalo y persiste planes diarios, asignaciones y huecos. |
 | [DailyPlanReferenceRepository](Persistence/Repositories/DailyPlanReferenceRepository.cs) | Implementación EF Core que consulta en lote tiempos de recetas y tipos de comida. |
+
+### Plantillas y consultas calculadas
+
+| Tipo | Representación |
+|---|---|
+| [DailyPlanTemplateRepository](Persistence/Repositories/DailyPlanTemplateRepository.cs) | Persistencia y consulta de plantillas con sus comidas ordenadas. |
+| [ShoppingListReadRepository](Persistence/Repositories/ShoppingListReadRepository.cs) | Read model que agrega comidas planificadas e inventario válido antes de aplicar la política de conversiones. |
 
 ## Migraciones y modelo
 

@@ -12,6 +12,8 @@ Al abrir un día puedes añadir, retirar y reordenar huecos, asignar recetas, in
 
 ## Necesidades y estados
 
-Las necesidades multiplican cada ingrediente por los comensales y agrupan por combinación exacta de ingrediente y unidad. No se convierten unidades. Se excluyen comidas omitidas y lotes agotados o ya caducados.
+Las necesidades multiplican cada ingrediente por los comensales y agrupan las cantidades compatibles por ingrediente y dimensión. Friggy convierte masa con masa, volumen con volumen y conteo con conteo; las unidades marcadas como **Sin conversión** solo coinciden consigo mismas. Se excluyen comidas omitidas y lotes agotados o ya caducados.
 
 Una comida se puede omitir con motivo o completar seleccionando consumos de lotes compatibles. La finalización es transaccional e idempotente; una comida completada queda bloqueada.
+
+Si repites con frecuencia una configuración, consulta [Plantillas de planes diarios](daily-plan-templates.md).

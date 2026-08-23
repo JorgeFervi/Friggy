@@ -1,15 +1,16 @@
 # Planificación de Friggy
 
-Esta carpeta mantiene tres itinerarios consecutivos:
+Esta carpeta mantiene cuatro itinerarios consecutivos:
 
 1. [Plan general del MVP](000-general-plan.md): fases 1 a 6, ya completadas.
 2. [Plan general post-MVP](001-general-plan.md): correcciones, inventario, planificación avanzada, detalle de recetas y evolución visual.
-3. Fases 12 a 15: sustitución por planes diarios, plantillas, lista de la compra y consolidación de UI/UX, definidas como planes individuales debajo.
+3. Fases 12 a 15: sustitución por planes diarios, plantillas, lista de la compra y consolidación de UI/UX.
+4. [Fase 16](../docs/plans/phases/16-unit-conversions.md): conversiones y usos contextuales de unidades.
 
 Los documentos se organizan por estado:
 
 - `completed/phases/` y `completed/implementation/`: planes y guías ya ejecutados.
-- `phases/` e `implementation/`: trabajo futuro y sus subfases TDD.
+- `phases/` e `implementation/`: implementaciones presentes en código cuyo cierre formal todavía no está documentado.
 - `discovery/`: decisiones funcionales que condicionan una fase.
 
 ## Fases completadas
@@ -29,13 +30,14 @@ Los documentos se organizan por estado:
 | 11 | [Sistema visual y experiencia responsive](completed/phases/11-visual-system-and-responsive-ui.md) | [Guía](completed/implementation/11-visual-system-and-responsive-ui-implementation.md) |
 | 12 | [Planificación diaria](completed/phases/12-daily-planning.md) | [Guía](completed/implementation/12-daily-planning-implementation.md) |
 
-## Fases planificadas
+## Implementadas en código con cierre formal pendiente
 
-| Fase | Plan | Implementación | Dependencia |
+| Fase | Plan | Implementación | Estado verificable |
 |---|---|---|---|
-| 13 | [Plantillas de planes diarios](phases/13-daily-plan-templates.md) | [Guía](implementation/13-daily-plan-templates-implementation.md) | Fase 12 |
-| 14 | [Lista de la compra calculada](phases/14-shopping-list.md) | [Guía](implementation/14-shopping-list-implementation.md) | Fase 12; independiente de la 13 |
-| 15 | [Consolidación de UI y UX](phases/15-ui-ux-consolidation.md) | [Guía](implementation/15-ui-ux-consolidation-implementation.md) | Fases 13 y 14 completadas |
+| 13 | [Plantillas de planes diarios](phases/13-daily-plan-templates.md) | [Guía](implementation/13-daily-plan-templates-implementation.md) | Domain, Application, PostgreSQL, API y Web presentes; faltan E2E/visual y gate final |
+| 14 | [Lista de la compra calculada](phases/14-shopping-list.md) | [Guía](implementation/14-shopping-list-implementation.md) | Implementación y recorridos E2E/visuales presentes; gate final no registrado |
+| 15 | [Consolidación de UI y UX](phases/15-ui-ux-consolidation.md) | [Guía](implementation/15-ui-ux-consolidation-implementation.md) | Cambios de interfaz presentes; checklist y gate final no registrados |
+| 16 | [Conversiones y usos contextuales](../docs/plans/phases/16-unit-conversions.md) | [Guía](../docs/plans/implementation/16-unit-conversions-implementation.md) | Implementación presente; PostgreSQL, E2E, visual y gate pendientes en un entorno con Docker |
 
 ## Reglas de uso
 
@@ -48,4 +50,4 @@ Los documentos se organizan por estado:
 
 ## Estado actual
 
-Las fases 1 a 12 están completadas. Las fases 13 y 14 están planificadas y pueden ejecutarse por separado sobre el modelo diario estable. La fase 15 consolida su experiencia una vez entregadas ambas.
+Las fases 1 a 12 están completadas y conservan evidencia de cierre. Las fases 13 a 16 están implementadas en el código actual, pero permanecen fuera de `completed/` hasta registrar o completar sus validaciones pendientes. “Implementada” no equivale a “cerrada”: solo se moverá cada pareja de documentos después de un gate completo y de actualizar su checklist con evidencia real.

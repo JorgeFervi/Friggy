@@ -1,11 +1,12 @@
 # Implementación ejecutable — Fase 15
 
 - **Fase relacionada:** [Fase 15 — Consolidación de UI y UX](../phases/15-ui-ux-consolidation.md)
-- **Dependencia ejecutable:** fases 13 y 14 completadas, documentadas y con suites/baselines verdes
+- **Dependencia ejecutable:** implementación funcional de las fases 13 y 14; sus gates finales no están registrados
+- **Estado:** implementación visible en Web; checklist y gate final pendientes de registrar
 - **Skills aplicables:** `blazor`, `modern-csharp`, `xunit`, `playwright-visual-testing`, `run-tests`
 - **Plataforma detectada:** .NET 10, Blazor Web App, xUnit v3 sobre Microsoft Testing Platform y regresión Pixelmatch existente
 
-La implementación es una evolución exclusiva de `Friggy.Web`. No se modifican Domain, Application, Infrastructure, Api, contratos HTTP, persistencia ni migraciones. Cada defecto o comportamiento comienza con un test que falla por la razón esperada; después se implementa el cambio mínimo y se refactoriza manteniendo verdes las suites afectadas.
+El núcleo de la implementación es una evolución de `Friggy.Web`. No añade tablas, migraciones ni rutas HTTP nuevas. Cambios posteriores del mismo recorrido ampliaron el resumen de recetas y su consulta en Application e Infrastructure para soportar el filtrado visible; esta guía conserva el contrato visual original, pero ya no debe interpretarse como evidencia de que solo cambió el proyecto Web. Cada defecto o comportamiento comienza con un test que falla por la razón esperada; después se implementa el cambio mínimo y se refactoriza manteniendo verdes las suites afectadas.
 
 ## Contratos transversales
 

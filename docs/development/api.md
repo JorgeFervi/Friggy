@@ -24,7 +24,9 @@ OpenAPI es la fuente de los cuerpos y respuestas actuales. Este documento resume
 | Tipos de comida | `/api/meal-types` | CRUD |
 | Recetas | `/api/recipes` | CRUD con ingredientes, pasos y clasificación |
 | Planes | `/api/daily-plans` | Consulta por intervalo y CRUD por fecha, asignaciones, huecos, orden, hora y omisión |
+| Plantillas | `/api/daily-plan-templates` | CRUD y aplicación atómica a una o varias fechas |
 | Inventario | `/api/inventory-lots` | Lista, detalle, alta, consumo, descarte, ajuste y caducidad |
+| Lista de la compra | `/api/shopping-list` | Consulta de solo lectura por intervalo inclusivo |
 
 Las operaciones relacionadas con inventario de un plan son:
 

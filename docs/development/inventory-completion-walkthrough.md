@@ -17,20 +17,21 @@ DailyPlanDetails -> DailyPlanApiClient -> DailyPlanEndpoints
 
 1. `DailyPlanDetails` solicita `GET /api/daily-plans/{date}/inventory-requirements`.
 2. `DailyPlanInventoryService.GetRequirementsAsync` carga el plan de la fecha y las recetas asignadas.
-3. Application agrupa líneas por `(IngredientId, UnitTypeId)` y multiplica por raciones.
-4. Los lotes con cantidad positiva y caducidad igual o posterior a hoy se agrupan por la misma clave.
-5. El servicio devuelve la cantidad de ingredientes requerido, disponible y faltante sin persistir el cálculo.
+3. Application multiplica las líneas por raciones y normaliza cada cantidad por ingrediente y dimensión de medida.
+4. Los lotes con cantidad positiva y caducidad igual o posterior a hoy se normalizan mediante la misma política.
+5. Masa, volumen y conteo se agregan en su unidad base; las unidades `Unconverted` conservan la coincidencia exacta por `UnitTypeId`.
+6. El servicio elige de forma determinista una unidad habilitada para compra y devuelve requerido, disponible y faltante sin persistir el cálculo.
 
 ## Completar una comida
 
 1. Se presentan los lotes inventariados compatibles y se construye `CompleteMealRequest` con cantidades explícitas.
 2. `DailyPlanApiClient` envía `POST /api/daily-plans/{date}/meal-types/{mealTypeId}/complete`.
-3. `Application` Carga la receta, calcula sus necesidades y obtiene los lotes compatibles para su uso y actualización con la receta seleccionada.
-5. Valida cantidades positivas, existencia, caducidad, coincidencia exacta de ingrediente/unidad y que no se supere lo requerido.
-6. Cada `InventoryLot.Consume` crea un movimiento enlazado con la entrada de la receta finalizada y evita cantidad negativa.
-7. `DailyPlan.CompleteEntry` cierra la asignación.
-8. `InventoryUnitOfWork.SaveChangesAsync` persiste movimientos, lotes y plan con el mismo `DbContext`; un conflicto de concurrencia se traduce a un error recuperable.
-9. La respuesta indica consumos aplicados y necesidades restantes.
+3. Application carga la receta, calcula sus necesidades y obtiene los lotes compatibles para su uso y actualización.
+4. Valida cantidades positivas, existencia, caducidad, coincidencia de ingrediente, compatibilidad de dimensión y que la cantidad normalizada no supere lo requerido.
+5. Cada `InventoryLot.Consume` crea un movimiento enlazado con la entrada finalizada, conserva la unidad original del lote y evita cantidades negativas.
+6. `DailyPlan.CompleteEntry` cierra la asignación.
+7. `InventoryUnitOfWork.SaveChangesAsync` persiste movimientos, lotes y plan con el mismo `DbContext`; un conflicto de concurrencia se traduce a un error recuperable.
+8. La respuesta indica consumos aplicados y necesidades restantes en una unidad de compra compatible.
 
 ## Invariantes que no deben incumplirse
 

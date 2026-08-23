@@ -8,6 +8,7 @@ Este índice separa la documentación vigente de los documentos históricos. Si 
 * [Tu primera semana con Friggy](user-guide/first-steps.md)
 * [Recetas y catálogos](user-guide/recipes.md)
 * [Planificación diaria](user-guide/daily-planning.md)
+* [Plantillas de planes diarios](user-guide/daily-plan-templates.md)
 * [Inventario doméstico](user-guide/inventory.md)
 * [Lista de la compra](user-guide/shopping-list.md)
 * [Persistencia y gestión de datos](user-guide/data-management.md)
@@ -18,10 +19,14 @@ Este índice separa la documentación vigente de los documentos históricos. Si 
 * [Funcionalidades actuales](product/current-capabilities.md)
 * [Estado y hoja de ruta](product/roadmap.md)
 
-## Planes ejecutables
+## Implementaciones con cierre formal pendiente
 
-* [Fase 16: conversiones y usos contextuales de unidades](plans/phases/16-unit-conversions.md)
-* [Guía de implementación de la fase 16](plans/implementation/16-unit-conversions-implementation.md)
+Las fases 13 a 16 están presentes en el código, pero sus documentos todavía no registran un gate final completo. No se consideran cerradas ni se trasladan a `plans/completed/` hasta disponer de esa evidencia.
+
+* [Fase 13: plantillas de planes diarios](../plans/phases/13-daily-plan-templates.md) y su [guía](../plans/implementation/13-daily-plan-templates-implementation.md)
+* [Fase 14: lista de la compra](../plans/phases/14-shopping-list.md) y su [guía](../plans/implementation/14-shopping-list-implementation.md)
+* [Fase 15: consolidación de UI y UX](../plans/phases/15-ui-ux-consolidation.md) y su [guía](../plans/implementation/15-ui-ux-consolidation-implementation.md)
+* [Fase 16: conversiones y usos contextuales de unidades](plans/phases/16-unit-conversions.md) y su [guía](plans/implementation/16-unit-conversions-implementation.md)
 
 ## Desarrollo
 
